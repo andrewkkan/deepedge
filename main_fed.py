@@ -54,7 +54,7 @@ if __name__ == '__main__':
         len_in = 1
         for x in img_size:
             len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=64, dim_out=args.num_classes).to(args.device)
+        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -72,35 +72,40 @@ if __name__ == '__main__':
     val_acc_list, net_list = [], []
 
     for iter in range(args.epochs):
-        w_locals, loss_locals = [], []
+        w_locals, loss_locals, acc_locals = [], [], []
         m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
-            w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
+            w, loss, acc = local.train(net=copy.deepcopy(net_glob).to(args.device))
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
+            acc_locals.append(copy.deepcopy(acc))
         # update global weights
         w_glob = FedAvg(w_locals)
 
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
 
-        # print loss
+        # Calculate accuracy for each round
+        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
+        acc_loc = 100. * sum(acc_locals) / len(acc_locals)
+
+        # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
-        print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+        print('Round {:3d}, Average loss {:.3f}, Central accuracy {:.3f}, Local accuracy {:.3f}'.format(iter, loss_avg, acc_glob, acc_loc))
         loss_train.append(loss_avg)
 
     # plot loss curve
-    plt.figure()
-    plt.plot(range(len(loss_train)), loss_train)
-    plt.ylabel('train_loss')
-    plt.savefig('./log/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
+    # plt.figure()
+    # plt.plot(range(len(loss_train)), loss_train)
+    # plt.ylabel('train_loss')
+    # plt.savefig('./log/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
 
     # testing
     net_glob.eval()
-    acc_train, loss_train = test_img(net_glob, dataset_train, args)
+    #acc_train, loss_train = test_img(net_glob, dataset_train, args)
     acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    print("Training accuracy: {:.2f}".format(acc_train))
-    print("Testing accuracy: {:.2f}".format(acc_test))
+    #print("Training accuracy: {:.2f}".format(acc_train))
+    print("Testing accuracy: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))
 

@@ -1,44 +1,18 @@
-# Federated Learning
+# Deep Edge Project 
 
-This is partly the reproduction of the paper of [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629)   
-Only experiments on MNIST and CIFAR10 (both IID and non-IID) is produced by far.
+This repo started from a github (https://github.com/shaoxiongji/federated-learning), but plenty of changes have been made.
+The origianl repo from the above site could not reproduce any of the results from the Google paper [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629) they claimed to be reproducing.
+The accuracy was way off and they havent made much attempt to improve the issue.  They were mainly trying to focus on their own publication, which I hope they have a better code base for generating their results.
 
-Note: The scripts will be slow without the implementation of parallel computing. 
+In any case, after a few corrections in their code, at least the MNIST results are looking better.  For example, the following runs will more or less reproduce the results from the Google papers for MNIST.
 
-## Run
+## IID MNIST E = 1 B = 10 C = 0.1
+python main_fed.py --dataset mnist --model mlp --epochs 100 --gpu 0 --num_channels 3 --iid --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5
 
-The MLP and CNN models are produced by:
-> python [main_nn.py](main_nn.py)
-
-The testing accuracy of MLP on MINST: 92.14% (10 epochs training) with the learning rate of 0.01.
-The testing accuracy of CNN on MINST: 98.37% (10 epochs training) with the learning rate of 0.01.
-
-Federated learning with MLP and CNN is produced by:
-> python [main_fed.py](main_fed.py)
-
-See the arguments in [options.py](utils/options.py). 
-
-For example:
-> python main_fed.py --dataset mnist --num_channels 1 --model cnn --epochs 50 --gpu 0 
+## Non-IID MNIST E = 1 B = 10 C = 0.1
+python main_fed.py --dataset mnist --model mlp --epochs 680 --gpu 0 --num_channels 3 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5
 
 
-## Results
-### MNIST
-Results are shown in Table 1 and Table 2, with the parameters C=0.1, B=10, E=5.
-
-Table 1. results of 10 epochs training with the learning rate of 0.01
-
-| Model     | Acc. of IID | Acc. of Non-IID|
-| -----     | -----       | ----           |
-| FedAVG-MLP|  85.66%     | 72.08%         |
-| FedAVG-CNN|  95.00%     | 74.92%         |
-
-Table 2. results of 50 epochs training with the learning rate of 0.01
-
-| Model     | Acc. of IID | Acc. of Non-IID|
-| -----     | -----       | ----           |
-| FedAVG-MLP| 84.42%      | 88.17%         |
-| FedAVG-CNN| 98.17%      | 89.92%         |
 
 ## References
 ```
@@ -48,16 +22,7 @@ Table 2. results of 50 epochs training with the learning rate of 0.01
   journal={arXiv preprint arXiv:1602.05629},
   year={2016}
 }
-
-@article{ji2018learning,
-  title={Learning Private Neural Language Modeling with Attentive Aggregation},
-  author={Ji, Shaoxiong and Pan, Shirui and Long, Guodong and Li, Xue and Jiang, Jing and Huang, Zi},
-  journal={arXiv preprint arXiv:1812.07108},
-  year={2018}
-}
 ```
-
-Attentive Federated Learning [[Paper](https://arxiv.org/abs/1812.07108)] [[Code](https://github.com/shaoxiongji/fed-att)]
 
 ## Requirements
 python 3.6  
