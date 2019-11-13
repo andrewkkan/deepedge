@@ -71,13 +71,21 @@ if __name__ == '__main__':
     best_loss = None
     val_acc_list, net_list = [], []
 
+    local_device = []
+    for idx in range(args.num_users):
+        local_device.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
+
     for iter in range(args.epochs):
         w_locals, loss_locals, acc_locals = [], [], []
         m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
-            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
-            w, loss, acc = local.train(net=copy.deepcopy(net_glob).to(args.device))
+            if args.async == True:
+                w, loss, acc = local_device[idx].train()
+                local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+            else:
+                local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                w, loss, acc = local_device[idx].train()
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
             acc_locals.append(copy.deepcopy(acc))

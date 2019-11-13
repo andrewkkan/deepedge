@@ -24,16 +24,20 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset=None, idxs=None):
+    def __init__(self, args, net, dataset=None, idxs=None):
         self.args = args
         self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
+        self.net = net
 
-    def train(self, net):
-        net.train()
+    def train(self):
+        if not self.net:
+            exit('Error: Device LocalUpdate self.net was not initialized')
+
+        self.net.train()
         # train and update
-        optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
 
         epoch_loss = []
         epoch_accuracy = []
@@ -42,8 +46,8 @@ class LocalUpdate(object):
             batch_accuracy = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
-                net.zero_grad()
-                nn_outputs = net(images)
+                self.net.zero_grad()
+                nn_outputs = self.net(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
                 loss = self.loss_func(nn_outputs, labels)
                 if self.args.verbose and batch_idx % 10 == 0:
@@ -56,5 +60,7 @@ class LocalUpdate(object):
                 optimizer.step()
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
-        return net.state_dict(), sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
+        return self.net.state_dict(), sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
+    def weight_update(self, net):
+        self.net = net
