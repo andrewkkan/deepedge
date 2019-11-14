@@ -13,9 +13,10 @@ python main_fed.py --dataset mnist --model mlp --epochs 100 --gpu 0 --num_channe
 python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channels 3 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.9
 
 ## Try out these new flags!!
-###--async_s2d 
+
+### --async_s2d 
 This flags turns on asynchronous server-to-device parameter updates.  Without this flag, all devices get global param sync from server in every communication round.  With this flag, only devices that update their local weight changes to the server get param sync from the server.  This means that some of these devices (called "stragglers" in literature) may have been working off of stale parameters, and their new local updates may be very localized.
-###--rand_d2s 
+### --rand_d2s 
 This flags turns on random device participation as you would expect in an asynchronous environment.  The random arrival is modeled by a Poisson process, with lambda set to "C".  Let's say we have 100 users and C = 0.1, lambda would be 10 and you get an average of 10 devices on the average per communication round.  Each communication still has a minimal device of 1.  FedAvg would just average whatever devices it gets in that round.
 
 
