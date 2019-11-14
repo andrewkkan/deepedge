@@ -86,7 +86,7 @@ if __name__ == '__main__':
             m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
-            if args.async == True:
+            if args.async_s2d == True:
                 w, loss, acc = local_device[idx].train()
                 local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
             else:
