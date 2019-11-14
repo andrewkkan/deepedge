@@ -23,6 +23,9 @@ if __name__ == '__main__':
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
     # load dataset and split users
     if args.dataset == 'mnist':
         trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -77,7 +80,10 @@ if __name__ == '__main__':
 
     for iter in range(args.epochs):
         w_locals, loss_locals, acc_locals = [], [], []
-        m = max(int(args.frac * args.num_users), 1)
+        if args.rand_d2s == True:
+            m = max(int(np.random.poisson(args.frac * args.num_users)), 1)
+        else:
+            m = max(int(args.frac * args.num_users), 1)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
             if args.async == True:
@@ -96,12 +102,13 @@ if __name__ == '__main__':
         net_glob.load_state_dict(w_glob)
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args)
         acc_loc = 100. * sum(acc_locals) / len(acc_locals)
 
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
-        print('Round {:3d}, Average loss {:.3f}, Central accuracy {:.3f}, Local accuracy {:.3f}'.format(iter, loss_avg, acc_glob, acc_loc))
+        print('Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy {:.3f}, Local accuracy {:.3f}'.\
+            format(iter, m, loss_avg, acc_glob, acc_loc))
         loss_train.append(loss_avg)
 
     # plot loss curve

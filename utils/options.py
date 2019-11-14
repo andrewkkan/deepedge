@@ -16,7 +16,8 @@ def args_parser():
     parser.add_argument('--lr', type=float, default=0.01, help="learning rate")
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
-    parser.add_argument('--async', action='store_true', help='whether async or not')
+    parser.add_argument('--async_s2d', action='store_true', help='async server-to-device update across all devices or not')
+    parser.add_argument('--rand_d2s', action='store_true', help='random device-to-server update (Poisson lambda = C) or not')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')
