@@ -21,7 +21,7 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False):
     for idx, (data, target) in enumerate(data_loader):
         if idx == stop_at_batch:
             break
-        if args.gpu != -1:
+        if args.device != torch.device('cpu'):
             data, target = data.cuda(), target.cuda()
         log_probs = net_g(data)
         # sum up batch loss
