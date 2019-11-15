@@ -7,10 +7,10 @@ The accuracy was way off and they havent made much attempt to improve the issue.
 In any case, after a few corrections in their code, at least the MNIST results are looking better.  For example, the following runs will more or less reproduce the results from the Google papers for MNIST.
 
 ### IID MNIST E = 1 B = 10 C = 0.1
-python main_fed.py --dataset mnist --model mlp --epochs 100 --gpu 0 --num_channels 3 --iid --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.9
+python main_fed.py --dataset mnist --model mlp --epochs 100 --gpu 0 --num_channels 1 --iid --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5
 
 ### Non-IID MNIST E = 1 B = 10 C = 0.1
-python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channels 3 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.9
+python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5
 
 ## Try out these new flags!!
 
