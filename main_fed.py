@@ -12,7 +12,7 @@ import torch
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
 from utils.options import args_parser
-from models.Update import LocalUpdate
+from models.Update import LocalUpdate, do_MAS
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg, FedGM
 from models.test import test_img
@@ -78,6 +78,8 @@ if __name__ == '__main__':
     for idx in range(args.num_users):
         local_device.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
 
+    N_omega = 0
+    omega_sum = None
     for iter in range(args.epochs):
         w_locals, loss_locals, acc_locals = [], [], []
         if args.rand_d2s == True:
@@ -89,8 +91,12 @@ if __name__ == '__main__':
             if args.async_s2d == True:
                 w, loss, acc = local_device[idx].train()
                 local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                if args.fedmas >= 0.0:
+                    omega_sum, N_omega = do_MAS(args=args, device_idx=idx, local_device=local_device, net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
             else:
                 local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                if args.fedmas >= 0.0:
+                    omega_sum, N_omega = do_MAS(args=args, device_idx=idx, local_device=local_device, net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
                 w, loss, acc = local_device[idx].train()
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(loss)
