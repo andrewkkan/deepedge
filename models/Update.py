@@ -9,6 +9,8 @@ import numpy as np
 import random
 from sklearn import metrics
 import copy
+import torch.nn.functional as F
+from models.FedMAS import do_Omega_Local_Update, calculate_Regularization_Omega
 
 
 class DatasetSplit(Dataset):
@@ -27,11 +29,11 @@ class DatasetSplit(Dataset):
 class LocalUpdate(object):
     def __init__(self, args, net, dataset=None, idxs=None):
         self.args = args
-        self.loss_func = nn.CrossEntropyLoss()
+        # self.loss_func = nn.CrossEntropyLoss()
         self.selected_clients = []
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
         self.net = net
-        self._omega = []
+        self._omega_local = []
         self._omega_global = []
 
     def train(self):
@@ -52,7 +54,8 @@ class LocalUpdate(object):
                 self.net.zero_grad()
                 nn_outputs = self.net(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
-                loss = self.loss_func(nn_outputs, labels)
+                # loss = self.loss_func(nn_outputs, labels)
+                loss = self.CrossEntropyLoss(nn_outputs, labels)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
@@ -67,57 +70,34 @@ class LocalUpdate(object):
 
     def weight_update(self, net):
         self.net = net
+        if self.args.fedmas > 0.0:
+            self.net_glob = copy.deepcopy(net)
 
     def omega_update(self, net, omega_glob, N_omega):
-        self._omega_global = omega_glob
-        if N_omega > 0:
-            for idx in range(len(omega_glob)):
-                self._omega_global[idx]['weight'] = self._omega_global[idx]['weight'] / float(N_omega)
-                self._omega_global[idx]['bias'] = self._omega_global[idx]['bias'] / float(N_omega)
-
-        self._omega = []
-        for idx, layer in enumerate(net.modules()):
-            if type(layer) == torch.nn.modules.linear.Linear:
-                self._omega.append({
-                        'idx': idx,
-                        'weight': torch.zeros(layer.weight.shape).to(self.args.device).to(self.args.device),
-                        'bias': torch.zeros(layer.bias.shape).to(self.args.device).to(self.args.device),
-                })
-        sample_counter = 0
-        for batch_idx, (images, labels) in enumerate(self.ldr_train):
-            images, labels = images.to(self.args.device), labels.to(self.args.device)
-            for idx in range(images.shape[0]):
-                nn_outputs = net(images[idx])
-                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
-                net.zero_grad()
-                nn_outputs.backward(torch.nn.functional.one_hot(nnout_max, nn_outputs.shape[1]).to(torch.float), retain_graph=True)
-                net_layer_list = list(net.modules())
-                for omega_layer in self._omega:
-                    omega_layer['weight'] = omega_layer['weight'] + torch.abs(net_layer_list[omega_layer['idx']].weight.grad.data).to(self.args.device)
-                    omega_layer['bias'] = omega_layer['bias'] + torch.abs(net_layer_list[omega_layer['idx']].bias.grad.data).to(self.args.device)
-                    sample_counter = sample_counter + 1
-        for omega_layer in self._omega:
-            omega_layer['weight'] = omega_layer['weight'] / float(sample_counter)
-            omega_layer['bias'] = omega_layer['bias'] / float(sample_counter)      
+        do_Omega_Local_Update(local_user=self, net=net, omega_glob=omega_glob, N_omega=N_omega)
 
     @property
-    def omega(self):
-        return self._omega
-    
+    def omega_local(self):
+        return self._omega_local
 
-def do_MAS(args, device_idx, local_device, net_glob, omega_sum, N_omega):
-    if local_device[device_idx].omega and N_omega > 0:
-        for layer_idx in range(len(omega_sum)):
-            omega_sum[layer_idx]['weight'] = omega_sum[layer_idx]['weight'] - local_device[device_idx].omega[layer_idx]['weight']
-            omega_sum[layer_idx]['bias'] = omega_sum[layer_idx]['bias'] - local_device[device_idx].omega[layer_idx]['bias']
-        N_omega = N_omega - 1
-    if omega_sum == None:
-        local_device[device_idx].omega_update(net=copy.deepcopy(net_glob).to(args.device), omega_glob=None, N_omega=0)
-        omega_sum = copy.deepcopy(local_device[device_idx].omega)
-    else:
-        local_device[device_idx].omega_update(net=copy.deepcopy(net_glob).to(args.device), omega_glob=omega_sum, N_omega=N_omega)
-        for layer_idx in range(len(omega_sum)):
-            omega_sum[layer_idx]['weight'] = omega_sum[layer_idx]['weight'] + local_device[device_idx].omega[layer_idx]['weight']
-            omega_sum[layer_idx]['bias'] = omega_sum[layer_idx]['bias'] + local_device[device_idx].omega[layer_idx]['bias']
-    N_omega = N_omega + 1
-    return omega_sum, N_omega
+    @omega_local.setter
+    def omega_local(self, omega_local):
+        self._omega_local = omega_local
+
+    @property
+    def omega_global(self):
+        return self._omega_global
+
+    @omega_global.setter
+    def omega_global(self, omega_global):
+        self._omega_global = omega_global
+    
+    def CrossEntropyLoss(self, outputs, labels):
+        batch_size = outputs.size()[0]            # batch_size
+        outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
+        outputs = outputs[range(batch_size), labels] # pick the values corresponding to the labels
+        if self._omega_global and self.net_glob:
+            regularization_mas = calculate_Regularization_Omega(net_glob=self.net_glob, net_local=self.net, omega_glob=self.omega_global)
+        else:
+            regularization_mas = 0
+        return -torch.sum(outputs)/float(batch_size) -(self.args.fedmas * regularization_mas)

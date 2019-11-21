@@ -12,11 +12,11 @@ import torch
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
 from utils.options import args_parser
-from models.Update import LocalUpdate, do_MAS
+from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg, FedGM
 from models.test import test_img
-
+from models.FedMAS import do_MAS_Glob
 
 if __name__ == '__main__':
     # parse args
@@ -74,9 +74,9 @@ if __name__ == '__main__':
     best_loss = None
     val_acc_list, net_list = [], []
 
-    local_device = []
+    local_user = []
     for idx in range(args.num_users):
-        local_device.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
+        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
 
     N_omega = 0
     omega_sum = None
@@ -89,15 +89,15 @@ if __name__ == '__main__':
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
             if args.async_s2d == True:
-                w, loss, acc = local_device[idx].train()
-                local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                if args.fedmas >= 0.0:
-                    omega_sum, N_omega = do_MAS(args=args, device_idx=idx, local_device=local_device, net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
+                w, loss, acc = local_user[idx].train()
+                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                if args.fedmas > 0.0:
+                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
             else:
-                local_device[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                if args.fedmas >= 0.0:
-                    omega_sum, N_omega = do_MAS(args=args, device_idx=idx, local_device=local_device, net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
-                w, loss, acc = local_device[idx].train()
+                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                if args.fedmas > 0.0:
+                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
+                w, loss, acc = local_user[idx].train()
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(loss)
             acc_locals.append(acc)
