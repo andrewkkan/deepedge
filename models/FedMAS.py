@@ -49,16 +49,21 @@ def do_Omega_Local_Update(local_user, net, omega_glob, N_omega):
         for idx in range(images.shape[0]):
             nn_outputs = net(images[idx])
             nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+            if nnout_max[0] == labels[idx]:
+                backward_vector = torch.nn.functional.one_hot(nnout_max, nn_outputs.shape[1]).to(torch.float)
+            else:
+                continue
             net.zero_grad()
-            nn_outputs.backward(torch.nn.functional.one_hot(nnout_max, nn_outputs.shape[1]).to(torch.float), retain_graph=True)
+            nn_outputs.backward(backward_vector, retain_graph=True)
             net_layer_list = list(net.modules())
             for omega_layer in local_user.omega_local:
                 omega_layer['weight'] = omega_layer['weight'] + torch.abs(net_layer_list[omega_layer['idx']].weight.grad.data).to(local_user.args.device)
                 omega_layer['bias'] = omega_layer['bias'] + torch.abs(net_layer_list[omega_layer['idx']].bias.grad.data).to(local_user.args.device)
-                sample_counter = sample_counter + 1
-    for omega_layer in local_user.omega_local:
-        omega_layer['weight'] = omega_layer['weight'] / float(sample_counter)
-        omega_layer['bias'] = omega_layer['bias'] / float(sample_counter)      
+            sample_counter = sample_counter + 1
+    if sample_counter:
+        for omega_layer in local_user.omega_local:
+            omega_layer['weight'] = omega_layer['weight'] / float(sample_counter)
+            omega_layer['bias'] = omega_layer['bias'] / float(sample_counter)
 
 
 def calculate_Regularization_Omega(net_glob, net_local, omega_glob):
