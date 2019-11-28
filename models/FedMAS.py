@@ -20,7 +20,7 @@ def do_MAS_Glob(args, local_user, net_glob, omega_sum, N_omega):
         local_user.omega_update(net=copy.deepcopy(net_glob).to(args.device), omega_glob=[], N_omega=0)
         omega_sum = copy.deepcopy(local_user.omega_local)
     else:
-        local_user.omega_update(net=copy.deepcopy(net_glob).to(args.device), omega_glob=omega_sum, N_omega=N_omega)
+        local_user.omega_update(net=copy.deepcopy(net_glob).to(args.device), omega_glob=copy.deepcopy(omega_sum), N_omega=N_omega)
         for layer_idx in range(len(omega_sum)):
             omega_sum[layer_idx]['weight'] = omega_sum[layer_idx]['weight'] + local_user.omega_local[layer_idx]['weight']
             omega_sum[layer_idx]['bias'] = omega_sum[layer_idx]['bias'] + local_user.omega_local[layer_idx]['bias']
