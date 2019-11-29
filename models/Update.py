@@ -99,4 +99,4 @@ class LocalUpdate(object):
             regularization_mas = calculate_Regularization_Omega(net_glob=self.net_glob, net_local=self.net, omega_glob=self.omega_global)
         else:
             regularization_mas = 0
-        return -torch.sum(outputs)/float(batch_size) -(self.args.fedmas * regularization_mas)
+        return -torch.sum(outputs)/float(batch_size) +(self.args.fedmas * regularization_mas)
