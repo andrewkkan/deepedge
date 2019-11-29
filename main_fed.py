@@ -81,7 +81,7 @@ if __name__ == '__main__':
     N_omega = 0
     omega_sum = None
     for iter in range(args.epochs):
-        w_locals, loss_locals, acc_locals = [], [], []
+        w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
         if args.rand_d2s == True:
             m = min(max(int(np.random.poisson(args.frac * args.num_users)), 1), args.num_users)
         else:
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         for idx in idxs_users:
             if args.async_s2d == True:
-                w, loss, acc = local_user[idx].train()
+                w, loss, acc_ll = local_user[idx].train()
                 local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                 if args.fedmas > 0.0:
                     omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
@@ -97,10 +97,12 @@ if __name__ == '__main__':
                 local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                 if args.fedmas > 0.0:
                     omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
-                w, loss, acc = local_user[idx].train()
+                w, loss, acc_ll = local_user[idx].train()
+            acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(loss)
-            acc_locals.append(acc)
+            acc_locals.append(acc_l)
+            acc_locals_on_local.append(acc_ll)
 
         # update global weights
         if args.fedgm == 1.0:
@@ -113,12 +115,17 @@ if __name__ == '__main__':
 
         # Calculate accuracy for each round
         acc_glob, _ = test_img(net_glob, dataset_train, args, stop_at_batch=16, shuffle=True)
-        acc_loc = 100. * sum(acc_locals) / len(acc_locals)
+        acc_loc = sum(acc_locals) / len(acc_locals)
+        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
-        print('Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on train data {:.3f}, Local accuracy on local train data {:.3f}'.\
-            format(iter, m, loss_avg, acc_glob, acc_loc))
+        print(
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, \
+                Central accuracy on global train data {:.3f}, Local accuracy on global train data {:.3f}, \
+                Local accuracy on local train data {:.3f}'.\
+                format(iter, m, loss_avg, acc_glob, acc_loc, acc_lloc)
+        )
         loss_train.append(loss_avg)
 
     # plot loss curve
