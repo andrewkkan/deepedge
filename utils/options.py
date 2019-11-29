@@ -17,9 +17,9 @@ def args_parser():
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
     parser.add_argument('--async_s2d', action='store_true', help='async server-to-device update across all devices or not')
-    parser.add_argument('--rand_d2s', action='store_true', help='random device-to-server update (Poisson lambda = C) or not')
     parser.add_argument('--fedgm', type=float, default=1.0, help="Use FedGM instead of FedAvg (default: 1.0 = FedAvg).  GM = generalized mean.")
     parser.add_argument('--fedmas', type=float, default=0.0, help="Use FedMAS (memory-aware synapses) to mitigate catastrophic forgetting.  Provide value for lambda.")
+    parser.add_argument('--rand_d2s', type=float, nargs='*', default=0.0, help='random device-to-server update')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

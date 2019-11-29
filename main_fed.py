@@ -82,11 +82,22 @@ if __name__ == '__main__':
     omega_sum = None
     for iter in range(args.epochs):
         w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
-        if args.rand_d2s == True:
-            m = min(max(int(np.random.poisson(args.frac * args.num_users)), 1), args.num_users)
-        else:
+        
+        if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+            idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        else:
+            if args.rand_d2s == []:
+                frac_list = [args.frac]
+            else:
+                frac_list = args.rand_d2s
+            rand_d2s = np.resize(frac_list, args.num_users)
+            idxs_users = np.where(np.random.random(args.num_users) < rand_d2s)[0]
+            m = len(idxs_users)
+            if m == 0:
+                m = 1
+                idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+
         for idx in idxs_users:
             if args.async_s2d == True:
                 w, loss, acc_ll = local_user[idx].train()
@@ -121,9 +132,7 @@ if __name__ == '__main__':
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, \
-                Central accuracy on global train data {:.3f}, Local accuracy on global train data {:.3f}, \
-                Local accuracy on local train data {:.3f}'.\
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global train data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(iter, m, loss_avg, acc_glob, acc_loc, acc_lloc)
         )
         loss_train.append(loss_avg)
