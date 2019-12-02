@@ -17,8 +17,9 @@ python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channe
 ### --async_s2d 
 This flags turns on asynchronous server-to-device parameter updates.  Without this flag, all devices get global param sync from server in every communication round.  With this flag, only devices that update their local weight changes to the server get param sync from the server.  This means that some of these devices (called "stragglers" in literature) may have been working off of stale parameters, and their new local updates may be very localized.
 ### --rand_d2s 
-This flags turns on random device participation as you would expect in an asynchronous environment.  The random arrival is modeled by a Poisson process, with lambda set to "C".  Let's say we have 100 users and C = 0.1, lambda would be 10 and you get an average of 10 devices on the average per communication round.  Each communication still has a minimal device of 1.  FedAvg would just average whatever devices it gets in that round.
-
+This flags turns on random device participation as you would expect in an asynchronous environment.  The random arrival at the server is binomial.  This is modelled by success and failure probability at the local devices.  Each local device has success update prob = C, and failure update prob = 1-C.  With "--rand_d2s" alone without any value provided, all local devices will have the same success prob = C.  With "--rand_d2s 0.1 0.2 0.3", for example, local device #1 will get success prob = 0.1, #2 will be 0.2, #3 will be 0.3, #4 will be 0.1, etc, all the way through 100 for num_users = 100. Each communication still has a minimal device of 1.  FedAvg would just average whatever devices it gets in that round.
+### --fedmas 1.0
+This flag implements the Memory Aware Synapses algorithm for catastrophic forgetting.  arXiv:1812.03596
 
 ## References
 ```
@@ -27,6 +28,21 @@ This flags turns on random device participation as you would expect in an asynch
   author={McMahan, H Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and others},
   journal={arXiv preprint arXiv:1602.05629},
   year={2016}
+}
+@ARTICLE{2018arXiv181203596A,
+       author = {{Aljundi}, Rahaf and {Kelchtermans}, Klaas and {Tuytelaars}, Tinne},
+        title = "{Task-Free Continual Learning}",
+      journal = {arXiv e-prints},
+     keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Artificial Intelligence, Computer Science - Machine Learning, Statistics - Machine Learning},
+         year = "2018",
+        month = "Dec",
+          eid = {arXiv:1812.03596},
+        pages = {arXiv:1812.03596},
+archivePrefix = {arXiv},
+       eprint = {1812.03596},
+ primaryClass = {cs.CV},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2018arXiv181203596A},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 ```
 
