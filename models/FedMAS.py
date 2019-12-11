@@ -50,11 +50,13 @@ def do_Omega_Local_Update(local_user, net, omega_glob, N_omega):
             nn_outputs = net(images[idx])
             nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
             if nnout_max[0] == labels[idx]:
-                backward_vector = torch.nn.functional.one_hot(nnout_max, nn_outputs.shape[1]).to(torch.float)
+                # backward_vector = torch.nn.functional.one_hot(nnout_max, nn_outputs.shape[1]).to(torch.float)
+                loss = local_user.CrossEntropyLoss(nn_outputs, labels)
             else:
                 continue
             net.zero_grad()
-            nn_outputs.backward(backward_vector, retain_graph=True)
+            # nn_outputs.backward(backward_vector, retain_graph=True)
+            loss.backward(None, retain_graph=True)
             net_layer_list = list(net.modules())
             for omega_layer in local_user.omega_local:
                 omega_layer['weight'] = omega_layer['weight'] + torch.abs(net_layer_list[omega_layer['idx']].weight.grad.data).to(local_user.args.device)

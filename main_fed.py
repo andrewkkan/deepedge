@@ -98,22 +98,49 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
-        for idx in idxs_users:
-            if args.async_s2d == True:
-                w, loss, acc_ll = local_user[idx].train()
+        if args.sync_grad == True:
+            for idx in idxs_users:
                 local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                if args.fedmas > 0.0:
-                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
-            else:
-                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                if args.fedmas > 0.0:
-                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob, omega_sum=omega_sum, N_omega=N_omega)
-                w, loss, acc_ll = local_user[idx].train()
-            acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-            w_locals.append(copy.deepcopy(w))
-            loss_locals.append(loss)
-            acc_locals.append(acc_l)
-            acc_locals_on_local.append(acc_ll)
+            for epoch_idx in range(args.local_ep):
+                for batch_idx, (images, labels) in enumerate(local_user[0].ldr_train):
+                    grad_avg = copy.deepcopy(net_glob).to(args.device)
+                    grad_avg.zero_grad()
+                    for idx in idxs_users:
+                        bl, acc_ll = local_user[idx].train_nobackprop(epoch_idx, batch_idx)
+                        local_params = list(local_user[idx].net.parameters())
+                        for p_idx, p in enumerate(grad_avg.parameters()):
+                            try:
+                                p.grad += local_params[p_idx].grad / float(len(idxs_users))
+                            except:
+                                p.grad = local_params[p_idx].grad / float(len(idxs_users))
+                        acc_locals_on_local.append(acc_ll)
+                        loss_locals.append(bl)
+                    for idx in idxs_users:
+                        w = local_user[idx].train_backprop(grad_avg)
+            for idx in idxs_users:
+                w = local_user[idx].net.state_dict()
+                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
+                w_locals.append(copy.deepcopy(w))
+                acc_locals.append(acc_l)
+        else:
+            for idx in idxs_users:
+                if args.async_s2d == True:
+                    w, loss, acc_ll = local_user[idx].train()
+                    local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                    if args.fedmas > 0.0:
+                        omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
+                                                         omega_sum=omega_sum, N_omega=N_omega)
+                else:
+                    local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                    if args.fedmas > 0.0:
+                        omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
+                                                         omega_sum=omega_sum, N_omega=N_omega)
+                    w, loss, acc_ll = local_user[idx].train()
+                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
+                w_locals.append(copy.deepcopy(w))
+                loss_locals.append(loss)
+                acc_locals.append(acc_l)
+                acc_locals_on_local.append(acc_ll)
 
         # update global weights
         if args.fedgm == 1.0:
