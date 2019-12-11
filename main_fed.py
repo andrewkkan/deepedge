@@ -122,6 +122,21 @@ if __name__ == '__main__':
                 acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
                 w_locals.append(copy.deepcopy(w))
                 acc_locals.append(acc_l)
+        elif args.sync_params == True:
+            for epoch_idx in range(args.local_ep):
+                for batch_idx, (images, labels) in enumerate(local_user[0].ldr_train):
+                    w_locals = []
+                    for idx in idxs_users:
+                        local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                        w, loss, acc_ll = local_user[idx].train_batch(epoch_idx, batch_idx)
+                        acc_locals_on_local.append(acc_ll)
+                        loss_locals.append(loss)
+                        w_locals.append(copy.deepcopy(w))
+                    w_glob = FedAvg(w_locals)
+                    net_glob.load_state_dict(w_glob)
+            for idx in idxs_users:
+                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
+                acc_locals.append(acc_l)
         else:
             for idx in idxs_users:
                 if args.async_s2d == True:

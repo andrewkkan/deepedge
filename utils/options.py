@@ -21,6 +21,7 @@ def args_parser():
     parser.add_argument('--fedmas', type=float, default=0.0, help="Use FedMAS (memory-aware synapses) to mitigate catastrophic forgetting.  Provide value for lambda.")
     parser.add_argument('--rand_d2s', type=float, nargs='*', default=0.0, help='random device-to-server update')
     parser.add_argument('--sync_grad', action='store_true', help='Sync gradients for each mini batch update from active devices.')
+    parser.add_argument('--sync_params', action='store_true', help='Sync params for each mini batch update from active devices.')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

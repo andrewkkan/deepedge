@@ -98,6 +98,31 @@ class LocalUpdate(object):
         optimizer.step()
         return self.net.state_dict()
 
+    def train_batch(self, epoch_idx, batch_idx):
+        if not self.net:
+            exit('Error: Device LocalUpdate self.net was not initialized')
+
+        self.net.train()
+        # train and update
+        # optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+
+        if epoch_idx == 0:
+            self.train_data_batches = [(images, labels) for batch_idx, (images, labels) in enumerate(self.ldr_train)]
+
+        (images, labels) = self.train_data_batches[batch_idx]
+        images, labels = images.to(self.args.device), labels.to(self.args.device)
+        self.net.zero_grad()
+        nn_outputs = self.net(images)
+        nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+        batch_loss = self.CrossEntropyLoss(nn_outputs, labels)
+        batch_loss.backward(retain_graph=True)
+        batch_accuracy = sum(nnout_max==labels).float() / len(labels)
+
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+        optimizer.step()
+
+        return self.net.state_dict(), batch_loss.item(), batch_accuracy
+
     def weight_update(self, net):
         self.net = net
         if self.args.fedmas > 0.0:
