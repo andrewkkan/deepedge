@@ -135,6 +135,7 @@ if __name__ == '__main__':
                     w_glob = FedAvg(w_locals)
                     net_glob.load_state_dict(w_glob)
             for idx in idxs_users:
+                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                 acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
                 acc_locals.append(acc_l)
         else:
