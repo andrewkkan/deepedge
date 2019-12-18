@@ -14,11 +14,12 @@ from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import FedAvg, FedGM
+from models.Fed import FedAvg
 from models.test import test_img
 from models.FedMAS import do_MAS_Glob
 
 if __name__ == '__main__':
+
     # parse args
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
@@ -98,31 +99,7 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
-        if args.sync_grad == True:
-            for idx in idxs_users:
-                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-            for epoch_idx in range(args.local_ep):
-                for batch_idx, (images, labels) in enumerate(local_user[0].ldr_train):
-                    grad_avg = copy.deepcopy(net_glob).to(args.device)
-                    grad_avg.zero_grad()
-                    for idx in idxs_users:
-                        bl, acc_ll = local_user[idx].train_nobackprop(epoch_idx, batch_idx)
-                        local_params = list(local_user[idx].net.parameters())
-                        for p_idx, p in enumerate(grad_avg.parameters()):
-                            try:
-                                p.grad += local_params[p_idx].grad / float(len(idxs_users))
-                            except:
-                                p.grad = local_params[p_idx].grad / float(len(idxs_users))
-                        acc_locals_on_local.append(acc_ll)
-                        loss_locals.append(bl)
-                    for idx in idxs_users:
-                        w = local_user[idx].train_backprop(grad_avg)
-            for idx in idxs_users:
-                w = local_user[idx].net.state_dict()
-                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-                w_locals.append(copy.deepcopy(w))
-                acc_locals.append(acc_l)
-        elif args.sync_params == True:
+        if args.sync_params == True:
             for epoch_idx in range(args.local_ep):
                 for batch_idx, (images, labels) in enumerate(local_user[0].ldr_train):
                     w_locals = []
@@ -140,13 +117,15 @@ if __name__ == '__main__':
                 acc_locals.append(acc_l)
         else:
             for idx in idxs_users:
-                if args.async_s2d == True:
+                if args.async_s2d == 1: # async mode 1 updates after FedAvg (see lines below FedAvg)
+                    w, loss, acc_ll = local_user[idx].train()
+                elif args.async_s2d == 2: # async mode 2 updates before FedAvg
                     w, loss, acc_ll = local_user[idx].train()
                     local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                     if args.fedmas > 0.0:
                         omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
                                                          omega_sum=omega_sum, N_omega=N_omega)
-                else:
+                elif args.async_s2d == 0:  # synchronous mode, updates before training
                     local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                     if args.fedmas > 0.0:
                         omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
@@ -159,13 +138,17 @@ if __name__ == '__main__':
                 acc_locals_on_local.append(acc_ll)
 
         # update global weights
-        if args.fedgm == 1.0:
-            w_glob = FedAvg(w_locals)
-        else:
-            w_glob = FedGM(w_locals, args.fedgm)
+        w_glob = FedAvg(w_locals)
 
         # copy weight to net_glob
         net_glob.load_state_dict(w_glob)
+
+        if args.async_s2d == 1:  # async mode 1 updates after FedAvg
+            for idx in idxs_users:
+                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                if args.fedmas > 0.0:
+                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
+                                                     omega_sum=omega_sum, N_omega=N_omega)
 
         # Calculate accuracy for each round
         acc_glob, _ = test_img(net_glob, dataset_train, args, stop_at_batch=16, shuffle=True)

@@ -14,9 +14,14 @@ python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channe
 
 ## Try out these new flags!!
 
-### --async_s2d 
-This flags turns on asynchronous server-to-device parameter updates.  Without this flag, all devices get global param sync from server in every communication round.  With this flag, only devices that update their local weight changes to the server get param sync from the server.  This means that some of these devices (called "stragglers" in literature) may have been working off of stale parameters, and their new local updates may be very localized.
-### --rand_d2s 
+### --async_s2d 0 or 1 or 2
+This flags turns on asynchronous server-to-device parameter updates. 0 is more benign, 1 is more hostile, 2 is most hostile.
+0: Synchronous mode.  The order of operations are as followed: (1) Weight update from server to selected devices; (2) Selected devices training; (3) FedAvg on selected devices
+1: Asynchronous mode 1. The order of operations are as followed: (1) Selected devices training; (2) FedAvg on selected devices (3) Weight update from server to selected devices
+2: Asynchronous mode 2. The order of operations are as followed:  (1) Selected devices training; (2) Weight update from server to selected devices; (3) FedAvg on selected devices
+### --sync_params
+This flag tests out a mode in which weight update happens after every batch of training.  Basically same order of operations as synchronous mode 0, but the operations happen after every batch.
+### --rand_d2s
 This flags turns on random device participation as you would expect in an asynchronous environment.  The random arrival at the server is binomial.  This is modelled by success and failure probability at the local devices.  Each local device has success update prob = C, and failure update prob = 1-C.  With "--rand_d2s" alone without any value provided, all local devices will have the same success prob = C.  With "--rand_d2s 0.1 0.2 0.3", for example, local device #1 will get success prob = 0.1, #2 will be 0.2, #3 will be 0.3, #4 will be 0.1, etc, all the way through 100 for num_users = 100. Each communication still has a minimal device of 1.  FedAvg would just average whatever devices it gets in that round.
 ### --fedmas 1.0
 This flag implements the Memory Aware Synapses algorithm for catastrophic forgetting.  arXiv:1812.03596
