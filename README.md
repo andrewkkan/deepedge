@@ -16,9 +16,9 @@ python main_fed.py --dataset mnist --model mlp --epochs 700 --gpu 0 --num_channe
 
 ### --async_s2d 0 or 1 or 2
 This flags turns on asynchronous server-to-device parameter updates. 0 is more benign, 1 is more hostile, 2 is most hostile.
--0: Synchronous mode.  The order of operations are as followed: (1) Weight update from server to selected devices; (2) Selected devices training; (3) FedAvg on selected devices
--1: Asynchronous mode 1. The order of operations are as followed: (1) Selected devices training; (2) FedAvg on selected devices (3) Weight update from server to selected devices
--2: Asynchronous mode 2. The order of operations are as followed:  (1) Selected devices training; (2) Weight update from server to selected devices; (3) FedAvg on selected devices
+- 0: Synchronous mode.  The order of operations are as followed: (1) Weight update from server to selected devices; (2) Selected devices training; (3) FedAvg on selected devices
+- 1: Asynchronous mode 1. The order of operations are as followed: (1) Selected devices training; (2) FedAvg on selected devices (3) Weight update from server to selected devices
+- 2: Asynchronous mode 2. The order of operations are as followed:  (1) Selected devices training; (2) Weight update from server to selected devices; (3) FedAvg on selected devices
 ### --sync_params
 This flag tests out a mode in which weight update happens after every batch of training.  Basically same order of operations as synchronous mode 0, but the operations happen after every batch.
 ### --rand_d2s
