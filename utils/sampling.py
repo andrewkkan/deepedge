@@ -8,7 +8,7 @@ from torchvision import datasets, transforms
 
 def mnist_iid(dataset, num_users):
     """
-    Sample I.I.D. client data from MNIST dataset
+    Partitions I.I.D. client data from MNIST dataset
     :param dataset:
     :param num_users:
     :return: dict of image index
@@ -20,6 +20,18 @@ def mnist_iid(dataset, num_users):
         all_idxs = list(set(all_idxs) - dict_users[i])
     return dict_users
 
+def mnist_sample_iid(dataset, num_users):
+    """
+    Samples I.I.D. client data from MNIST dataset
+    :param dataset:
+    :param num_users:
+    :return: dict of image index
+    """
+    num_items = int(len(dataset)/num_users)
+    dict_users, all_idxs = {}, [i for i in range(len(dataset))]
+    for i in range(num_users):
+        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=True))
+    return dict_users
 
 def mnist_noniid(dataset, num_users):
     """

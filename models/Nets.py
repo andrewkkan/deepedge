@@ -8,12 +8,23 @@ import torch.nn.functional as F
 
 
 class MLP(nn.Module):
-    def __init__(self, dim_in, dim_hidden, dim_out):
+    def __init__(self, dim_in, dim_hidden, dim_out, weight_init='xavier', bias_init='zeros'):
         super(MLP, self).__init__()
         self.layer_input = nn.Linear(dim_in, dim_hidden)
         self.relu = nn.ReLU()
         self.layer_hidden1 = nn.Linear(dim_hidden, dim_hidden)
         self.layer_hidden2 = nn.Linear(dim_hidden, dim_out)
+
+        if weight_init == 'xavier':
+            torch.nn.init.xavier_uniform_(self.layer_input.weight)
+            torch.nn.init.xavier_uniform_(self.layer_hidden1.weight)
+            torch.nn.init.xavier_uniform_(self.layer_hidden2.weight)
+
+        if bias_init == 'zeros':
+            torch.nn.init.zeros_(self.layer_input.bias)
+            torch.nn.init.zeros_(self.layer_hidden1.bias)
+            torch.nn.init.zeros_(self.layer_hidden2.bias)
+
 
     def forward(self, x):
         x = x.view(-1, x.shape[-3]*x.shape[-2]*x.shape[-1])

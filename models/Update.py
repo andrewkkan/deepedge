@@ -53,7 +53,7 @@ class LocalUpdate(object):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
                 self.net.zero_grad()
                 nn_outputs = self.net(images)
-                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
                 # loss = self.loss_func(nn_outputs, labels)
                 loss = self.CrossEntropyLoss(nn_outputs, labels)
                 if self.args.verbose and batch_idx % 10 == 0:
@@ -116,7 +116,7 @@ class LocalUpdate(object):
     @omega_global.setter
     def omega_global(self, omega_global):
         self._omega_global = omega_global
-    
+
     def CrossEntropyLoss(self, outputs, labels):
         batch_size = outputs.size()[0]            # batch_size
         outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values

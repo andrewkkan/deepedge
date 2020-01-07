@@ -30,6 +30,8 @@ def args_parser():
     parser.add_argument('--num_filters', type=int, default=32, help="number of filters for conv nets")
     parser.add_argument('--max_pool', type=str, default='True',
                         help="Whether use max pooling rather than strided convolutions")
+    parser.add_argument('--weight_init', type=str, default='xavier', help='weight initialization type')
+    parser.add_argument('--bias_init', type=str, default='zeros', help='bias initialization type')
 
     # other arguments
     parser.add_argument('--dataset', type=str, default='mnist', help="name of dataset")

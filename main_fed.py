@@ -10,7 +10,7 @@ import numpy as np
 from torchvision import datasets, transforms
 import torch
 
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid
+from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
@@ -34,7 +34,8 @@ if __name__ == '__main__':
         dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
         if args.iid:
-            dict_users = mnist_iid(dataset_train, args.num_users)
+            # dict_users = mnist_iid(dataset_train, args.num_users)
+            dict_users = mnist_sample_iid(dataset_train, args.num_users)
         else:
             dict_users = mnist_noniid(dataset_train, args.num_users)
     elif args.dataset == 'cifar':
@@ -45,6 +46,7 @@ if __name__ == '__main__':
             dict_users = cifar_iid(dataset_train, args.num_users)
         else:
             exit('Error: only consider IID setting in CIFAR10')
+
     else:
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
@@ -58,7 +60,8 @@ if __name__ == '__main__':
         len_in = 1
         for x in img_size:
             len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
+        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes,
+                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -83,7 +86,7 @@ if __name__ == '__main__':
     omega_sum = None
     for iter in range(args.epochs):
         w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
-        
+
         if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
             idxs_users = np.random.choice(range(args.num_users), m, replace=False)
@@ -151,14 +154,14 @@ if __name__ == '__main__':
                                                      omega_sum=omega_sum, N_omega=N_omega)
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_train, args, stop_at_batch=16, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
         acc_loc = sum(acc_locals) / len(acc_locals)
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global train data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(iter, m, loss_avg, acc_glob, acc_loc, acc_lloc)
         )
         loss_train.append(loss_avg)
@@ -171,8 +174,8 @@ if __name__ == '__main__':
 
     # testing
     net_glob.eval()
-    #acc_train, loss_train = test_img(net_glob, dataset_train, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args)
+    # acc_train, loss_train = test_img(net_glob, dataset_train, args)
+    # acc_test, loss_test = test_img(net_glob, dataset_test, args)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
     #print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))
-
