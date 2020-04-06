@@ -3,11 +3,7 @@
 # Python version: 3.6
 
 import torch
-from torch import nn, autograd
 from torch.utils.data import DataLoader, Dataset
-import numpy as np
-import random
-from sklearn import metrics
 import copy
 import torch.nn.functional as F
 from models.FedMAS import do_Omega_Local_Update, calculate_Regularization_Omega
