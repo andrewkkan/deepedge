@@ -57,6 +57,8 @@ def args_parser():
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     # parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
     #                     help='SGD momentum (default: 0.9)')
+    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+                        help='how many batches to wait before logging training status')
 
     args = parser.parse_args()
     return args
