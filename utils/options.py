@@ -30,8 +30,8 @@ def args_parser():
     parser.add_argument('--num_filters', type=int, default=32, help="number of filters for conv nets")
     parser.add_argument('--max_pool', type=str, default='True',
                         help="Whether use max pooling rather than strided convolutions")
-    parser.add_argument('--weight_init', type=str, default='xavier', help='weight initialization type')
-    parser.add_argument('--bias_init', type=str, default='zeros', help='bias initialization type')
+    parser.add_argument('--weight_init', type=str, default='random', help='weight initialization type')
+    parser.add_argument('--bias_init', type=str, default='random', help='bias initialization type')
 
     # other arguments
     parser.add_argument('--dataset', type=str, default='mnist', help="name of dataset")
@@ -42,5 +42,21 @@ def args_parser():
     parser.add_argument('--stopping_rounds', type=int, default=10, help='rounds of early stopping')
     parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
+
+    # Below are imported from DFAN code
+    parser.add_argument('--batch_size', type=int, default=512, metavar='N',
+                        help='input batch size for training (default: 64)')
+    parser.add_argument('--lr_S', type=float, default=0.1, metavar='LR',
+                        help='learning rate (default: 0.1)')
+    parser.add_argument('--lr_G', type=float, default=0.01,
+                        help='learning rate (default: 0.1)')
+    parser.add_argument('--epoch_itrs', type=int, default=400)
+    parser.add_argument('--ensemble_mode', type=int, default=0, metavar='N',
+                        help='mode for ensemble (default: 0)')
+    parser.add_argument('--nz', type=int, default=100)
+    parser.add_argument('--weight_decay', type=float, default=1e-4)
+    # parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
+    #                     help='SGD momentum (default: 0.9)')
+
     args = parser.parse_args()
     return args

@@ -9,14 +9,14 @@ import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
-from models.Update import LocalUpdate
+from models.Update import DatasetSplit
 from models.Nets import MLP, CNNMnist, CNNCifar
-from models.Fed import FedAvg
 from models.test import test_img
-from models.FedMAS import do_MAS_Glob
 
 if __name__ == '__main__':
 
@@ -80,11 +80,11 @@ if __name__ == '__main__':
 
     local_user = []
     for idx in range(args.num_users):
-        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
+        local_user.append(dict_users[idx])
 
-    N_omega = 0
-    omega_sum = None
-    for iter in range(args.epochs):
+    optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr, momentum=args.momentum)
+
+    for epoch_idx in range(args.epochs):
         w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
         if args.rand_d2s == 0.0: # default
@@ -102,67 +102,41 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
-        if args.sync_params == True:
-            for epoch_idx in range(args.local_ep):
-                for batch_idx, (images, labels) in enumerate(local_user[0].ldr_train):
-                    w_locals = []
-                    for idx in idxs_users:
-                        local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                        w, loss, acc_ll = local_user[idx].train_batch(epoch_idx, batch_idx)
-                        acc_locals_on_local.append(acc_ll)
-                        loss_locals.append(loss)
-                        w_locals.append(copy.deepcopy(w))
-                    w_glob = FedAvg(w_locals)
-                    net_glob.load_state_dict(w_glob)
-            for idx in idxs_users:
-                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-                acc_locals.append(acc_l)
-        else:
-            for idx in idxs_users:
-                if args.async_s2d == 1: # async mode 1 updates after FedAvg (see lines below FedAvg)
-                    w, loss, acc_ll = local_user[idx].train()
-                elif args.async_s2d == 2: # async mode 2 updates before FedAvg
-                    w, loss, acc_ll = local_user[idx].train()
-                    local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                    if args.fedmas > 0.0:
-                        omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
-                                                         omega_sum=omega_sum, N_omega=N_omega)
-                elif args.async_s2d == 0:  # synchronous mode, updates before training
-                    local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                    if args.fedmas > 0.0:
-                        omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
-                                                         omega_sum=omega_sum, N_omega=N_omega)
-                    w, loss, acc_ll = local_user[idx].train()
-                acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-                w_locals.append(copy.deepcopy(w))
-                loss_locals.append(loss)
-                acc_locals.append(acc_l)
-                acc_locals_on_local.append(acc_ll)
-
-        # update global weights
-        w_glob = FedAvg(w_locals)
-
-        # copy weight to net_glob
-        net_glob.load_state_dict(w_glob)
-
-        if args.async_s2d == 1:  # async mode 1 updates after FedAvg
-            for idx in idxs_users:
-                local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                if args.fedmas > 0.0:
-                    omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
-                                                     omega_sum=omega_sum, N_omega=N_omega)
+        data_idxs = []
+        for idxs in idxs_users:
+            data_idxs.extend(local_user[idxs])
+        user_data = DataLoader(DatasetSplit(dataset_train, data_idxs), batch_size=args.local_bs, shuffle=True)
+        epoch_loss = []
+        epoch_accuracy = []
+        for local_idx in range(args.local_ep):
+            batch_loss = []
+            batch_accuracy = []
+            for batch_idx, (images, labels) in enumerate(user_data):
+                images, labels = images.to(args.device), labels.to(args.device)
+                net_glob.zero_grad()
+                nn_outputs = net_glob(images)
+                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+                # loss = self.loss_func(nn_outputs, labels)
+                loss = F.cross_entropy(nn_outputs, labels)
+                if args.verbose and batch_idx % 10 == 0:
+                    print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                        local_idx, batch_idx * len(images), len(user_data.dataset),
+                               100. * batch_idx / len(user_data), loss.item()))
+                batch_loss.append(loss.item())
+                batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+                loss.backward(retain_graph=True)
+                optimizer.step()
+            epoch_loss.append(sum(batch_loss)/len(batch_loss))
+            epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
         # Calculate accuracy for each round
         acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
-        acc_loc = sum(acc_locals) / len(acc_locals)
-        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
         # print status
-        loss_avg = sum(loss_locals) / len(loss_locals)
+        loss_avg = sum(epoch_loss) / len(epoch_loss)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
-                format(iter, m, loss_avg, acc_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}'.\
+                format(epoch_idx, m, loss_avg, acc_glob)
         )
         loss_train.append(loss_avg)
 
