@@ -10,14 +10,13 @@ import numpy as np
 from torchvision import datasets, transforms
 import torch
 import random
-import os
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.test import test_img, test_img_ensem
-from models.DFAN import DFAN_ensemble
+from models.Fed import FedAvg
 from network.gan import GeneratorA, GeneratorB
 
 from IPython import embed
@@ -34,9 +33,6 @@ if __name__ == '__main__':
     random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
-    if not os.path.exists('data/models/%s'%(args.store_models)):
-        os.makedirs('data/models/%s'%(args.store_models))
 
     # load dataset and split users
     if args.dataset == 'mnist':
@@ -99,7 +95,7 @@ if __name__ == '__main__':
         local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
 
     for epoch_idx in range(args.epochs):
-        net_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
+        net_locals, w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], []
 
         if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
@@ -119,39 +115,28 @@ if __name__ == '__main__':
         for user_idx in idxs_users:
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
                 w, loss, acc_ll = local_user[user_idx].train()
+                w_locals.append(copy.deepcopy(w))
                 net_locals.append(copy.deepcopy(local_user[user_idx].net))
             elif args.async_s2d == 2:  # async mode 2 updates before FedAvg
                 w, loss, acc_ll = local_user[user_idx].train()
+                w_locals.append(copy.deepcopy(w))
                 net_locals.append(copy.deepcopy(local_user[user_idx].net))
                 local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
             elif args.async_s2d == 0:  # synchronous mode, updates before training
                 local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                 w, loss, acc_ll = local_user[user_idx].train()
+                w_locals.append(copy.deepcopy(w))
                 net_locals.append(copy.deepcopy(local_user[user_idx].net))
             acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
             loss_locals.append(loss)
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
 
-        if args.nn_refresh == 2:
-            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                           dim_out=args.num_classes,
-                           weight_init=args.weight_init, bias_init=args.bias_init)
-            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                             weight_decay=args.weight_decay, momentum=0.9)
-            net_glob = net_glob.to(args.device)
-        elif args.nn_refresh == 1 or args.nn_refresh == 2:
-            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-            generator = generator.to(args.device)
-
         # update global weights
-        DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        w_glob = FedAvg(w_locals)
 
-        for idx, net in enumerate(net_locals):
-            torch.save(net.state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
-        torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
-        torch.save(generator.state_dict(),"data/models/%s/netgen-epoch%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.dataset))
+        # copy weight to net_glob
+        net_glob.load_state_dict(w_glob)
 
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
             for user_idx in idxs_users:

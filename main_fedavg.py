@@ -9,6 +9,7 @@ import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
+import random
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
@@ -126,8 +127,10 @@ if __name__ == '__main__':
             for idx in idxs_users:
                 if args.async_s2d == 1: # async mode 1 updates after FedAvg (see lines below FedAvg)
                     w, loss, acc_ll = local_user[idx].train()
+                    w_locals.append(copy.deepcopy(w))
                 elif args.async_s2d == 2: # async mode 2 updates before FedAvg
                     w, loss, acc_ll = local_user[idx].train()
+                    w_locals.append(copy.deepcopy(w))
                     local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
                     if args.fedmas > 0.0:
                         omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
@@ -138,8 +141,8 @@ if __name__ == '__main__':
                         omega_sum, N_omega = do_MAS_Glob(args=args, local_user=local_user[idx], net_glob=net_glob,
                                                          omega_sum=omega_sum, N_omega=N_omega)
                     w, loss, acc_ll = local_user[idx].train()
+                    w_locals.append(copy.deepcopy(w))
                 acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-                w_locals.append(copy.deepcopy(w))
                 loss_locals.append(loss)
                 acc_locals.append(acc_l)
                 acc_locals_on_local.append(acc_ll)

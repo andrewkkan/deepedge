@@ -50,7 +50,7 @@ def args_parser():
                         help='learning rate (default: 0.1)')
     parser.add_argument('--lr_G', type=float, default=0.01,
                         help='learning rate (default: 0.1)')
-    parser.add_argument('--epoch_itrs', type=int, default=400)
+    parser.add_argument('--epoch_itrs', type=int, default=600)
     parser.add_argument('--ensemble_mode', type=int, default=0, metavar='N',
                         help='mode for ensemble (default: 0)')
     parser.add_argument('--nz', type=int, default=100)
@@ -59,6 +59,9 @@ def args_parser():
     #                     help='SGD momentum (default: 0.9)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
+    parser.add_argument('--nn_refresh', type=int, default=0, help='Re-initialize Generator and Global NNs every round for DFAN (default 0: none)')
+    parser.add_argument('--store_models', type=str, default="testrun", help='Directory for model storage under deepedge/data')
+
 
     args = parser.parse_args()
     return args
