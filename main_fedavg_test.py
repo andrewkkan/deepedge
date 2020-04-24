@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        trans_mnist = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
         dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
@@ -106,6 +106,13 @@ if __name__ == '__main__':
             if m == 0:
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+
+
+        if epoch_idx < 35:
+            continue
+
+        if epoch_idx == 35:
+            net_glob.load_state_dict( torch.load('data/models/testrun6/netglob-epoch34-modelmlp-datasetmnist.pt'))
 
         if args.sync_params == True:
             for epoch_idx in range(args.local_ep):

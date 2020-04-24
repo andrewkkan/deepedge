@@ -30,6 +30,10 @@ class LocalUpdate(object):
         self.net_glob = None
         self._omega_local = []
         self._omega_global = []
+        labels_list = []
+        for (images, labels) in self.ldr_train:
+            labels_list.extend(list(labels.numpy()))
+        self.labels = set(labels_list)
 
     def train(self):
         if not self.net:

@@ -17,7 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.test import test_img, test_img_ensem
-from models.DFAN import DFAN_ensemble
+from models.DFAN import DFAN_single
 from models.Fed import FedAvg
 from network.gan import GeneratorA, GeneratorB
 
@@ -117,6 +117,13 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
+        if epoch_idx < 35:
+            continue
+
+        if epoch_idx == 35:
+            net_glob.load_state_dict( torch.load('data/models/testrun6/netglob-epoch34-modelmlp-datasetmnist.pt'))
+            generator.load_state_dict( torch.load('data/models/testrun6/netgen-epoch34-datasetmnist.pt'))
+
         for user_idx in idxs_users:
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
                 w, loss, acc_ll = local_user[user_idx].train()
@@ -134,35 +141,16 @@ if __name__ == '__main__':
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
 
-        if args.nn_refresh == 2:
-            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                           dim_out=args.num_classes,
-                           weight_init=args.weight_init, bias_init=args.bias_init)
-            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                             weight_decay=args.weight_decay, momentum=0.9)
-            net_glob = net_glob.to(args.device)
-        elif args.nn_refresh == 1 or args.nn_refresh == 2:
-            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-            generator = generator.to(args.device)
-        elif args.nn_refresh == 3:
-            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-            generator = generator.to(args.device)
-            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                           dim_out=args.num_classes,
-                           weight_init=args.weight_init, bias_init=args.bias_init)
-            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                             weight_decay=args.weight_decay, momentum=0.9)
-            net_glob = net_glob.to(args.device)
-            w_locals = []
-            for localnet in net_locals:
-                w_locals.append(copy.deepcopy(localnet.state_dict()))
-            w_fedavg = FedAvg(w_locals)
-            net_glob.load_state_dict(w_fedavg)
+        w_locals = []
+        for net in net_locals:
+            w_locals.append(net.state_dict())
+        w_fedavg = FedAvg(w_locals)
+        net_fedavg = copy.deepcopy(net_glob)
+        net_fedavg.load_state_dict(w_fedavg)
 
         # update global weights
-        DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        # DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        DFAN_single(args, net_fedavg, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
 
         for idx, user_idx in enumerate(idxs_users):
             torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))

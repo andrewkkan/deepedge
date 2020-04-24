@@ -17,8 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.test import test_img, test_img_ensem
-from models.DFAN import DFAN_ensemble
-from models.Fed import FedAvg
+from models.DFAN import DFAN_multigen
 from network.gan import GeneratorA, GeneratorB
 
 from IPython import embed
@@ -63,7 +62,6 @@ if __name__ == '__main__':
         exit('Error: unrecognized dataset')
     args.img_size = dataset_train[0][0].shape
 
-    generator = None
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
         net_glob = CNNCifar(args=args).to(args.device)
@@ -73,12 +71,15 @@ if __name__ == '__main__':
         net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
                        dim_out=args.num_classes,
                        weight_init=args.weight_init, bias_init=args.bias_init)
-        generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
         optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
                                          weight_decay=args.weight_decay, momentum=0.9)
-        optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
         net_glob = net_glob.to(args.device)
-        generator = generator.to(args.device)
+        generator = []
+        optimizer_gen = []
+        for ii in range(10):
+            generator.append(GeneratorA(nz=args.nz, nc=1, img_size=args.img_size))
+            optimizer_gen.append(torch.optim.Adam(generator[ii].parameters(), lr=args.lr_G))
+            generator[ii] = generator[ii].to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -134,42 +135,13 @@ if __name__ == '__main__':
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
 
-        if args.nn_refresh == 2:
-            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                           dim_out=args.num_classes,
-                           weight_init=args.weight_init, bias_init=args.bias_init)
-            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                             weight_decay=args.weight_decay, momentum=0.9)
-            net_glob = net_glob.to(args.device)
-        elif args.nn_refresh == 1 or args.nn_refresh == 2:
-            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-            generator = generator.to(args.device)
-        elif args.nn_refresh == 3:
-            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-            generator = generator.to(args.device)
-            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                           dim_out=args.num_classes,
-                           weight_init=args.weight_init, bias_init=args.bias_init)
-            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                             weight_decay=args.weight_decay, momentum=0.9)
-            net_glob = net_glob.to(args.device)
-            w_locals = []
-            for localnet in net_locals:
-                w_locals.append(copy.deepcopy(localnet.state_dict()))
-            w_fedavg = FedAvg(w_locals)
-            net_glob.load_state_dict(w_fedavg)
-
         # update global weights
-        DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        DFAN_multigen(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
 
-        for idx, user_idx in enumerate(idxs_users):
-            torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
-            print(idx, user_idx,
-                  local_user[user_idx].labels)
-        torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
-        torch.save(generator.state_dict(),"data/models/%s/netgen-epoch%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.dataset))
+        # for idx, user_idx in enumerate(idxs_users):
+        #     torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
+        # torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
+        # torch.save(generator.state_dict(),"data/models/%s/netgen-epoch%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.dataset))
 
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
             for user_idx in idxs_users:
@@ -190,6 +162,21 @@ if __name__ == '__main__':
         loss_train.append(loss_avg)
 
 
+        if args.nn_refresh == 2:
+            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
+                           dim_out=args.num_classes,
+                           weight_init=args.weight_init, bias_init=args.bias_init)
+            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
+                                             weight_decay=args.weight_decay, momentum=0.9)
+            net_glob = net_glob.to(args.device)
+        elif args.nn_refresh == 1 or args.nn_refresh == 2:
+            generator = []
+            optimizer_gen = []
+            for ii in range(10):
+                generator.append(GeneratorA(nz=args.nz, nc=1, img_size=args.img_size))
+                optimizer_gen.append(torch.optim.Adam(generator[ii].parameters(), lr=args.lr_G))
+                generator[ii] = generator[ii].to(args.device)
+
     # plot loss curve
     # plt.figure()
     # plt.plot(range(len(loss_train)), loss_train)
@@ -200,6 +187,6 @@ if __name__ == '__main__':
     net_glob.eval()
     # acc_train, loss_train = test_img(net_glob, dataset_train, args)
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
     #print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))

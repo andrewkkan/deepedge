@@ -1,5 +1,53 @@
-models/*[9Pipythonpython main_dfan.py --dataset mnist --model mlp --epochs 500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 64 --epoch_itrs 1000 --ensemble
-e_mode 0 --nn_refresh 0 --store_models 'testrun6'
+python main_dfan.py --dataset mnist --model mlp --epochs 150 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 800 --ensemble_mode 1 --nn_refresh 0 --store_models testrun6 
+
+
+
+def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
+    for ii in range(10):
+        teacher[ii].eval()
+    generator.train()
+    student.train()
+    loss_G = torch.tensor(0.0)
+    loss_S = torch.tensor(0.0)
+    optimizer_S, optimizer_G = optimizer
+    sm = torch.nn.Softmax()
+    for i in range(args.epoch_itrs):
+        for k in range(1):
+            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+            optimizer_G.zero_grad()
+            fake = generator(z)
+            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+            s_logit = student(fake)
+            # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
+            t_logit = torch.zeros_like(teacher[0](fake))
+            for k in range(10):
+                t_logit += teacher[k](fake)
+            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+            max_Gout = torch.max(torch.abs(fake))
+            if max_Gout > 8.0:
+                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
+                print(max_Gout)
+            else:
+                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
+            loss_G.backward()                   
+            optimizer_G.step()
+        for j in range(5):
+            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+            optimizer_S.zero_grad()
+            fake = generator(z).detach()
+            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+            s_logit = student(fake)
+            # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
+            t_logit = torch.zeros_like(teacher[0](fake).detach())
+            for k in range(10):
+                t_logit += teacher[k](fake).detach()
+            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+            loss_S = torch.log(1. / (2. - oneMinus_P_S))
+            loss_S.backward()
+            optimizer_S.step()
+
+
+
 /opt/conda/lib/python3.7/site-packages/torchvision/datasets/mnist.py:45: UserWarning: train_labels has been renamed targets
   warnings.warn("train_labels has been renamed targets")
 MLP(
@@ -8,142 +56,1039 @@ MLP(
   (layer_hidden1): Linear(in_features=200, out_features=200, bias=True)
   (layer_hidden2): Linear(in_features=200, out_features=10, bias=True)
 )
-/workspace/deepedge/models/DFAN.py:33: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+/workspace/deepedge/models/DFAN.py:36: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
   oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
 /opt/conda/lib/python3.7/site-packages/torch/nn/functional.py:1958: UserWarning: reduction: 'mean' divides the total loss by both the batch size and the support size.'batchmean' divides only by the batch size, and aligns with the KL div math definition.'mean' will be changed to behave the same as 'batchmean' in the next major release.
   warnings.warn("reduction: 'mean' divides the total loss by both the batch size and the support size."
-/workspace/deepedge/models/DFAN.py:45: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+/workspace/deepedge/models/DFAN.py:55: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
   oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-Round   0, Devices participated 10, Average loss 0.257, Central accuracy on global test data 22.681, Ensemble accuracy on global test data 19.727, Local accuracy on global train data 12.178, Local accuracy on local train data 96.483
-Round   1, Devices participated 10, Average loss 0.216, Central accuracy on global test data 32.983, Ensemble accuracy on global test data 31.812, Local accuracy on global train data 13.027, Local accuracy on local train data 97.350
-Round   2, Devices participated 10, Average loss 0.151, Central accuracy on global test data 40.454, Ensemble accuracy on global test data 35.742, Local accuracy on global train data 15.903, Local accuracy on local train data 98.567
-Round   3, Devices participated 10, Average loss 0.133, Central accuracy on global test data 48.657, Ensemble accuracy on global test data 51.514, Local accuracy on global train data 20.518, Local accuracy on local train data 98.617
-Round   4, Devices participated 10, Average loss 0.195, Central accuracy on global test data 43.164, Ensemble accuracy on global test data 45.288, Local accuracy on global train data 20.410, Local accuracy on local train data 98.217
-Round   5, Devices participated 10, Average loss 0.187, Central accuracy on global test data 52.100, Ensemble accuracy on global test data 50.269, Local accuracy on global train data 19.639, Local accuracy on local train data 98.833
-Round   6, Devices participated 10, Average loss 0.149, Central accuracy on global test data 55.322, Ensemble accuracy on global test data 55.542, Local accuracy on global train data 29.463, Local accuracy on local train data 98.183
-Round   7, Devices participated 10, Average loss 0.180, Central accuracy on global test data 39.551, Ensemble accuracy on global test data 38.940, Local accuracy on global train data 23.179, Local accuracy on local train data 98.450
-Round   8, Devices participated 10, Average loss 0.311, Central accuracy on global test data 48.926, Ensemble accuracy on global test data 43.628, Local accuracy on global train data 22.363, Local accuracy on local train data 98.067
-Round   9, Devices participated 10, Average loss 0.163, Central accuracy on global test data 57.520, Ensemble accuracy on global test data 54.028, Local accuracy on global train data 30.527, Local accuracy on local train data 98.517
-Round  10, Devices participated 10, Average loss 0.114, Central accuracy on global test data 60.718, Ensemble accuracy on global test data 60.327, Local accuracy on global train data 35.801, Local accuracy on local train data 99.183
-Round  11, Devices participated 10, Average loss 0.278, Central accuracy on global test data 59.106, Ensemble accuracy on global test data 59.717, Local accuracy on global train data 31.511, Local accuracy on local train data 98.067
-Round  12, Devices participated 10, Average loss 0.153, Central accuracy on global test data 54.858, Ensemble accuracy on global test data 53.809, Local accuracy on global train data 30.107, Local accuracy on local train data 98.267
-Round  13, Devices participated 10, Average loss 0.178, Central accuracy on global test data 54.175, Ensemble accuracy on global test data 54.712, Local accuracy on global train data 27.412, Local accuracy on local train data 98.833
-Round  14, Devices participated 10, Average loss 0.085, Central accuracy on global test data 28.296, Ensemble accuracy on global test data 61.792, Local accuracy on global train data 29.368, Local accuracy on local train data 98.700
-Round  15, Devices participated 10, Average loss 0.101, Central accuracy on global test data 9.790, Ensemble accuracy on global test data 60.278, Local accuracy on global train data 17.996, Local accuracy on local train data 98.350
-Round  16, Devices participated 10, Average loss 0.209, Central accuracy on global test data 9.473, Ensemble accuracy on global test data 32.593, Local accuracy on global train data 10.803, Local accuracy on local train data 97.167
-Round  17, Devices participated 10, Average loss 0.370, Central accuracy on global test data 10.449, Ensemble accuracy on global test data 48.730, Local accuracy on global train data 11.497, Local accuracy on local train data 93.767
-Round  18, Devices participated 10, Average loss 0.540, Central accuracy on global test data 9.717, Ensemble accuracy on global test data 32.275, Local accuracy on global train data 10.164, Local accuracy on local train data 87.033
-Round  19, Devices participated 10, Average loss 0.676, Central accuracy on global test data 10.327, Ensemble accuracy on global test data 17.261, Local accuracy on global train data 9.963, Local accuracy on local train data 82.900
-Round  20, Devices participated 10, Average loss 1.142, Central accuracy on global test data 10.352, Ensemble accuracy on global test data 19.751, Local accuracy on global train data 9.521, Local accuracy on local train data 69.433
-Round  21, Devices participated 10, Average loss 1.139, Central accuracy on global test data 9.839, Ensemble accuracy on global test data 16.602, Local accuracy on global train data 9.810, Local accuracy on local train data 70.933
-^CTraceback (most recent call last):
-  File "main_dfan.py", line 149, in <module>
-    DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
-  File "/workspace/deepedge/models/DFAN.py", line 29, in DFAN_ensemble
-    fake = generator(z).detach()
-KeyboardInterrupt
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# [Kpython main_dfan.py --dataset mnist --model mlp --epochs 500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 64 --epoch_itrs 1000 --ensemble
-e_mode 0 --nn_refresh 0 --store_models 'testrun6'^C
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# [K
+0 49 {7}
+1 29 {3}
+2 56 {0}
+3 42 {7}
+4 35 {8}
+5 17 {8}
+6 45 {6}
+7 88 {6, 7}
+8 62 {0}
+9 0 {8, 7}
+Round   0, Devices participated 10, Average loss 0.257, Central accuracy on global test data 26.099, Ensemble accuracy on global test data 20.068, Local accuracy on global train data 12.100, Local accuracy on local train data 96.250
 
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# 
-Round   5, Devices participated 10, Average loss 0.156, Central accuracy on global test data 51.367, Ensemble accuracy on global test data 53.955, Local accuracy on global train data 20.620, Local accuracy on local train data 99.000
-Round   6, Devices participated 10, Average loss 0.169, Central accuracy on global test data 56.934, Ensemble accuracy on global test data 49.829, Local accuracy on global train data 27.859, Local accuracy on local train data 98.217
-Round   7, Devices participated 10, Average loss 0.138, Central accuracy on global test data 34.009, Ensemble accuracy on global test data 36.255, Local accuracy on global train data 22.549, Local accuracy on local train data 98.633
-Round   8, Devices participated 10, Average loss 0.236, Central accuracy on global test data 48.975, Ensemble accuracy on global test data 45.801, Local accuracy on global train data 24.202, Local accuracy on local train data 97.983
-Round   9, Devices participated 10, Average loss 0.147, Central accuracy on global test data 56.494, Ensemble accuracy on global test data 56.372, Local accuracy on global train data 31.157, Local accuracy on local train data 98.733
-Round  10, Devices participated 10, Average loss 0.080, Central accuracy on global test data 61.230, Ensemble accuracy on global test data 60.449, Local accuracy on global train data 36.699, Local accuracy on local train data 99.133
-Round  11, Devices participated 10, Average loss 0.188, Central accuracy on global test data 61.816, Ensemble accuracy on global test data 62.573, Local accuracy on global train data 31.226, Local accuracy on local train data 98.483
-Round  12, Devices participated 10, Average loss 0.121, Central accuracy on global test data 49.756, Ensemble accuracy on global test data 50.195, Local accuracy on global train data 33.950, Local accuracy on local train data 98.417
-Round  13, Devices participated 10, Average loss 0.130, Central accuracy on global test data 66.431, Ensemble accuracy on global test data 65.674, Local accuracy on global train data 30.129, Local accuracy on local train data 98.983
-Round  14, Devices participated 10, Average loss 0.147, Central accuracy on global test data 67.358, Ensemble accuracy on global test data 65.649, Local accuracy on global train data 42.517, Local accuracy on local train data 98.150
-Round  15, Devices participated 10, Average loss 0.225, Central accuracy on global test data 66.431, Ensemble accuracy on global test data 66.602, Local accuracy on global train data 34.578, Local accuracy on local train data 97.600
-Round  16, Devices participated 10, Average loss 0.176, Central accuracy on global test data 66.333, Ensemble accuracy on global test data 66.382, Local accuracy on global train data 35.925, Local accuracy on local train data 98.167
-Round  17, Devices participated 10, Average loss 0.149, Central accuracy on global test data 70.361, Ensemble accuracy on global test data 70.215, Local accuracy on global train data 44.871, Local accuracy on local train data 98.667
-Round  18, Devices participated 10, Average loss 0.069, Central accuracy on global test data 69.507, Ensemble accuracy on global test data 70.386, Local accuracy on global train data 44.761, Local accuracy on local train data 99.050
-Round  19, Devices participated 10, Average loss 0.072, Central accuracy on global test data 67.603, Ensemble accuracy on global test data 65.552, Local accuracy on global train data 43.750, Local accuracy on local train data 99.117
-Round  20, Devices participated 10, Average loss 0.098, Central accuracy on global test data 71.655, Ensemble accuracy on global test data 71.362, Local accuracy on global train data 42.532, Local accuracy on local train data 99.033
-Round  21, Devices participated 10, Average loss 0.182, Central accuracy on global test data 68.896, Ensemble accuracy on global test data 69.946, Local accuracy on global train data 44.951, Local accuracy on local train data 98.167
-Round  22, Devices participated 10, Average loss 0.145, Central accuracy on global test data 69.751, Ensemble accuracy on global test data 70.288, Local accuracy on global train data 36.418, Local accuracy on local train data 98.433
-Round  23, Devices participated 10, Average loss 0.072, Central accuracy on global test data 56.421, Ensemble accuracy on global test data 56.201, Local accuracy on global train data 34.973, Local accuracy on local train data 99.017
-Round  24, Devices participated 10, Average loss 0.191, Central accuracy on global test data 69.629, Ensemble accuracy on global test data 69.775, Local accuracy on global train data 44.170, Local accuracy on local train data 97.767
-Round  25, Devices participated 10, Average loss 0.152, Central accuracy on global test data 73.511, Ensemble accuracy on global test data 73.657, Local accuracy on global train data 35.620, Local accuracy on local train data 98.117
-Round  26, Devices participated 10, Average loss 0.263, Central accuracy on global test data 68.823, Ensemble accuracy on global test data 69.116, Local accuracy on global train data 40.774, Local accuracy on local train data 96.850
-Round  27, Devices participated 10, Average loss 0.205, Central accuracy on global test data 68.921, Ensemble accuracy on global test data 70.410, Local accuracy on global train data 43.489, Local accuracy on local train data 97.517
-Round  28, Devices participated 10, Average loss 0.210, Central accuracy on global test data 72.705, Ensemble accuracy on global test data 72.900, Local accuracy on global train data 37.651, Local accuracy on local train data 97.650
-Round  29, Devices participated 10, Average loss 0.083, Central accuracy on global test data 74.951, Ensemble accuracy on global test data 74.121, Local accuracy on global train data 39.634, Local accuracy on local train data 99.033
-Round  30, Devices participated 10, Average loss 0.135, Central accuracy on global test data 69.507, Ensemble accuracy on global test data 70.312, Local accuracy on global train data 35.164, Local accuracy on local train data 98.333
-Round  31, Devices participated 10, Average loss 0.143, Central accuracy on global test data 71.948, Ensemble accuracy on global test data 72.827, Local accuracy on global train data 43.416, Local accuracy on local train data 97.933
-Round  32, Devices participated 10, Average loss 0.094, Central accuracy on global test data 75.659, Ensemble accuracy on global test data 76.489, Local accuracy on global train data 42.717, Local accuracy on local train data 98.817
-Round  33, Devices participated 10, Average loss 0.056, Central accuracy on global test data 74.951, Ensemble accuracy on global test data 73.267, Local accuracy on global train data 45.330, Local accuracy on local train data 99.150
-Round  34, Devices participated 10, Average loss 0.199, Central accuracy on global test data 74.707, Ensemble accuracy on global test data 74.854, Local accuracy on global train data 42.593, Local accuracy on local train data 97.433
-Round  35, Devices participated 10, Average loss 0.216, Central accuracy on global test data 65.894, Ensemble accuracy on global test data 66.113, Local accuracy on global train data 39.363, Local accuracy on local train data 96.883
-Round  36, Devices participated 10, Average loss 0.109, Central accuracy on global test data 75.049, Ensemble accuracy on global test data 74.854, Local accuracy on global train data 40.566, Local accuracy on local train data 98.950
-Round  37, Devices participated 10, Average loss 0.228, Central accuracy on global test data 66.797, Ensemble accuracy on global test data 67.603, Local accuracy on global train data 37.371, Local accuracy on local train data 97.117
-Round  38, Devices participated 10, Average loss 0.114, Central accuracy on global test data 73.584, Ensemble accuracy on global test data 73.633, Local accuracy on global train data 41.106, Local accuracy on local train data 98.333
-Round  39, Devices participated 10, Average loss 0.051, Central accuracy on global test data 75.586, Ensemble accuracy on global test data 74.365, Local accuracy on global train data 48.582, Local accuracy on local train data 99.283
-Round  40, Devices participated 10, Average loss 0.135, Central accuracy on global test data 67.407, Ensemble accuracy on global test data 67.139, Local accuracy on global train data 35.442, Local accuracy on local train data 98.217
-Round  41, Devices participated 10, Average loss 0.163, Central accuracy on global test data 69.702, Ensemble accuracy on global test data 70.264, Local accuracy on global train data 37.388, Local accuracy on local train data 98.067
-Round  42, Devices participated 10, Average loss 0.161, Central accuracy on global test data 74.512, Ensemble accuracy on global test data 74.731, Local accuracy on global train data 43.335, Local accuracy on local train data 97.917
-Round  43, Devices participated 10, Average loss 0.274, Central accuracy on global test data 76.880, Ensemble accuracy on global test data 76.611, Local accuracy on global train data 47.087, Local accuracy on local train data 96.717
-Round  44, Devices participated 10, Average loss 0.206, Central accuracy on global test data 77.295, Ensemble accuracy on global test data 77.319, Local accuracy on global train data 46.721, Local accuracy on local train data 96.433
-Round  45, Devices participated 10, Average loss 0.088, Central accuracy on global test data 74.927, Ensemble accuracy on global test data 76.294, Local accuracy on global train data 48.672, Local accuracy on local train data 98.867
-Round  46, Devices participated 10, Average loss 0.213, Central accuracy on global test data 42.871, Ensemble accuracy on global test data 76.514, Local accuracy on global train data 49.412, Local accuracy on local train data 97.450
-Round  47, Devices participated 10, Average loss 0.166, Central accuracy on global test data 38.599, Ensemble accuracy on global test data 64.893, Local accuracy on global train data 35.859, Local accuracy on local train data 96.883
-Round  48, Devices participated 10, Average loss 0.095, Central accuracy on global test data 30.371, Ensemble accuracy on global test data 50.830, Local accuracy on global train data 27.488, Local accuracy on local train data 98.233
-Round  49, Devices participated 10, Average loss 0.319, Central accuracy on global test data 37.524, Ensemble accuracy on global test data 37.646, Local accuracy on global train data 16.704, Local accuracy on local train data 89.483
-Round  50, Devices participated 10, Average loss 0.391, Central accuracy on global test data 41.064, Ensemble accuracy on global test data 42.139, Local accuracy on global train data 22.400, Local accuracy on local train data 89.733
-Round  51, Devices participated 10, Average loss 0.168, Central accuracy on global test data 42.969, Ensemble accuracy on global test data 43.823, Local accuracy on global train data 25.083, Local accuracy on local train data 96.100
-Round  52, Devices participated 10, Average loss 0.270, Central accuracy on global test data 43.335, Ensemble accuracy on global test data 46.606, Local accuracy on global train data 21.797, Local accuracy on local train data 96.000
-Round  53, Devices participated 10, Average loss 0.251, Central accuracy on global test data 54.858, Ensemble accuracy on global test data 54.370, Local accuracy on global train data 24.722, Local accuracy on local train data 97.367
-Round  54, Devices participated 10, Average loss 0.143, Central accuracy on global test data 54.614, Ensemble accuracy on global test data 55.225, Local accuracy on global train data 31.433, Local accuracy on local train data 98.450
-Round  55, Devices participated 10, Average loss 0.232, Central accuracy on global test data 57.129, Ensemble accuracy on global test data 57.593, Local accuracy on global train data 29.844, Local accuracy on local train data 97.150
-Round  56, Devices participated 10, Average loss 0.241, Central accuracy on global test data 60.425, Ensemble accuracy on global test data 58.838, Local accuracy on global train data 31.692, Local accuracy on local train data 97.417
-Round  57, Devices participated 10, Average loss 0.184, Central accuracy on global test data 56.323, Ensemble accuracy on global test data 57.446, Local accuracy on global train data 35.540, Local accuracy on local train data 98.000
-Round  58, Devices participated 10, Average loss 0.074, Central accuracy on global test data 58.643, Ensemble accuracy on global test data 59.912, Local accuracy on global train data 33.352, Local accuracy on local train data 98.967
-Round  59, Devices participated 10, Average loss 0.170, Central accuracy on global test data 58.862, Ensemble accuracy on global test data 60.059, Local accuracy on global train data 33.354, Local accuracy on local train data 98.050
-Round  60, Devices participated 10, Average loss 0.166, Central accuracy on global test data 55.347, Ensemble accuracy on global test data 54.663, Local accuracy on global train data 27.822, Local accuracy on local train data 98.267
-Round  61, Devices participated 10, Average loss 0.326, Central accuracy on global test data 58.447, Ensemble accuracy on global test data 57.495, Local accuracy on global train data 27.036, Local accuracy on local train data 97.333
-Round  62, Devices participated 10, Average loss 0.117, Central accuracy on global test data 59.424, Ensemble accuracy on global test data 59.668, Local accuracy on global train data 35.066, Local accuracy on local train data 98.683
-Round  63, Devices participated 10, Average loss 0.208, Central accuracy on global test data 53.174, Ensemble accuracy on global test data 53.467, Local accuracy on global train data 24.268, Local accuracy on local train data 97.950
-Round  64, Devices participated 10, Average loss 0.133, Central accuracy on global test data 56.201, Ensemble accuracy on global test data 56.372, Local accuracy on global train data 28.872, Local accuracy on local train data 98.617
-Round  65, Devices participated 10, Average loss 0.184, Central accuracy on global test data 54.248, Ensemble accuracy on global test data 56.201, Local accuracy on global train data 23.669, Local accuracy on local train data 98.450
-Round  66, Devices participated 10, Average loss 0.125, Central accuracy on global test data 59.033, Ensemble accuracy on global test data 60.522, Local accuracy on global train data 27.715, Local accuracy on local train data 98.800
-Round  67, Devices participated 10, Average loss 0.179, Central accuracy on global test data 60.815, Ensemble accuracy on global test data 59.692, Local accuracy on global train data 31.050, Local accuracy on local train data 98.033
-Round  68, Devices participated 10, Average loss 0.100, Central accuracy on global test data 59.912, Ensemble accuracy on global test data 60.645, Local accuracy on global train data 32.185, Local accuracy on local train data 99.017
-Round  69, Devices participated 10, Average loss 0.056, Central accuracy on global test data 67.676, Ensemble accuracy on global test data 68.188, Local accuracy on global train data 36.567, Local accuracy on local train data 99.183
-Round  70, Devices participated 10, Average loss 0.144, Central accuracy on global test data 66.162, Ensemble accuracy on global test data 65.503, Local accuracy on global train data 30.403, Local accuracy on local train data 98.133
-Round  71, Devices participated 10, Average loss 0.234, Central accuracy on global test data 65.479, Ensemble accuracy on global test data 65.601, Local accuracy on global train data 35.559, Local accuracy on local train data 97.600
-Round  72, Devices participated 10, Average loss 0.164, Central accuracy on global test data 69.580, Ensemble accuracy on global test data 69.629, Local accuracy on global train data 40.322, Local accuracy on local train data 98.433
-Round  73, Devices participated 10, Average loss 0.103, Central accuracy on global test data 69.214, Ensemble accuracy on global test data 70.410, Local accuracy on global train data 43.125, Local accuracy on local train data 98.633
-Round  74, Devices participated 10, Average loss 0.115, Central accuracy on global test data 71.045, Ensemble accuracy on global test data 69.922, Local accuracy on global train data 37.024, Local accuracy on local train data 98.617
-Round  75, Devices participated 10, Average loss 0.120, Central accuracy on global test data 63.574, Ensemble accuracy on global test data 64.111, Local accuracy on global train data 30.833, Local accuracy on local train data 98.300
-Round  76, Devices participated 10, Average loss 0.146, Central accuracy on global test data 68.701, Ensemble accuracy on global test data 68.457, Local accuracy on global train data 35.820, Local accuracy on local train data 98.033
-Round  77, Devices participated 10, Average loss 0.129, Central accuracy on global test data 67.529, Ensemble accuracy on global test data 67.993, Local accuracy on global train data 37.983, Local accuracy on local train data 98.133
-Round  78, Devices participated 10, Average loss 0.172, Central accuracy on global test data 67.676, Ensemble accuracy on global test data 67.505, Local accuracy on global train data 35.222, Local accuracy on local train data 97.850
-Round  79, Devices participated 10, Average loss 0.084, Central accuracy on global test data 65.161, Ensemble accuracy on global test data 65.527, Local accuracy on global train data 37.751, Local accuracy on local train data 98.717
-Round  80, Devices participated 10, Average loss 0.061, Central accuracy on global test data 67.358, Ensemble accuracy on global test data 67.676, Local accuracy on global train data 38.406, Local accuracy on local train data 98.817
-Round  81, Devices participated 10, Average loss 0.057, Central accuracy on global test data 62.964, Ensemble accuracy on global test data 63.354, Local accuracy on global train data 34.910, Local accuracy on local train data 99.067
-Round  82, Devices participated 10, Average loss 0.053, Central accuracy on global test data 65.161, Ensemble accuracy on global test data 65.039, Local accuracy on global train data 42.515, Local accuracy on local train data 99.050
-Round  83, Devices participated 10, Average loss 0.243, Central accuracy on global test data 62.109, Ensemble accuracy on global test data 60.596, Local accuracy on global train data 31.631, Local accuracy on local train data 96.950
-Round  84, Devices participated 10, Average loss 0.162, Central accuracy on global test data 69.312, Ensemble accuracy on global test data 70.044, Local accuracy on global train data 39.385, Local accuracy on local train data 97.617
-Round  85, Devices participated 10, Average loss 0.228, Central accuracy on global test data 66.992, Ensemble accuracy on global test data 67.212, Local accuracy on global train data 40.828, Local accuracy on local train data 96.133
-Round  86, Devices participated 10, Average loss 0.191, Central accuracy on global test data 67.383, Ensemble accuracy on global test data 66.187, Local accuracy on global train data 36.770, Local accuracy on local train data 97.133
-Round  87, Devices participated 10, Average loss 0.221, Central accuracy on global test data 62.891, Ensemble accuracy on global test data 62.598, Local accuracy on global train data 38.645, Local accuracy on local train data 96.383
-Round  88, Devices participated 10, Average loss 0.120, Central accuracy on global test data 65.405, Ensemble accuracy on global test data 64.771, Local accuracy on global train data 37.185, Local accuracy on local train data 98.367
-Round  89, Devices participated 10, Average loss 0.130, Central accuracy on global test data 66.260, Ensemble accuracy on global test data 65.088, Local accuracy on global train data 44.250, Local accuracy on local train data 97.800
-Round  90, Devices participated 10, Average loss 0.246, Central accuracy on global test data 56.128, Ensemble accuracy on global test data 56.519, Local accuracy on global train data 31.125, Local accuracy on local train data 96.567
-Round  91, Devices participated 10, Average loss 0.262, Central accuracy on global test data 65.771, Ensemble accuracy on global test data 65.283, Local accuracy on global train data 33.625, Local accuracy on local train data 96.250
-Round  92, Devices participated 10, Average loss 0.229, Central accuracy on global test data 67.261, Ensemble accuracy on global test data 67.407, Local accuracy on global train data 32.827, Local accuracy on local train data 96.867
-^CTraceback (most recent call last):
-  File "main_dfan.py", line 149, in <module>
-    DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
-  File "/workspace/deepedge/models/DFAN.py", line 40, in DFAN_ensemble
-    z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-KeyboardInterrupt
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# [Kpython main_dfan.py --dataset mnist --model mlp --epochs 500 --gpu 0 --num_channnels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 64 --epoch_itrs 1000 --ensemblee_mode 0 --nn_refresh 0 --store_models 'testrun6'[K[A[A]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# python main_dfan.py --dataset mnist --model mlp --epochs 500 --gpu 0 --num_chann
-els 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 64 --epoch_itrs 1000 --ensemble_mmode 0 --nn_refresh 0 --store_models 'testrun6'[K[A[A]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# python main_dfan.py --dataset mnist --model mlp --epochs 500 --gpu 0 --num_chan
-nels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 64 --epoch_itrs 1000 --ensemblee_mode 0 --nn_refresh 0 --store_models 'testrun6'^C
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# [K
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# 
-]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# 
+
+tensor(8.3737, device='cuda:0', grad_fn=<MaxBackward1>)
+0 53 {1}
+1 34 {3}
+2 14 {6}
+3 50 {8}
+4 37 {9}
+5 48 {4}
+6 89 {9}
+7 86 {0}
+8 15 {2}
+9 55 {3}
+Round   1, Devices participated 10, Average loss 0.222, Central accuracy on global test data 36.060, Ensemble accuracy on global test data 37.695, Local accuracy on global train data 13.638, Local accuracy on local train data 97.317
+
+
+0 10 {7}
+1 4 {8}
+2 94 {2, 3}
+3 27 {9}
+4 42 {7}
+5 23 {7}
+6 19 {9}
+7 33 {0}
+8 70 {5}
+9 59 {3}
+Round   2, Devices participated 10, Average loss 0.138, Central accuracy on global test data 42.334, Ensemble accuracy on global test data 42.065, Local accuracy on global train data 16.880, Local accuracy on local train data 98.467
+
+
+0 84 {1}
+1 46 {3}
+2 3 {9}
+3 1 {4}
+4 55 {3}
+5 39 {1}
+6 8 {0}
+7 93 {9}
+8 31 {4}
+9 47 {5}
+Round   3, Devices participated 10, Average loss 0.234, Central accuracy on global test data 46.484, Ensemble accuracy on global test data 47.681, Local accuracy on global train data 16.042, Local accuracy on local train data 98.267
+
+
+0 89 {9}
+1 84 {1}
+2 20 {2}
+3 10 {7}
+4 95 {3}
+5 73 {1, 2}
+6 17 {8}
+7 67 {1}
+8 94 {2, 3}
+9 3 {9}
+Round   4, Devices participated 10, Average loss 0.233, Central accuracy on global test data 44.360, Ensemble accuracy on global test data 45.557, Local accuracy on global train data 21.323, Local accuracy on local train data 98.350
+
+
+0 29 {3}
+1 80 {1}
+2 55 {3}
+3 64 {7}
+4 19 {9}
+5 10 {7}
+6 58 {8}
+7 67 {1}
+8 63 {5}
+9 83 {7}
+Round   5, Devices participated 10, Average loss 0.167, Central accuracy on global test data 48.828, Ensemble accuracy on global test data 47.168, Local accuracy on global train data 18.337, Local accuracy on local train data 98.967
+
+
+0 83 {7}
+1 40 {2}
+2 99 {5}
+3 23 {7}
+4 60 {8}
+5 26 {1}
+6 27 {9}
+7 41 {8, 9}
+8 79 {6}
+9 28 {6}
+Round   6, Devices participated 10, Average loss 0.188, Central accuracy on global test data 58.325, Ensemble accuracy on global test data 51.074, Local accuracy on global train data 27.175, Local accuracy on local train data 98.517
+
+
+0 9 {3}
+1 79 {6}
+2 30 {8}
+3 34 {3}
+4 84 {1}
+5 2 {4}
+6 90 {5}
+7 99 {5}
+8 69 {5}
+9 98 {5}
+Round   7, Devices participated 10, Average loss 0.164, Central accuracy on global test data 57.568, Ensemble accuracy on global test data 36.230, Local accuracy on global train data 20.933, Local accuracy on local train data 98.717
+
+
+0 57 {9}
+1 81 {0}
+2 96 {0}
+3 35 {8}
+4 56 {0}
+5 24 {2}
+6 41 {8, 9}
+7 17 {8}
+8 70 {5}
+9 22 {3}
+Round   8, Devices participated 10, Average loss 0.133, Central accuracy on global test data 62.695, Ensemble accuracy on global test data 62.402, Local accuracy on global train data 26.033, Local accuracy on local train data 98.433
+
+
+0 51 {5, 6}
+1 91 {1}
+2 83 {7}
+3 28 {6}
+4 87 {1}
+5 16 {7}
+6 59 {3}
+7 55 {3}
+8 52 {1}
+9 92 {8}
+Round   9, Devices participated 10, Average loss 0.117, Central accuracy on global test data 61.035, Ensemble accuracy on global test data 59.106, Local accuracy on global train data 33.435, Local accuracy on local train data 98.850
+
+
+0 35 {8}
+1 86 {0}
+2 66 {6}
+3 56 {0}
+4 91 {1}
+5 50 {8}
+6 77 {6}
+7 96 {0}
+8 48 {4}
+9 81 {0}
+Round  10, Devices participated 10, Average loss 0.080, Central accuracy on global test data 62.085, Ensemble accuracy on global test data 57.837, Local accuracy on global train data 36.860, Local accuracy on local train data 99.050
+
+
+0 98 {5}
+1 43 {0}
+2 38 {4, 5}
+3 64 {7}
+4 39 {1}
+5 36 {5}
+6 90 {5}
+7 28 {6}
+8 74 {4}
+9 34 {3}
+Round  11, Devices participated 10, Average loss 0.112, Central accuracy on global test data 61.182, Ensemble accuracy on global test data 58.521, Local accuracy on global train data 32.117, Local accuracy on local train data 98.667
+
+
+0 90 {5}
+1 47 {5}
+2 62 {0}
+3 28 {6}
+4 77 {6}
+5 37 {9}
+6 14 {6}
+7 36 {5}
+8 88 {6, 7}
+9 71 {3, 4}
+Round  12, Devices participated 10, Average loss 0.169, Central accuracy on global test data 57.080, Ensemble accuracy on global test data 53.491, Local accuracy on global train data 29.956, Local accuracy on local train data 97.733
+
+
+0 48 {4}
+1 24 {2}
+2 40 {2}
+3 33 {0}
+4 91 {1}
+5 70 {5}
+6 30 {8}
+7 77 {6}
+8 69 {5}
+9 63 {5}
+Round  13, Devices participated 10, Average loss 0.125, Central accuracy on global test data 62.280, Ensemble accuracy on global test data 59.497, Local accuracy on global train data 28.315, Local accuracy on local train data 98.867
+
+
+0 3 {9}
+1 93 {9}
+2 67 {1}
+3 11 {4}
+4 75 {4}
+5 56 {0}
+6 52 {1}
+7 48 {4}
+8 18 {0}
+9 64 {7}
+Round  14, Devices participated 10, Average loss 0.258, Central accuracy on global test data 64.868, Ensemble accuracy on global test data 63.916, Local accuracy on global train data 41.379, Local accuracy on local train data 94.933
+
+
+0 17 {8}
+1 56 {0}
+2 6 {2}
+3 55 {3}
+4 57 {9}
+5 4 {8}
+6 11 {4}
+7 44 {2}
+8 74 {4}
+9 27 {9}
+Round  15, Devices participated 10, Average loss 0.314, Central accuracy on global test data 63.232, Ensemble accuracy on global test data 62.183, Local accuracy on global train data 31.873, Local accuracy on local train data 94.417
+
+
+0 29 {3}
+1 25 {6}
+2 28 {6}
+3 22 {3}
+4 72 {5}
+5 5 {7}
+6 33 {0}
+7 93 {9}
+8 70 {5}
+9 84 {1}
+Round  16, Devices participated 10, Average loss 0.149, Central accuracy on global test data 67.969, Ensemble accuracy on global test data 66.138, Local accuracy on global train data 32.866, Local accuracy on local train data 97.267
+
+
+0 32 {2}
+1 10 {7}
+2 22 {3}
+3 5 {7}
+4 1 {4}
+5 76 {0, 1}
+6 61 {1}
+7 96 {0}
+8 94 {2, 3}
+9 38 {4, 5}
+Round  17, Devices participated 10, Average loss 0.098, Central accuracy on global test data 68.677, Ensemble accuracy on global test data 68.359, Local accuracy on global train data 39.783, Local accuracy on local train data 98.733
+
+
+0 50 {8}
+1 66 {6}
+2 76 {0, 1}
+3 47 {5}
+4 84 {1}
+5 54 {7}
+6 91 {1}
+7 56 {0}
+8 42 {7}
+9 96 {0}
+Round  18, Devices participated 10, Average loss 0.067, Central accuracy on global test data 65.503, Ensemble accuracy on global test data 62.891, Local accuracy on global train data 40.723, Local accuracy on local train data 99.017
+
+
+0 13 {4}
+1 54 {7}
+2 42 {7}
+3 2 {4}
+4 60 {8}
+5 56 {0}
+6 49 {7}
+7 4 {8}
+8 88 {6, 7}
+9 66 {6}
+Round  19, Devices participated 10, Average loss 0.065, Central accuracy on global test data 67.725, Ensemble accuracy on global test data 67.065, Local accuracy on global train data 40.762, Local accuracy on local train data 99.017
+
+
+0 79 {6}
+1 63 {5}
+2 20 {2}
+3 82 {6}
+4 33 {0}
+5 71 {3, 4}
+6 86 {0}
+7 75 {4}
+8 38 {4, 5}
+9 81 {0}
+Round  20, Devices participated 10, Average loss 0.108, Central accuracy on global test data 71.997, Ensemble accuracy on global test data 70.703, Local accuracy on global train data 41.350, Local accuracy on local train data 98.967
+
+
+0 30 {8}
+1 27 {9}
+2 45 {6}
+3 43 {0}
+4 35 {8}
+5 86 {0}
+6 24 {2}
+7 33 {0}
+8 73 {1, 2}
+9 88 {6, 7}
+Round  21, Devices participated 10, Average loss 0.205, Central accuracy on global test data 70.728, Ensemble accuracy on global test data 69.214, Local accuracy on global train data 45.825, Local accuracy on local train data 97.633
+
+
+0 78 {9}
+1 14 {6}
+2 98 {5}
+3 54 {7}
+4 97 {3}
+5 8 {0}
+6 16 {7}
+7 31 {4}
+8 40 {2}
+9 83 {7}
+Round  22, Devices participated 10, Average loss 0.166, Central accuracy on global test data 72.485, Ensemble accuracy on global test data 70.898, Local accuracy on global train data 38.567, Local accuracy on local train data 97.767
+
+
+0 52 {1}
+1 87 {1}
+2 31 {4}
+3 70 {5}
+4 36 {5}
+5 99 {5}
+6 83 {7}
+7 11 {4}
+8 45 {6}
+9 47 {5}
+Round  23, Devices participated 10, Average loss 0.077, Central accuracy on global test data 60.742, Ensemble accuracy on global test data 58.765, Local accuracy on global train data 41.697, Local accuracy on local train data 99.000
+
+
+0 28 {6}
+1 18 {0}
+2 27 {9}
+3 93 {9}
+4 87 {1}
+5 70 {5}
+6 14 {6}
+7 88 {6, 7}
+8 24 {2}
+9 91 {1}
+Round  24, Devices participated 10, Average loss 0.235, Central accuracy on global test data 73.193, Ensemble accuracy on global test data 72.583, Local accuracy on global train data 46.511, Local accuracy on local train data 96.167
+
+
+0 56 {0}
+1 46 {3}
+2 65 {9}
+3 5 {7}
+4 25 {6}
+5 63 {5}
+6 35 {8}
+7 32 {2}
+8 36 {5}
+9 33 {0}
+Round  25, Devices participated 10, Average loss 0.143, Central accuracy on global test data 75.854, Ensemble accuracy on global test data 74.390, Local accuracy on global train data 40.720, Local accuracy on local train data 97.433
+
+
+0 94 {2, 3}
+1 6 {2}
+2 34 {3}
+3 55 {3}
+4 87 {1}
+5 23 {7}
+6 82 {6}
+7 41 {8, 9}
+8 63 {5}
+9 93 {9}
+Round  26, Devices participated 10, Average loss 0.236, Central accuracy on global test data 71.362, Ensemble accuracy on global test data 70.972, Local accuracy on global train data 41.440, Local accuracy on local train data 95.183
+
+
+0 43 {0}
+1 96 {0}
+2 57 {9}
+3 69 {5}
+4 91 {1}
+5 17 {8}
+6 33 {0}
+7 39 {1}
+8 93 {9}
+9 36 {5}
+Round  27, Devices participated 10, Average loss 0.192, Central accuracy on global test data 68.457, Ensemble accuracy on global test data 65.845, Local accuracy on global train data 45.344, Local accuracy on local train data 96.000
+
+
+0 22 {3}
+1 47 {5}
+2 61 {1}
+3 27 {9}
+4 50 {8}
+5 96 {0}
+6 89 {9}
+7 97 {3}
+8 85 {2}
+9 30 {8}
+Round  28, Devices participated 10, Average loss 0.211, Central accuracy on global test data 73.364, Ensemble accuracy on global test data 72.021, Local accuracy on global train data 38.206, Local accuracy on local train data 96.217
+
+
+0 44 {2}
+1 70 {5}
+2 23 {7}
+3 38 {4, 5}
+4 74 {4}
+5 21 {2}
+6 82 {6}
+7 4 {8}
+8 88 {6, 7}
+9 98 {5}
+Round  29, Devices participated 10, Average loss 0.097, Central accuracy on global test data 74.170, Ensemble accuracy on global test data 73.267, Local accuracy on global train data 41.565, Local accuracy on local train data 98.733
+
+
+0 90 {5}
+1 72 {5}
+2 65 {9}
+3 50 {8}
+4 85 {2}
+5 56 {0}
+6 4 {8}
+7 80 {1}
+8 31 {4}
+9 17 {8}
+Round  30, Devices participated 10, Average loss 0.140, Central accuracy on global test data 70.898, Ensemble accuracy on global test data 68.213, Local accuracy on global train data 38.872, Local accuracy on local train data 97.750
+
+
+0 61 {1}
+1 40 {2}
+2 41 {8, 9}
+3 34 {3}
+4 97 {3}
+5 51 {5, 6}
+6 50 {8}
+7 13 {4}
+8 22 {3}
+9 8 {0}
+Round  31, Devices participated 10, Average loss 0.149, Central accuracy on global test data 72.266, Ensemble accuracy on global test data 70.410, Local accuracy on global train data 41.133, Local accuracy on local train data 97.733
+
+
+0 87 {1}
+1 54 {7}
+2 63 {5}
+3 83 {7}
+4 96 {0}
+5 26 {1}
+6 0 {8, 7}
+7 59 {3}
+8 69 {5}
+9 14 {6}
+Round  32, Devices participated 10, Average loss 0.110, Central accuracy on global test data 74.927, Ensemble accuracy on global test data 73.462, Local accuracy on global train data 46.621, Local accuracy on local train data 98.617
+
+
+0 58 {8}
+1 47 {5}
+2 83 {7}
+3 36 {5}
+4 8 {0}
+5 2 {4}
+6 56 {0}
+7 49 {7}
+8 10 {7}
+9 38 {4, 5}
+Round  33, Devices participated 10, Average loss 0.086, Central accuracy on global test data 71.704, Ensemble accuracy on global test data 71.362, Local accuracy on global train data 49.800, Local accuracy on local train data 98.867
+
+
+tensor(8.3481, device='cuda:0', grad_fn=<MaxBackward1>)
+0 89 {9}
+1 90 {5}
+2 81 {0}
+3 54 {7}
+4 59 {3}
+5 4 {8}
+6 53 {1}
+7 47 {5}
+8 52 {1}
+9 19 {9}
+Round  34, Devices participated 10, Average loss 0.224, Central accuracy on global test data 72.876, Ensemble accuracy on global test data 72.168, Local accuracy on global train data 42.141, Local accuracy on local train data 96.500
+
+
+0 24 {2}
+1 13 {4}
+2 81 {0}
+3 73 {1, 2}
+4 19 {9}
+5 55 {3}
+6 40 {2}
+7 76 {0, 1}
+8 57 {9}
+9 96 {0}
+Round  35, Devices participated 10, Average loss 0.257, Central accuracy on global test data 69.360, Ensemble accuracy on global test data 67.358, Local accuracy on global train data 43.257, Local accuracy on local train data 96.517
+
+
+0 31 {4}
+1 75 {4}
+2 94 {2, 3}
+3 20 {2}
+4 87 {1}
+5 26 {1}
+6 29 {3}
+7 70 {5}
+8 2 {4}
+9 50 {8}
+Round  36, Devices participated 10, Average loss 0.121, Central accuracy on global test data 73.169, Ensemble accuracy on global test data 72.241, Local accuracy on global train data 42.607, Local accuracy on local train data 98.567
+
+
+0 0 {8, 7}
+1 9 {3}
+2 46 {3}
+3 37 {9}
+4 72 {5}
+5 83 {7}
+6 73 {1, 2}
+7 16 {7}
+8 55 {3}
+9 27 {9}
+Round  37, Devices participated 10, Average loss 0.281, Central accuracy on global test data 69.360, Ensemble accuracy on global test data 64.673, Local accuracy on global train data 39.385, Local accuracy on local train data 95.867
+
+
+0 80 {1}
+1 29 {3}
+2 9 {3}
+3 50 {8}
+4 26 {1}
+5 81 {0}
+6 48 {4}
+7 82 {6}
+8 37 {9}
+9 15 {2}
+Round  38, Devices participated 10, Average loss 0.146, Central accuracy on global test data 71.997, Ensemble accuracy on global test data 71.069, Local accuracy on global train data 41.458, Local accuracy on local train data 97.883
+
+
+0 82 {6}
+1 6 {2}
+2 87 {1}
+3 74 {4}
+4 29 {3}
+5 50 {8}
+6 62 {0}
+7 67 {1}
+8 12 {1}
+9 83 {7}
+Round  39, Devices participated 10, Average loss 0.059, Central accuracy on global test data 73.950, Ensemble accuracy on global test data 73.267, Local accuracy on global train data 45.742, Local accuracy on local train data 99.100
+
+
+0 36 {5}
+1 75 {4}
+2 89 {9}
+3 43 {0}
+4 12 {1}
+5 21 {2}
+6 95 {3}
+7 72 {5}
+8 24 {2}
+9 63 {5}
+Round  40, Devices participated 10, Average loss 0.167, Central accuracy on global test data 68.237, Ensemble accuracy on global test data 67.090, Local accuracy on global train data 34.641, Local accuracy on local train data 97.800
+
+
+0 34 {3}
+1 15 {2}
+2 31 {4}
+3 94 {2, 3}
+4 46 {3}
+5 70 {5}
+6 19 {9}
+7 80 {1}
+8 6 {2}
+9 88 {6, 7}
+Round  41, Devices participated 10, Average loss 0.153, Central accuracy on global test data 68.506, Ensemble accuracy on global test data 68.335, Local accuracy on global train data 42.349, Local accuracy on local train data 97.367
+
+
+0 70 {5}
+1 92 {8}
+2 72 {5}
+3 77 {6}
+4 23 {7}
+5 53 {1}
+6 1 {4}
+7 12 {1}
+8 97 {3}
+9 93 {9}
+Round  42, Devices participated 10, Average loss 0.157, Central accuracy on global test data 68.774, Ensemble accuracy on global test data 69.507, Local accuracy on global train data 42.854, Local accuracy on local train data 97.667
+
+
+0 13 {4}
+1 38 {4, 5}
+2 36 {5}
+3 14 {6}
+4 57 {9}
+5 77 {6}
+6 66 {6}
+7 73 {1, 2}
+8 3 {9}
+9 0 {8, 7}
+Round  43, Devices participated 10, Average loss 0.253, Central accuracy on global test data 70.215, Ensemble accuracy on global test data 69.482, Local accuracy on global train data 43.228, Local accuracy on local train data 96.217
+
+
+0 13 {4}
+1 19 {9}
+2 10 {7}
+3 24 {2}
+4 76 {0, 1}
+5 57 {9}
+6 88 {6, 7}
+7 23 {7}
+8 61 {1}
+9 31 {4}
+Round  44, Devices participated 10, Average loss 0.249, Central accuracy on global test data 71.436, Ensemble accuracy on global test data 71.411, Local accuracy on global train data 47.290, Local accuracy on local train data 95.783
+
+
+0 18 {0}
+1 45 {6}
+2 94 {2, 3}
+3 24 {2}
+4 56 {0}
+5 67 {1}
+6 10 {7}
+7 14 {6}
+8 13 {4}
+9 9 {3}
+Round  45, Devices participated 10, Average loss 0.080, Central accuracy on global test data 72.290, Ensemble accuracy on global test data 72.681, Local accuracy on global train data 46.848, Local accuracy on local train data 98.817
+
+
+0 13 {4}
+1 48 {4}
+2 73 {1, 2}
+3 93 {9}
+4 70 {5}
+5 1 {4}
+6 43 {0}
+7 77 {6}
+8 76 {0, 1}
+9 88 {6, 7}
+Round  46, Devices participated 10, Average loss 0.159, Central accuracy on global test data 71.582, Ensemble accuracy on global test data 69.507, Local accuracy on global train data 44.753, Local accuracy on local train data 97.117
+
+
+0 21 {2}
+1 45 {6}
+2 83 {7}
+3 68 {7}
+4 75 {4}
+5 65 {9}
+6 96 {0}
+7 1 {4}
+8 77 {6}
+9 73 {1, 2}
+Round  47, Devices participated 10, Average loss 0.142, Central accuracy on global test data 71.875, Ensemble accuracy on global test data 70.752, Local accuracy on global train data 45.525, Local accuracy on local train data 97.600
+
+
+0 81 {0}
+1 84 {1}
+2 60 {8}
+3 18 {0}
+4 45 {6}
+5 47 {5}
+6 94 {2, 3}
+7 83 {7}
+8 76 {0, 1}
+9 22 {3}
+Round  48, Devices participated 10, Average loss 0.106, Central accuracy on global test data 74.756, Ensemble accuracy on global test data 73.853, Local accuracy on global train data 44.990, Local accuracy on local train data 98.700
+
+
+0 21 {2}
+1 69 {5}
+2 47 {5}
+3 34 {3}
+4 65 {9}
+5 81 {0}
+6 93 {9}
+7 44 {2}
+8 30 {8}
+9 84 {1}
+Round  49, Devices participated 10, Average loss 0.207, Central accuracy on global test data 68.677, Ensemble accuracy on global test data 64.331, Local accuracy on global train data 33.154, Local accuracy on local train data 95.817
+
+
+0 22 {3}
+1 38 {4, 5}
+2 77 {6}
+3 15 {2}
+4 11 {4}
+5 61 {1}
+6 37 {9}
+7 34 {3}
+8 87 {1}
+9 3 {9}
+Round  50, Devices participated 10, Average loss 0.176, Central accuracy on global test data 71.875, Ensemble accuracy on global test data 71.655, Local accuracy on global train data 47.158, Local accuracy on local train data 96.083
+
+
+0 96 {0}
+1 9 {3}
+2 26 {1}
+3 58 {8}
+4 69 {5}
+5 44 {2}
+6 13 {4}
+7 93 {9}
+8 61 {1}
+9 43 {0}
+Round  51, Devices participated 10, Average loss 0.121, Central accuracy on global test data 72.876, Ensemble accuracy on global test data 72.998, Local accuracy on global train data 45.039, Local accuracy on local train data 97.683
+
+
+0 13 {4}
+1 34 {3}
+2 27 {9}
+3 16 {7}
+4 72 {5}
+5 98 {5}
+6 14 {6}
+7 19 {9}
+8 9 {3}
+9 46 {3}
+Round  52, Devices participated 10, Average loss 0.187, Central accuracy on global test data 69.531, Ensemble accuracy on global test data 64.478, Local accuracy on global train data 38.872, Local accuracy on local train data 96.350
+
+
+0 29 {3}
+1 72 {5}
+2 81 {0}
+3 80 {1}
+4 68 {7}
+5 85 {2}
+6 14 {6}
+7 0 {8, 7}
+8 93 {9}
+9 52 {1}
+Round  53, Devices participated 10, Average loss 0.177, Central accuracy on global test data 71.411, Ensemble accuracy on global test data 72.412, Local accuracy on global train data 41.826, Local accuracy on local train data 97.167
+
+
+0 17 {8}
+1 69 {5}
+2 35 {8}
+3 86 {0}
+4 83 {7}
+5 84 {1}
+6 23 {7}
+7 56 {0}
+8 89 {9}
+9 60 {8}
+Round  54, Devices participated 10, Average loss 0.179, Central accuracy on global test data 71.509, Ensemble accuracy on global test data 65.967, Local accuracy on global train data 44.326, Local accuracy on local train data 96.967
+
+
+0 94 {2, 3}
+1 79 {6}
+2 36 {5}
+3 8 {0}
+4 19 {9}
+5 16 {7}
+6 13 {4}
+7 30 {8}
+8 25 {6}
+9 3 {9}
+Round  55, Devices participated 10, Average loss 0.242, Central accuracy on global test data 70.581, Ensemble accuracy on global test data 71.411, Local accuracy on global train data 43.286, Local accuracy on local train data 95.467
+
+
+0 45 {6}
+1 82 {6}
+2 32 {2}
+3 52 {1}
+4 17 {8}
+5 96 {0}
+6 6 {2}
+7 57 {9}
+8 67 {1}
+9 74 {4}
+Round  56, Devices participated 10, Average loss 0.140, Central accuracy on global test data 71.899, Ensemble accuracy on global test data 70.312, Local accuracy on global train data 44.683, Local accuracy on local train data 97.333
+
+
+0 61 {1}
+1 20 {2}
+2 59 {3}
+3 99 {5}
+4 39 {1}
+5 42 {7}
+6 73 {1, 2}
+7 53 {1}
+8 45 {6}
+9 8 {0}
+Round  57, Devices participated 10, Average loss 0.072, Central accuracy on global test data 71.777, Ensemble accuracy on global test data 73.071, Local accuracy on global train data 47.307, Local accuracy on local train data 98.950
+
+
+0 60 {8}
+1 38 {4, 5}
+2 5 {7}
+3 54 {7}
+4 66 {6}
+5 33 {0}
+6 80 {1}
+7 83 {7}
+8 9 {3}
+9 4 {8}
+Round  58, Devices participated 10, Average loss 0.098, Central accuracy on global test data 71.460, Ensemble accuracy on global test data 70.874, Local accuracy on global train data 47.588, Local accuracy on local train data 98.783
+
+
+0 39 {1}
+1 44 {2}
+2 62 {0}
+3 4 {8}
+4 42 {7}
+5 25 {6}
+6 0 {8, 7}
+7 45 {6}
+8 29 {3}
+9 93 {9}
+Round  59, Devices participated 10, Average loss 0.173, Central accuracy on global test data 71.997, Ensemble accuracy on global test data 71.240, Local accuracy on global train data 43.940, Local accuracy on local train data 97.017
+
+
+0 96 {0}
+1 54 {7}
+2 19 {9}
+3 97 {3}
+4 92 {8}
+5 31 {4}
+6 81 {0}
+7 2 {4}
+8 24 {2}
+9 9 {3}
+Round  60, Devices participated 10, Average loss 0.145, Central accuracy on global test data 70.264, Ensemble accuracy on global test data 69.067, Local accuracy on global train data 40.176, Local accuracy on local train data 97.000
+
+
+tensor(8.0229, device='cuda:0', grad_fn=<MaxBackward1>)
+0 9 {3}
+1 19 {9}
+2 7 {8}
+3 49 {7}
+4 45 {6}
+5 35 {8}
+6 80 {1}
+7 85 {2}
+8 40 {2}
+9 89 {9}
+Round  61, Devices participated 10, Average loss 0.239, Central accuracy on global test data 64.453, Ensemble accuracy on global test data 66.724, Local accuracy on global train data 35.012, Local accuracy on local train data 95.400
+
+
+0 73 {1, 2}
+1 66 {6}
+2 18 {0}
+3 74 {4}
+4 33 {0}
+5 2 {4}
+6 87 {1}
+7 29 {3}
+8 98 {5}
+9 91 {1}
+Round  62, Devices participated 10, Average loss 0.055, Central accuracy on global test data 56.812, Ensemble accuracy on global test data 72.852, Local accuracy on global train data 45.098, Local accuracy on local train data 98.750
+
+
+0 40 {2}
+1 31 {4}
+2 27 {9}
+3 50 {8}
+4 71 {3, 4}
+5 81 {0}
+6 99 {5}
+7 97 {3}
+8 73 {1, 2}
+9 49 {7}
+Round  63, Devices participated 10, Average loss 0.182, Central accuracy on global test data 55.396, Ensemble accuracy on global test data 63.354, Local accuracy on global train data 27.532, Local accuracy on local train data 96.483
+
+
+0 61 {1}
+1 64 {7}
+2 42 {7}
+3 88 {6, 7}
+4 27 {9}
+5 95 {3}
+6 92 {8}
+7 50 {8}
+8 45 {6}
+9 85 {2}
+Round  64, Devices participated 10, Average loss 0.162, Central accuracy on global test data 61.279, Ensemble accuracy on global test data 59.375, Local accuracy on global train data 32.659, Local accuracy on local train data 97.200
+
+
+0 27 {9}
+1 8 {0}
+2 49 {7}
+3 32 {2}
+4 15 {2}
+5 35 {8}
+6 70 {5}
+7 59 {3}
+8 31 {4}
+9 30 {8}
+Round  65, Devices participated 10, Average loss 0.175, Central accuracy on global test data 59.351, Ensemble accuracy on global test data 57.202, Local accuracy on global train data 29.382, Local accuracy on local train data 97.150
+
+
+0 69 {5}
+1 35 {8}
+2 52 {1}
+3 51 {5, 6}
+4 26 {1}
+5 15 {2}
+6 76 {0, 1}
+7 48 {4}
+8 98 {5}
+9 12 {1}
+Round  66, Devices participated 10, Average loss 0.082, Central accuracy on global test data 59.180, Ensemble accuracy on global test data 56.567, Local accuracy on global train data 33.931, Local accuracy on local train data 98.800
+
+
+0 46 {3}
+1 57 {9}
+2 0 {8, 7}
+3 86 {0}
+4 26 {1}
+5 80 {1}
+6 73 {1, 2}
+7 20 {2}
+8 63 {5}
+9 98 {5}
+Round  67, Devices participated 10, Average loss 0.201, Central accuracy on global test data 54.370, Ensemble accuracy on global test data 56.177, Local accuracy on global train data 29.207, Local accuracy on local train data 96.517
+
+
+0 81 {0}
+1 6 {2}
+2 64 {7}
+3 84 {1}
+4 20 {2}
+5 2 {4}
+6 8 {0}
+7 4 {8}
+8 66 {6}
+9 92 {8}
+Round  68, Devices participated 10, Average loss 0.086, Central accuracy on global test data 53.320, Ensemble accuracy on global test data 55.957, Local accuracy on global train data 31.580, Local accuracy on local train data 98.583
+
+
+0 61 {1}
+1 34 {3}
+2 64 {7}
+3 11 {4}
+4 96 {0}
+5 18 {0}
+6 82 {6}
+7 52 {1}
+8 72 {5}
+9 92 {8}
+Round  69, Devices participated 10, Average loss 0.078, Central accuracy on global test data 54.370, Ensemble accuracy on global test data 59.180, Local accuracy on global train data 31.426, Local accuracy on local train data 98.783
+
+
+0 93 {9}
+1 68 {7}
+2 94 {2, 3}
+3 13 {4}
+4 36 {5}
+5 11 {4}
+6 5 {7}
+7 1 {4}
+8 40 {2}
+9 7 {8}
+Round  70, Devices participated 10, Average loss 0.196, Central accuracy on global test data 56.030, Ensemble accuracy on global test data 46.094, Local accuracy on global train data 23.606, Local accuracy on local train data 96.500
+
+
+0 73 {1, 2}
+1 64 {7}
+2 37 {9}
+3 69 {5}
+4 31 {4}
+5 48 {4}
+6 77 {6}
+7 41 {8, 9}
+8 53 {1}
+9 75 {4}
+Round  71, Devices participated 10, Average loss 0.202, Central accuracy on global test data 48.657, Ensemble accuracy on global test data 50.049, Local accuracy on global train data 22.668, Local accuracy on local train data 95.017
+
+
+0 46 {3}
+1 43 {0}
+2 84 {1}
+3 11 {4}
+4 66 {6}
+5 92 {8}
+6 16 {7}
+7 19 {9}
+8 96 {0}
+9 37 {9}
+Round  72, Devices participated 10, Average loss 0.187, Central accuracy on global test data 55.566, Ensemble accuracy on global test data 57.300, Local accuracy on global train data 24.102, Local accuracy on local train data 95.767
+
+
+0 43 {0}
+1 96 {0}
+2 9 {3}
+3 0 {8, 7}
+4 74 {4}
+5 19 {9}
+6 1 {4}
+7 23 {7}
+8 38 {4, 5}
+9 66 {6}
+Round  73, Devices participated 10, Average loss 0.127, Central accuracy on global test data 54.468, Ensemble accuracy on global test data 58.398, Local accuracy on global train data 29.038, Local accuracy on local train data 97.050
+
+
+0 27 {9}
+1 62 {0}
+2 32 {2}
+3 10 {7}
+4 22 {3}
+5 72 {5}
+6 64 {7}
+7 25 {6}
+8 86 {0}
+9 60 {8}
+Round  74, Devices participated 10, Average loss 0.124, Central accuracy on global test data 57.812, Ensemble accuracy on global test data 54.492, Local accuracy on global train data 28.396, Local accuracy on local train data 96.633
+
+
+0 84 {1}
+1 7 {8}
+2 64 {7}
+3 76 {0, 1}
+4 15 {2}
+5 46 {3}
+6 27 {9}
+7 47 {5}
+8 40 {2}
+9 69 {5}
+Round  75, Devices participated 10, Average loss 0.106, Central accuracy on global test data 49.268, Ensemble accuracy on global test data 49.316, Local accuracy on global train data 21.877, Local accuracy on local train data 96.917
+
+
+0 75 {4}
+1 97 {3}
+2 79 {6}
+3 87 {1}
+4 11 {4}
+5 7 {8}
+6 37 {9}
+7 92 {8}
+8 41 {8, 9}
+9 12 {1}
+Round  76, Devices participated 10, Average loss 0.246, Central accuracy on global test data 52.002, Ensemble accuracy on global test data 48.853, Local accuracy on global train data 24.814, Local accuracy on local train data 93.300
+
+
+0 78 {9}
+1 4 {8}
+2 17 {8}
+3 21 {2}
+4 76 {0, 1}
+5 74 {4}
+6 19 {9}
+7 61 {1}
+8 45 {6}
+9 86 {0}
+Round  77, Devices participated 10, Average loss 0.187, Central accuracy on global test data 56.421, Ensemble accuracy on global test data 56.274, Local accuracy on global train data 26.809, Local accuracy on local train data 94.783
+
+
+0 23 {7}
+1 41 {8, 9}
+2 75 {4}
+3 36 {5}
+4 26 {1}
+5 49 {7}
+6 95 {3}
+7 16 {7}
+8 93 {9}
+9 72 {5}
+Round  78, Devices participated 10, Average loss 0.217, Central accuracy on global test data 53.418, Ensemble accuracy on global test data 51.318, Local accuracy on global train data 27.773, Local accuracy on local train data 93.367
+
+
