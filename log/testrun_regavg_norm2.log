@@ -1,0 +1,2921 @@
+
+python main_dfan_regavg.py --dataset mnist --model mlp --epochs 200 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 800 --nn_refresh 0 --store_models testrunt_regavg_norm2
+
+Data non-IID 600 100
+
+def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
+
+    for local in teacher:
+        local.eval()
+    generator.train()
+    student.train()
+    loss_G = torch.tensor(0.0)
+    loss_S = torch.tensor(0.0)
+    optimizer_S, optimizer_G = optimizer
+    sm = torch.nn.Softmax()
+
+    w_locals = []
+    for local in teacher:
+        w_locals.append(copy.deepcopy(local.state_dict()))
+    w_fedavg = FedAvg(w_locals)
+
+    # mlpa, mlpt = model_fusion_MLP(teacher, 1024, 200, 10)
+    # mlpa, mlpt = mlpa.to(args.device), mlpt.to(args.device)
+    # w_mlpt = mlpt.state_dict()
+    # alpha = mlpa.minavg_cluster_ratio * 3.0
+
+    layers = ['layer_input','layer_hidden1','layer_hidden2']
+    delta = torch.zeros(len(teacher),len(teacher),len(layers)).to(args.device)
+    for ii, t1 in enumerate(teacher):
+        t1_sd = t1.state_dict()
+        for jj, t2 in enumerate(teacher):
+            t2_sd = t2.state_dict()
+            for lni, ln in enumerate(layers):
+                delta[ii,jj,lni] = (t1_sd[ln+'.weight'] - t2_sd[ln+'.weight']).pow(2.0).sum() + (t1_sd[ln+'.bias'] - t2_sd[ln+'.bias']).pow(2.0).sum()
+                # delta[ii,jj] += (t1_sd[ln] - t2_sd[ln]).pow(2.0).sum()
+    alpha = norm.cdf(-delta.var().cpu().numpy(), scale=0.05) * 2.0 * 0.2
+    # alpha = float(max(min(epoch-10, 40), 0)) / 200. 
+
+    print("delta var = {}, alpha = {}".format(delta.var(),alpha))
+    if epoch == 0:
+        # This is important for the generator and the source networks to be aligned in the first epoch.
+        # Otherwise, too much regularization will cause misalignment and poor overall performance.
+        alpha = 0.
+
+    for i in range(args.epoch_itrs):
+        for k in range(1):
+            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+            optimizer_G.zero_grad()
+            fake = generator(z)
+            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+            s_logit = student(fake)
+            # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
+            t_logit = torch.zeros_like(teacher[0](fake))
+            for k in range(10):
+                t_logit += teacher[k](fake) 
+            # t_logit = mlpa(fake)
+            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+            max_Gout = torch.max(torch.abs(fake))
+            if max_Gout > 8.0:
+                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
+                print(max_Gout)
+            else:
+                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
+            loss_G.backward()                   
+            optimizer_G.step()
+        for j in range(5):
+            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+            optimizer_S.zero_grad()
+            fake = generator(z).detach()
+            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+            s_logit = student(fake)
+            # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
+            t_logit = torch.zeros_like(teacher[0](fake).detach())
+            for k in range(10):
+                t_logit += teacher[k](fake).detach()
+            # t_logit = mlpa(fake).detach()
+            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+            loss_S1 = torch.log(1. / (2. - oneMinus_P_S))
+
+            diff_L2 = torch.FloatTensor([0.]).to(args.device)
+            for student_w, fedavg_w in zip(student.parameters(), w_fedavg.values()):
+                diff_L2 += (fedavg_w - student_w).norm(2)
+            loss_S2 = diff_L2 * alpha
+
+            # diff_L2 = torch.FloatTensor([0.]).to(args.device)
+            # for student_w, mlpt_w in zip(student.parameters(), w_mlpt.values()):
+            #     diff_L2 += ((mlpt_w - student_w)*mlpt_w.abs()).norm(2)
+            # loss_S2 = diff_L2 * alpha
+
+            loss_S = loss_S1 + loss_S2
+            loss_S.backward()
+            optimizer_S.step()
+
+        if args.verbose and i % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tG_Loss: {:.6f} S_loss: {:.6f}'.format(
+                epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
+            #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
+
+
+
+^C]0;root@3562d63b26d0: /workspace/deepedgeroot@3562d63b26d0:/workspace/deepedge# [Kpython main_dfan_regavg.py --dataset mnist --model mlp --epochs 200 --gpu 0 --num
+m_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 800 --nn_
+_refresh 0 --store_models testruntemp
+/opt/conda/lib/python3.7/site-packages/torchvision/datasets/mnist.py:45: UserWarning: train_labels has been renamed targets
+  warnings.warn("train_labels has been renamed targets")
+MLP(
+  (layer_input): Linear(in_features=1024, out_features=200, bias=True)
+  (relu): ReLU()
+  (layer_hidden1): Linear(in_features=200, out_features=200, bias=True)
+  (layer_hidden2): Linear(in_features=200, out_features=10, bias=True)
+)
+delta var = 0.0517989844083786, alpha = 0.06004232372695757
+/workspace/deepedge/models/DFAN.py:254: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+/opt/conda/lib/python3.7/site-packages/torch/nn/functional.py:1958: UserWarning: reduction: 'mean' divides the total loss by both the batch size and the support size.'batchmean' divides only by the batch size, and aligns with the KL div math definition.'mean' will be changed to behave the same as 'batchmean' in the next major release.
+  warnings.warn("reduction: 'mean' divides the total loss by both the batch size and the support size."
+/workspace/deepedge/models/DFAN.py:274: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+0 49 {7}
+1 29 {3}
+2 56 {0}
+3 42 {7}
+4 35 {8}
+5 17 {8}
+6 45 {6}
+7 88 {6, 7}
+8 62 {0}
+9 0 {8, 7}
+Round   0, Devices participated 10, Average loss 0.257, Central accuracy on global test data 26.099, Ensemble accuracy on global test data 20.068, Local accuracy on global train data 12.100, Local accuracy on local train data 96.250
+
+
+delta var = 0.3420432209968567, alpha = 1.5743346054415483e-12
+tensor(8.3737, device='cuda:0', grad_fn=<MaxBackward1>)
+0 53 {1}
+1 34 {3}
+2 14 {6}
+3 50 {8}
+4 37 {9}
+5 48 {4}
+6 89 {9}
+7 86 {0}
+8 15 {2}
+9 55 {3}
+Round   1, Devices participated 10, Average loss 0.222, Central accuracy on global test data 35.474, Ensemble accuracy on global test data 37.695, Local accuracy on global train data 13.638, Local accuracy on local train data 97.317
+
+
+delta var = 1.2307175397872925, alpha = 1.7736990703904967e-134
+0 10 {7}
+1 4 {8}
+2 94 {2, 3}
+3 27 {9}
+4 42 {7}
+5 23 {7}
+6 19 {9}
+7 33 {0}
+8 70 {5}
+9 59 {3}
+Round   2, Devices participated 10, Average loss 0.141, Central accuracy on global test data 42.358, Ensemble accuracy on global test data 40.381, Local accuracy on global train data 16.750, Local accuracy on local train data 98.450
+
+
+delta var = 1.9890875816345215, alpha = 0.0
+0 84 {1}
+1 46 {3}
+2 3 {9}
+3 1 {4}
+4 55 {3}
+5 39 {1}
+6 8 {0}
+7 93 {9}
+8 31 {4}
+9 47 {5}
+Round   3, Devices participated 10, Average loss 0.215, Central accuracy on global test data 44.727, Ensemble accuracy on global test data 45.508, Local accuracy on global train data 15.388, Local accuracy on local train data 98.350
+
+
+delta var = 1.150037407875061, alpha = 9.163201954289425e-118
+0 89 {9}
+1 84 {1}
+2 20 {2}
+3 10 {7}
+4 95 {3}
+5 73 {1, 2}
+6 17 {8}
+7 67 {1}
+8 94 {2, 3}
+9 3 {9}
+Round   4, Devices participated 10, Average loss 0.206, Central accuracy on global test data 28.589, Ensemble accuracy on global test data 42.554, Local accuracy on global train data 21.196, Local accuracy on local train data 98.567
+
+
+delta var = 0.7798908352851868, alpha = 1.506528537617983e-55
+0 29 {3}
+1 80 {1}
+2 55 {3}
+3 64 {7}
+4 19 {9}
+5 10 {7}
+6 58 {8}
+7 67 {1}
+8 63 {5}
+9 83 {7}
+Round   5, Devices participated 10, Average loss 0.291, Central accuracy on global test data 46.021, Ensemble accuracy on global test data 49.219, Local accuracy on global train data 18.865, Local accuracy on local train data 98.233
+
+
+delta var = 0.49004310369491577, alpha = 2.232576524582088e-23
+0 83 {7}
+1 40 {2}
+2 99 {5}
+3 23 {7}
+4 60 {8}
+5 26 {1}
+6 27 {9}
+7 41 {8, 9}
+8 79 {6}
+9 28 {6}
+Round   6, Devices participated 10, Average loss 0.285, Central accuracy on global test data 50.513, Ensemble accuracy on global test data 49.463, Local accuracy on global train data 26.313, Local accuracy on local train data 98.017
+
+
+delta var = 0.8017767667770386, alpha = 1.4431818723356798e-58
+0 9 {3}
+1 79 {6}
+2 30 {8}
+3 34 {3}
+4 84 {1}
+5 2 {4}
+6 90 {5}
+7 99 {5}
+8 69 {5}
+9 98 {5}
+Round   7, Devices participated 10, Average loss 0.388, Central accuracy on global test data 52.539, Ensemble accuracy on global test data 54.932, Local accuracy on global train data 22.683, Local accuracy on local train data 97.317
+
+
+delta var = 0.26874998211860657, alpha = 1.5316566825109268e-08
+0 57 {9}
+1 81 {0}
+2 96 {0}
+3 35 {8}
+4 56 {0}
+5 24 {2}
+6 41 {8, 9}
+7 17 {8}
+8 70 {5}
+9 22 {3}
+Round   8, Devices participated 10, Average loss 0.190, Central accuracy on global test data 51.440, Ensemble accuracy on global test data 52.271, Local accuracy on global train data 33.105, Local accuracy on local train data 98.250
+
+
+delta var = 0.6543996930122375, alpha = 7.713194886985856e-40
+0 51 {5, 6}
+1 91 {1}
+2 83 {7}
+3 28 {6}
+4 87 {1}
+5 16 {7}
+6 59 {3}
+7 55 {3}
+8 52 {1}
+9 92 {8}
+Round   9, Devices participated 10, Average loss 0.165, Central accuracy on global test data 52.832, Ensemble accuracy on global test data 52.466, Local accuracy on global train data 31.653, Local accuracy on local train data 98.733
+
+
+delta var = 0.7629735469818115, alpha = 2.8479635825795306e-53
+0 35 {8}
+1 86 {0}
+2 66 {6}
+3 56 {0}
+4 91 {1}
+5 50 {8}
+6 77 {6}
+7 96 {0}
+8 48 {4}
+9 81 {0}
+Round  10, Devices participated 10, Average loss 0.143, Central accuracy on global test data 56.982, Ensemble accuracy on global test data 57.178, Local accuracy on global train data 37.209, Local accuracy on local train data 99.083
+
+
+delta var = 0.29864704608917236, alpha = 4.660285994901503e-10
+0 98 {5}
+1 43 {0}
+2 38 {4, 5}
+3 64 {7}
+4 39 {1}
+5 36 {5}
+6 90 {5}
+7 28 {6}
+8 74 {4}
+9 34 {3}
+Round  11, Devices participated 10, Average loss 0.159, Central accuracy on global test data 56.641, Ensemble accuracy on global test data 55.957, Local accuracy on global train data 33.433, Local accuracy on local train data 98.467
+
+
+delta var = 0.28600195050239563, alpha = 2.1299919748899476e-09
+0 90 {5}
+1 47 {5}
+2 62 {0}
+3 28 {6}
+4 77 {6}
+5 37 {9}
+6 14 {6}
+7 36 {5}
+8 88 {6, 7}
+9 71 {3, 4}
+Round  12, Devices participated 10, Average loss 0.139, Central accuracy on global test data 56.274, Ensemble accuracy on global test data 52.417, Local accuracy on global train data 35.190, Local accuracy on local train data 98.417
+
+
+delta var = 0.4042727053165436, alpha = 1.2386599414549888e-16
+0 48 {4}
+1 24 {2}
+2 40 {2}
+3 33 {0}
+4 91 {1}
+5 70 {5}
+6 30 {8}
+7 77 {6}
+8 69 {5}
+9 63 {5}
+Round  13, Devices participated 10, Average loss 0.102, Central accuracy on global test data 58.276, Ensemble accuracy on global test data 59.277, Local accuracy on global train data 29.575, Local accuracy on local train data 98.633
+
+
+delta var = 0.368943452835083, alpha = 3.192794783056961e-14
+0 3 {9}
+1 93 {9}
+2 67 {1}
+3 11 {4}
+4 75 {4}
+5 56 {0}
+6 52 {1}
+7 48 {4}
+8 18 {0}
+9 64 {7}
+Round  14, Devices participated 10, Average loss 0.195, Central accuracy on global test data 65.430, Ensemble accuracy on global test data 65.283, Local accuracy on global train data 39.353, Local accuracy on local train data 98.133
+
+
+delta var = 0.5201020836830139, alpha = 4.853538464274324e-26
+0 17 {8}
+1 56 {0}
+2 6 {2}
+3 55 {3}
+4 57 {9}
+5 4 {8}
+6 11 {4}
+7 44 {2}
+8 74 {4}
+9 27 {9}
+Round  15, Devices participated 10, Average loss 0.232, Central accuracy on global test data 67.822, Ensemble accuracy on global test data 67.505, Local accuracy on global train data 34.409, Local accuracy on local train data 97.800
+
+
+delta var = 0.31855127215385437, alpha = 3.755369722137639e-11
+0 29 {3}
+1 25 {6}
+2 28 {6}
+3 22 {3}
+4 72 {5}
+5 5 {7}
+6 33 {0}
+7 93 {9}
+8 70 {5}
+9 84 {1}
+Round  16, Devices participated 10, Average loss 0.142, Central accuracy on global test data 61.670, Ensemble accuracy on global test data 61.206, Local accuracy on global train data 36.240, Local accuracy on local train data 98.250
+
+
+delta var = 0.1952015608549118, alpha = 1.892071405517041e-05
+tensor(9.1478, device='cuda:0', grad_fn=<MaxBackward1>)
+0 32 {2}
+1 10 {7}
+2 22 {3}
+3 5 {7}
+4 1 {4}
+5 76 {0, 1}
+6 61 {1}
+7 96 {0}
+8 94 {2, 3}
+9 38 {4, 5}
+Round  17, Devices participated 10, Average loss 0.152, Central accuracy on global test data 53.418, Ensemble accuracy on global test data 65.845, Local accuracy on global train data 42.808, Local accuracy on local train data 98.633
+
+
+delta var = 0.055991560220718384, alpha = 0.052557139829522925
+0 50 {8}
+1 66 {6}
+2 76 {0, 1}
+3 47 {5}
+4 84 {1}
+5 54 {7}
+6 91 {1}
+7 56 {0}
+8 42 {7}
+9 96 {0}
+Round  18, Devices participated 10, Average loss 0.057, Central accuracy on global test data 60.376, Ensemble accuracy on global test data 58.032, Local accuracy on global train data 43.289, Local accuracy on local train data 98.967
+
+
+delta var = 0.06019987910985947, alpha = 0.04571810260998648
+0 13 {4}
+1 54 {7}
+2 42 {7}
+3 2 {4}
+4 60 {8}
+5 56 {0}
+6 49 {7}
+7 4 {8}
+8 88 {6, 7}
+9 66 {6}
+Round  19, Devices participated 10, Average loss 0.045, Central accuracy on global test data 66.992, Ensemble accuracy on global test data 65.698, Local accuracy on global train data 44.214, Local accuracy on local train data 98.867
+
+
+delta var = 0.14530077576637268, alpha = 0.0007321265945879114
+0 79 {6}
+1 63 {5}
+2 20 {2}
+3 82 {6}
+4 33 {0}
+5 71 {3, 4}
+6 86 {0}
+7 75 {4}
+8 38 {4, 5}
+9 81 {0}
+Round  20, Devices participated 10, Average loss 0.056, Central accuracy on global test data 71.069, Ensemble accuracy on global test data 68.896, Local accuracy on global train data 42.910, Local accuracy on local train data 98.717
+
+
+delta var = 0.1935221254825592, alpha = 2.172759507864248e-05
+0 30 {8}
+1 27 {9}
+2 45 {6}
+3 43 {0}
+4 35 {8}
+5 86 {0}
+6 24 {2}
+7 33 {0}
+8 73 {1, 2}
+9 88 {6, 7}
+Round  21, Devices participated 10, Average loss 0.104, Central accuracy on global test data 56.470, Ensemble accuracy on global test data 69.141, Local accuracy on global train data 43.850, Local accuracy on local train data 97.600
+
+
+delta var = 0.08364801853895187, alpha = 0.018867019551397385
+0 78 {9}
+1 14 {6}
+2 98 {5}
+3 54 {7}
+4 97 {3}
+5 8 {0}
+6 16 {7}
+7 31 {4}
+8 40 {2}
+9 83 {7}
+Round  22, Devices participated 10, Average loss 0.072, Central accuracy on global test data 59.521, Ensemble accuracy on global test data 55.273, Local accuracy on global train data 26.829, Local accuracy on local train data 98.000
+
+
+delta var = 0.013410906307399273, alpha = 0.15770628467339082
+0 52 {1}
+1 87 {1}
+2 31 {4}
+3 70 {5}
+4 36 {5}
+5 99 {5}
+6 83 {7}
+7 11 {4}
+8 45 {6}
+9 47 {5}
+Round  23, Devices participated 10, Average loss 0.035, Central accuracy on global test data 46.509, Ensemble accuracy on global test data 41.431, Local accuracy on global train data 27.432, Local accuracy on local train data 99.133
+
+
+delta var = 0.0666656345129013, alpha = 0.03648584217791384
+0 28 {6}
+1 18 {0}
+2 27 {9}
+3 93 {9}
+4 87 {1}
+5 70 {5}
+6 14 {6}
+7 88 {6, 7}
+8 24 {2}
+9 91 {1}
+Round  24, Devices participated 10, Average loss 0.087, Central accuracy on global test data 63.892, Ensemble accuracy on global test data 61.182, Local accuracy on global train data 32.817, Local accuracy on local train data 97.867
+
+
+delta var = 0.025222476571798325, alpha = 0.12278910377293017
+0 56 {0}
+1 46 {3}
+2 65 {9}
+3 5 {7}
+4 25 {6}
+5 63 {5}
+6 35 {8}
+7 32 {2}
+8 36 {5}
+9 33 {0}
+Round  25, Devices participated 10, Average loss 0.046, Central accuracy on global test data 63.745, Ensemble accuracy on global test data 60.474, Local accuracy on global train data 29.751, Local accuracy on local train data 98.700
+
+
+delta var = 0.024012112990021706, alpha = 0.12621102811413604
+0 94 {2, 3}
+1 6 {2}
+2 34 {3}
+3 55 {3}
+4 87 {1}
+5 23 {7}
+6 82 {6}
+7 41 {8, 9}
+8 63 {5}
+9 93 {9}
+Round  26, Devices participated 10, Average loss 0.060, Central accuracy on global test data 65.112, Ensemble accuracy on global test data 68.237, Local accuracy on global train data 29.697, Local accuracy on local train data 98.183
+
+
+delta var = 0.010097130201756954, alpha = 0.16799231898895484
+0 43 {0}
+1 96 {0}
+2 57 {9}
+3 69 {5}
+4 91 {1}
+5 17 {8}
+6 33 {0}
+7 39 {1}
+8 93 {9}
+9 36 {5}
+Round  27, Devices participated 10, Average loss 0.032, Central accuracy on global test data 62.817, Ensemble accuracy on global test data 62.598, Local accuracy on global train data 36.699, Local accuracy on local train data 99.250
+
+
+delta var = 0.01134652178734541, alpha = 0.16409556701298333
+0 22 {3}
+1 47 {5}
+2 61 {1}
+3 27 {9}
+4 50 {8}
+5 96 {0}
+6 89 {9}
+7 97 {3}
+8 85 {2}
+9 30 {8}
+Round  28, Devices participated 10, Average loss 0.034, Central accuracy on global test data 68.604, Ensemble accuracy on global test data 66.162, Local accuracy on global train data 27.571, Local accuracy on local train data 99.000
+
+
+delta var = 0.02495831623673439, alpha = 0.1235324432111191
+0 44 {2}
+1 70 {5}
+2 23 {7}
+3 38 {4, 5}
+4 74 {4}
+5 21 {2}
+6 82 {6}
+7 4 {8}
+8 88 {6, 7}
+9 98 {5}
+Round  29, Devices participated 10, Average loss 0.047, Central accuracy on global test data 73.877, Ensemble accuracy on global test data 70.972, Local accuracy on global train data 28.181, Local accuracy on local train data 98.683
+
+
+delta var = 0.009012225084006786, alpha = 0.17139212464193246
+0 90 {5}
+1 72 {5}
+2 65 {9}
+3 50 {8}
+4 85 {2}
+5 56 {0}
+6 4 {8}
+7 80 {1}
+8 31 {4}
+9 17 {8}
+Round  30, Devices participated 10, Average loss 0.031, Central accuracy on global test data 63.574, Ensemble accuracy on global test data 64.355, Local accuracy on global train data 29.160, Local accuracy on local train data 99.250
+
+
+delta var = 0.010768121108412743, alpha = 0.16589695306870783
+0 61 {1}
+1 40 {2}
+2 41 {8, 9}
+3 34 {3}
+4 97 {3}
+5 51 {5, 6}
+6 50 {8}
+7 13 {4}
+8 22 {3}
+9 8 {0}
+Round  31, Devices participated 10, Average loss 0.040, Central accuracy on global test data 75.098, Ensemble accuracy on global test data 74.390, Local accuracy on global train data 34.077, Local accuracy on local train data 98.817
+
+
+delta var = 0.00823198352009058, alpha = 0.17384552096157246
+0 87 {1}
+1 54 {7}
+2 63 {5}
+3 83 {7}
+4 96 {0}
+5 26 {1}
+6 0 {8, 7}
+7 59 {3}
+8 69 {5}
+9 14 {6}
+Round  32, Devices participated 10, Average loss 0.036, Central accuracy on global test data 66.821, Ensemble accuracy on global test data 70.703, Local accuracy on global train data 36.975, Local accuracy on local train data 98.917
+
+
+delta var = 0.004302302375435829, alpha = 0.18628596246386198
+0 58 {8}
+1 47 {5}
+2 83 {7}
+3 36 {5}
+4 8 {0}
+5 2 {4}
+6 56 {0}
+7 49 {7}
+8 10 {7}
+9 38 {4, 5}
+Round  33, Devices participated 10, Average loss 0.031, Central accuracy on global test data 68.359, Ensemble accuracy on global test data 67.578, Local accuracy on global train data 34.607, Local accuracy on local train data 99.217
+
+
+delta var = 0.010677927173674107, alpha = 0.16617826620480444
+0 89 {9}
+1 90 {5}
+2 81 {0}
+3 54 {7}
+4 59 {3}
+5 4 {8}
+6 53 {1}
+7 47 {5}
+8 52 {1}
+9 19 {9}
+Round  34, Devices participated 10, Average loss 0.032, Central accuracy on global test data 66.748, Ensemble accuracy on global test data 67.285, Local accuracy on global train data 30.974, Local accuracy on local train data 99.150
+
+
+delta var = 0.016143083572387695, alpha = 0.14936000096034616
+0 24 {2}
+1 13 {4}
+2 81 {0}
+3 73 {1, 2}
+4 19 {9}
+5 55 {3}
+6 40 {2}
+7 76 {0, 1}
+8 57 {9}
+9 96 {0}
+Round  35, Devices participated 10, Average loss 0.047, Central accuracy on global test data 69.873, Ensemble accuracy on global test data 64.722, Local accuracy on global train data 32.488, Local accuracy on local train data 98.617
+
+
+delta var = 0.00747067853808403, alpha = 0.1762454608019755
+0 31 {4}
+1 75 {4}
+2 94 {2, 3}
+3 20 {2}
+4 87 {1}
+5 26 {1}
+6 29 {3}
+7 70 {5}
+8 2 {4}
+9 50 {8}
+Round  36, Devices participated 10, Average loss 0.036, Central accuracy on global test data 69.312, Ensemble accuracy on global test data 68.848, Local accuracy on global train data 32.168, Local accuracy on local train data 98.783
+
+
+delta var = 0.012422100640833378, alpha = 0.16075848615192437
+0 0 {8, 7}
+1 9 {3}
+2 46 {3}
+3 37 {9}
+4 72 {5}
+5 83 {7}
+6 73 {1, 2}
+7 16 {7}
+8 55 {3}
+9 27 {9}
+Round  37, Devices participated 10, Average loss 0.047, Central accuracy on global test data 63.892, Ensemble accuracy on global test data 60.962, Local accuracy on global train data 24.194, Local accuracy on local train data 98.600
+
+
+delta var = 0.014419482089579105, alpha = 0.1546096991478796
+0 80 {1}
+1 29 {3}
+2 9 {3}
+3 50 {8}
+4 26 {1}
+5 81 {0}
+6 48 {4}
+7 82 {6}
+8 37 {9}
+9 15 {2}
+Round  38, Devices participated 10, Average loss 0.029, Central accuracy on global test data 72.144, Ensemble accuracy on global test data 68.530, Local accuracy on global train data 31.672, Local accuracy on local train data 99.250
+
+
+delta var = 0.009232540614902973, alpha = 0.17070058574277547
+0 82 {6}
+1 6 {2}
+2 87 {1}
+3 74 {4}
+4 29 {3}
+5 50 {8}
+6 62 {0}
+7 67 {1}
+8 12 {1}
+9 83 {7}
+Round  39, Devices participated 10, Average loss 0.023, Central accuracy on global test data 73.438, Ensemble accuracy on global test data 72.729, Local accuracy on global train data 39.834, Local accuracy on local train data 99.367
+
+
+delta var = 0.008462835103273392, alpha = 0.17311894625859658
+0 36 {5}
+1 75 {4}
+2 89 {9}
+3 43 {0}
+4 12 {1}
+5 21 {2}
+6 95 {3}
+7 72 {5}
+8 24 {2}
+9 63 {5}
+Round  40, Devices participated 10, Average loss 0.030, Central accuracy on global test data 69.702, Ensemble accuracy on global test data 69.409, Local accuracy on global train data 30.432, Local accuracy on local train data 99.050
+
+
+delta var = 0.006401090882718563, alpha = 0.17962634142389505
+0 34 {3}
+1 15 {2}
+2 31 {4}
+3 94 {2, 3}
+4 46 {3}
+5 70 {5}
+6 19 {9}
+7 80 {1}
+8 6 {2}
+9 88 {6, 7}
+Round  41, Devices participated 10, Average loss 0.030, Central accuracy on global test data 71.606, Ensemble accuracy on global test data 72.729, Local accuracy on global train data 31.353, Local accuracy on local train data 99.050
+
+
+delta var = 0.005604191683232784, alpha = 0.18215138710309736
+0 70 {5}
+1 92 {8}
+2 72 {5}
+3 77 {6}
+4 23 {7}
+5 53 {1}
+6 1 {4}
+7 12 {1}
+8 97 {3}
+9 93 {9}
+Round  42, Devices participated 10, Average loss 0.028, Central accuracy on global test data 68.848, Ensemble accuracy on global test data 74.707, Local accuracy on global train data 33.496, Local accuracy on local train data 99.167
+
+
+delta var = 0.013399670831859112, alpha = 0.1577408772422316
+0 13 {4}
+1 38 {4, 5}
+2 36 {5}
+3 14 {6}
+4 57 {9}
+5 77 {6}
+6 66 {6}
+7 73 {1, 2}
+8 3 {9}
+9 0 {8, 7}
+Round  43, Devices participated 10, Average loss 0.038, Central accuracy on global test data 78.979, Ensemble accuracy on global test data 78.613, Local accuracy on global train data 35.713, Local accuracy on local train data 98.817
+
+
+delta var = 0.0065299528650939465, alpha = 0.17921849770085482
+0 13 {4}
+1 19 {9}
+2 10 {7}
+3 24 {2}
+4 76 {0, 1}
+5 57 {9}
+6 88 {6, 7}
+7 23 {7}
+8 61 {1}
+9 31 {4}
+Round  44, Devices participated 10, Average loss 0.023, Central accuracy on global test data 78.955, Ensemble accuracy on global test data 76.367, Local accuracy on global train data 40.874, Local accuracy on local train data 99.367
+
+
+delta var = 0.003972778562456369, alpha = 0.18733405376894008
+0 18 {0}
+1 45 {6}
+2 94 {2, 3}
+3 24 {2}
+4 56 {0}
+5 67 {1}
+6 10 {7}
+7 14 {6}
+8 13 {4}
+9 9 {3}
+Round  45, Devices participated 10, Average loss 0.021, Central accuracy on global test data 75.537, Ensemble accuracy on global test data 73.828, Local accuracy on global train data 45.046, Local accuracy on local train data 99.383
+
+
+delta var = 0.007485886570066214, alpha = 0.17619746364541247
+0 13 {4}
+1 48 {4}
+2 73 {1, 2}
+3 93 {9}
+4 70 {5}
+5 1 {4}
+6 43 {0}
+7 77 {6}
+8 76 {0, 1}
+9 88 {6, 7}
+Round  46, Devices participated 10, Average loss 0.028, Central accuracy on global test data 75.806, Ensemble accuracy on global test data 73.901, Local accuracy on global train data 42.556, Local accuracy on local train data 99.233
+
+
+delta var = 0.009552862495183945, alpha = 0.169696148047884
+0 21 {2}
+1 45 {6}
+2 83 {7}
+3 68 {7}
+4 75 {4}
+5 65 {9}
+6 96 {0}
+7 1 {4}
+8 77 {6}
+9 73 {1, 2}
+Round  47, Devices participated 10, Average loss 0.027, Central accuracy on global test data 74.487, Ensemble accuracy on global test data 73.901, Local accuracy on global train data 40.513, Local accuracy on local train data 99.250
+
+
+delta var = 0.004103905986994505, alpha = 0.1869169184650491
+0 81 {0}
+1 84 {1}
+2 60 {8}
+3 18 {0}
+4 45 {6}
+5 47 {5}
+6 94 {2, 3}
+7 83 {7}
+8 76 {0, 1}
+9 22 {3}
+Round  48, Devices participated 10, Average loss 0.026, Central accuracy on global test data 76.636, Ensemble accuracy on global test data 75.806, Local accuracy on global train data 43.184, Local accuracy on local train data 99.317
+
+
+delta var = 0.008139941841363907, alpha = 0.17413536482562228
+0 21 {2}
+1 69 {5}
+2 47 {5}
+3 34 {3}
+4 65 {9}
+5 81 {0}
+6 93 {9}
+7 44 {2}
+8 30 {8}
+9 84 {1}
+Round  49, Devices participated 10, Average loss 0.029, Central accuracy on global test data 79.028, Ensemble accuracy on global test data 77.246, Local accuracy on global train data 30.842, Local accuracy on local train data 99.117
+
+
+delta var = 0.0035415564198046923, alpha = 0.18870643143164245
+0 22 {3}
+1 38 {4, 5}
+2 77 {6}
+3 15 {2}
+4 11 {4}
+5 61 {1}
+6 37 {9}
+7 34 {3}
+8 87 {1}
+9 3 {9}
+Round  50, Devices participated 10, Average loss 0.021, Central accuracy on global test data 78.345, Ensemble accuracy on global test data 77.002, Local accuracy on global train data 42.454, Local accuracy on local train data 99.317
+
+
+delta var = 0.004344779998064041, alpha = 0.18615089940287152
+0 96 {0}
+1 9 {3}
+2 26 {1}
+3 58 {8}
+4 69 {5}
+5 44 {2}
+6 13 {4}
+7 93 {9}
+8 61 {1}
+9 43 {0}
+Round  51, Devices participated 10, Average loss 0.017, Central accuracy on global test data 80.103, Ensemble accuracy on global test data 79.980, Local accuracy on global train data 39.963, Local accuracy on local train data 99.583
+
+
+delta var = 0.0044148932211101055, alpha = 0.18592798725438517
+0 13 {4}
+1 34 {3}
+2 27 {9}
+3 16 {7}
+4 72 {5}
+5 98 {5}
+6 14 {6}
+7 19 {9}
+8 9 {3}
+9 46 {3}
+Round  52, Devices participated 10, Average loss 0.021, Central accuracy on global test data 75.903, Ensemble accuracy on global test data 73.242, Local accuracy on global train data 30.464, Local accuracy on local train data 99.350
+
+
+delta var = 0.003211904549971223, alpha = 0.18975612955634502
+0 29 {3}
+1 72 {5}
+2 81 {0}
+3 80 {1}
+4 68 {7}
+5 85 {2}
+6 14 {6}
+7 0 {8, 7}
+8 93 {9}
+9 52 {1}
+Round  53, Devices participated 10, Average loss 0.025, Central accuracy on global test data 79.150, Ensemble accuracy on global test data 77.710, Local accuracy on global train data 37.351, Local accuracy on local train data 99.350
+
+
+delta var = 0.002532451879233122, alpha = 0.1919210373200883
+0 17 {8}
+1 69 {5}
+2 35 {8}
+3 86 {0}
+4 83 {7}
+5 84 {1}
+6 23 {7}
+7 56 {0}
+8 89 {9}
+9 60 {8}
+Round  54, Devices participated 10, Average loss 0.019, Central accuracy on global test data 69.800, Ensemble accuracy on global test data 70.239, Local accuracy on global train data 35.991, Local accuracy on local train data 99.533
+
+
+delta var = 0.004722419660538435, alpha = 0.18495059507190437
+0 94 {2, 3}
+1 79 {6}
+2 36 {5}
+3 8 {0}
+4 19 {9}
+5 16 {7}
+6 13 {4}
+7 30 {8}
+8 25 {6}
+9 3 {9}
+Round  55, Devices participated 10, Average loss 0.022, Central accuracy on global test data 77.368, Ensemble accuracy on global test data 77.344, Local accuracy on global train data 35.693, Local accuracy on local train data 99.233
+
+
+delta var = 0.003123322268947959, alpha = 0.19003827648883315
+0 45 {6}
+1 82 {6}
+2 32 {2}
+3 52 {1}
+4 17 {8}
+5 96 {0}
+6 6 {2}
+7 57 {9}
+8 67 {1}
+9 74 {4}
+Round  56, Devices participated 10, Average loss 0.017, Central accuracy on global test data 82.861, Ensemble accuracy on global test data 81.201, Local accuracy on global train data 41.931, Local accuracy on local train data 99.567
+
+
+delta var = 0.004011102952063084, alpha = 0.18721212922466812
+0 61 {1}
+1 20 {2}
+2 59 {3}
+3 99 {5}
+4 39 {1}
+5 42 {7}
+6 73 {1, 2}
+7 53 {1}
+8 45 {6}
+9 8 {0}
+Round  57, Devices participated 10, Average loss 0.019, Central accuracy on global test data 81.763, Ensemble accuracy on global test data 82.153, Local accuracy on global train data 44.761, Local accuracy on local train data 99.417
+
+
+delta var = 0.002497606910765171, alpha = 0.1920321057685075
+0 60 {8}
+1 38 {4, 5}
+2 5 {7}
+3 54 {7}
+4 66 {6}
+5 33 {0}
+6 80 {1}
+7 83 {7}
+8 9 {3}
+9 4 {8}
+Round  58, Devices participated 10, Average loss 0.024, Central accuracy on global test data 74.512, Ensemble accuracy on global test data 73.828, Local accuracy on global train data 42.668, Local accuracy on local train data 99.383
+
+
+delta var = 0.004970740061253309, alpha = 0.18416178626052232
+0 39 {1}
+1 44 {2}
+2 62 {0}
+3 4 {8}
+4 42 {7}
+5 25 {6}
+6 0 {8, 7}
+7 45 {6}
+8 29 {3}
+9 93 {9}
+Round  59, Devices participated 10, Average loss 0.021, Central accuracy on global test data 76.880, Ensemble accuracy on global test data 76.050, Local accuracy on global train data 40.198, Local accuracy on local train data 99.283
+
+
+delta var = 0.0031960534397512674, alpha = 0.1898066152221891
+0 96 {0}
+1 54 {7}
+2 19 {9}
+3 97 {3}
+4 92 {8}
+5 31 {4}
+6 81 {0}
+7 2 {4}
+8 24 {2}
+9 9 {3}
+Round  60, Devices participated 10, Average loss 0.018, Central accuracy on global test data 76.221, Ensemble accuracy on global test data 75.757, Local accuracy on global train data 38.940, Local accuracy on local train data 99.500
+
+
+delta var = 0.004226439166814089, alpha = 0.18652720378707743
+0 9 {3}
+1 19 {9}
+2 7 {8}
+3 49 {7}
+4 45 {6}
+5 35 {8}
+6 80 {1}
+7 85 {2}
+8 40 {2}
+9 89 {9}
+Round  61, Devices participated 10, Average loss 0.019, Central accuracy on global test data 77.148, Ensemble accuracy on global test data 74.487, Local accuracy on global train data 31.436, Local accuracy on local train data 99.283
+
+
+delta var = 0.002639026613906026, alpha = 0.19158135457366232
+0 73 {1, 2}
+1 66 {6}
+2 18 {0}
+3 74 {4}
+4 33 {0}
+5 2 {4}
+6 87 {1}
+7 29 {3}
+8 98 {5}
+9 91 {1}
+Round  62, Devices participated 10, Average loss 0.021, Central accuracy on global test data 78.198, Ensemble accuracy on global test data 77.637, Local accuracy on global train data 45.720, Local accuracy on local train data 99.167
+
+
+delta var = 0.004294974729418755, alpha = 0.18630926265746273
+0 40 {2}
+1 31 {4}
+2 27 {9}
+3 50 {8}
+4 71 {3, 4}
+5 81 {0}
+6 99 {5}
+7 97 {3}
+8 73 {1, 2}
+9 49 {7}
+Round  63, Devices participated 10, Average loss 0.029, Central accuracy on global test data 80.640, Ensemble accuracy on global test data 80.078, Local accuracy on global train data 32.310, Local accuracy on local train data 99.067
+
+
+delta var = 0.0026930368039757013, alpha = 0.19140922386044834
+0 61 {1}
+1 64 {7}
+2 42 {7}
+3 88 {6, 7}
+4 27 {9}
+5 95 {3}
+6 92 {8}
+7 50 {8}
+8 45 {6}
+9 85 {2}
+Round  64, Devices participated 10, Average loss 0.015, Central accuracy on global test data 80.029, Ensemble accuracy on global test data 78.857, Local accuracy on global train data 36.348, Local accuracy on local train data 99.550
+
+
+delta var = 0.0030751514714211226, alpha = 0.19019172036815063
+0 27 {9}
+1 8 {0}
+2 49 {7}
+3 32 {2}
+4 15 {2}
+5 35 {8}
+6 70 {5}
+7 59 {3}
+8 31 {4}
+9 30 {8}
+Round  65, Devices participated 10, Average loss 0.018, Central accuracy on global test data 85.107, Ensemble accuracy on global test data 83.374, Local accuracy on global train data 29.873, Local accuracy on local train data 99.500
+
+
+delta var = 0.0022204320412129164, alpha = 0.1929157348127364
+0 69 {5}
+1 35 {8}
+2 52 {1}
+3 51 {5, 6}
+4 26 {1}
+5 15 {2}
+6 76 {0, 1}
+7 48 {4}
+8 98 {5}
+9 12 {1}
+Round  66, Devices participated 10, Average loss 0.021, Central accuracy on global test data 73.755, Ensemble accuracy on global test data 71.753, Local accuracy on global train data 37.766, Local accuracy on local train data 99.333
+
+
+delta var = 0.004957320634275675, alpha = 0.18420440432096746
+0 46 {3}
+1 57 {9}
+2 0 {8, 7}
+3 86 {0}
+4 26 {1}
+5 80 {1}
+6 73 {1, 2}
+7 20 {2}
+8 63 {5}
+9 98 {5}
+Round  67, Devices participated 10, Average loss 0.026, Central accuracy on global test data 82.837, Ensemble accuracy on global test data 81.714, Local accuracy on global train data 34.751, Local accuracy on local train data 99.133
+
+
+delta var = 0.003268044674769044, alpha = 0.18957733198796622
+0 81 {0}
+1 6 {2}
+2 64 {7}
+3 84 {1}
+4 20 {2}
+5 2 {4}
+6 8 {0}
+7 4 {8}
+8 66 {6}
+9 92 {8}
+Round  68, Devices participated 10, Average loss 0.012, Central accuracy on global test data 76.343, Ensemble accuracy on global test data 76.709, Local accuracy on global train data 40.293, Local accuracy on local train data 99.733
+
+
+delta var = 0.0012250522850081325, alpha = 0.19609058992366202
+0 61 {1}
+1 34 {3}
+2 64 {7}
+3 11 {4}
+4 96 {0}
+5 18 {0}
+6 82 {6}
+7 52 {1}
+8 72 {5}
+9 92 {8}
+Round  69, Devices participated 10, Average loss 0.013, Central accuracy on global test data 77.222, Ensemble accuracy on global test data 79.272, Local accuracy on global train data 44.880, Local accuracy on local train data 99.633
+
+
+delta var = 0.0057447804138064384, alpha = 0.1817055732261369
+0 93 {9}
+1 68 {7}
+2 94 {2, 3}
+3 13 {4}
+4 36 {5}
+5 11 {4}
+6 5 {7}
+7 1 {4}
+8 40 {2}
+9 7 {8}
+Round  70, Devices participated 10, Average loss 0.024, Central accuracy on global test data 79.199, Ensemble accuracy on global test data 79.102, Local accuracy on global train data 32.722, Local accuracy on local train data 99.183
+
+
+delta var = 0.0113060949370265, alpha = 0.16422132258351682
+0 73 {1, 2}
+1 64 {7}
+2 37 {9}
+3 69 {5}
+4 31 {4}
+5 48 {4}
+6 77 {6}
+7 41 {8, 9}
+8 53 {1}
+9 75 {4}
+Round  71, Devices participated 10, Average loss 0.033, Central accuracy on global test data 82.837, Ensemble accuracy on global test data 82.837, Local accuracy on global train data 33.716, Local accuracy on local train data 98.967
+
+
+delta var = 0.003014866728335619, alpha = 0.19038376495859088
+0 46 {3}
+1 43 {0}
+2 84 {1}
+3 11 {4}
+4 66 {6}
+5 92 {8}
+6 16 {7}
+7 19 {9}
+8 96 {0}
+9 37 {9}
+Round  72, Devices participated 10, Average loss 0.014, Central accuracy on global test data 81.641, Ensemble accuracy on global test data 78.809, Local accuracy on global train data 43.457, Local accuracy on local train data 99.583
+
+
+delta var = 0.00205785664729774, alpha = 0.19343412552970274
+0 43 {0}
+1 96 {0}
+2 9 {3}
+3 0 {8, 7}
+4 74 {4}
+5 19 {9}
+6 1 {4}
+7 23 {7}
+8 38 {4, 5}
+9 66 {6}
+Round  73, Devices participated 10, Average loss 0.016, Central accuracy on global test data 76.147, Ensemble accuracy on global test data 75.391, Local accuracy on global train data 46.953, Local accuracy on local train data 99.617
+
+
+delta var = 0.005331462249159813, alpha = 0.18301662334097704
+0 27 {9}
+1 62 {0}
+2 32 {2}
+3 10 {7}
+4 22 {3}
+5 72 {5}
+6 64 {7}
+7 25 {6}
+8 86 {0}
+9 60 {8}
+Round  74, Devices participated 10, Average loss 0.015, Central accuracy on global test data 83.618, Ensemble accuracy on global test data 83.496, Local accuracy on global train data 34.893, Local accuracy on local train data 99.417
+
+
+delta var = 0.0027039090637117624, alpha = 0.19137457512526912
+0 84 {1}
+1 7 {8}
+2 64 {7}
+3 76 {0, 1}
+4 15 {2}
+5 46 {3}
+6 27 {9}
+7 47 {5}
+8 40 {2}
+9 69 {5}
+Round  75, Devices participated 10, Average loss 0.018, Central accuracy on global test data 79.102, Ensemble accuracy on global test data 81.006, Local accuracy on global train data 31.016, Local accuracy on local train data 99.533
+
+
+delta var = 0.003779967548325658, alpha = 0.18794757056840306
+0 75 {4}
+1 97 {3}
+2 79 {6}
+3 87 {1}
+4 11 {4}
+5 7 {8}
+6 37 {9}
+7 92 {8}
+8 41 {8, 9}
+9 12 {1}
+Round  76, Devices participated 10, Average loss 0.024, Central accuracy on global test data 72.510, Ensemble accuracy on global test data 75.806, Local accuracy on global train data 37.380, Local accuracy on local train data 99.267
+
+
+delta var = 0.0038008259143680334, alpha = 0.18788119130586098
+0 78 {9}
+1 4 {8}
+2 17 {8}
+3 21 {2}
+4 76 {0, 1}
+5 74 {4}
+6 19 {9}
+7 61 {1}
+8 45 {6}
+9 86 {0}
+Round  77, Devices participated 10, Average loss 0.013, Central accuracy on global test data 72.217, Ensemble accuracy on global test data 72.192, Local accuracy on global train data 39.675, Local accuracy on local train data 99.550
+
+
+delta var = 0.005403455346822739, alpha = 0.18278817473887746
+0 23 {7}
+1 41 {8, 9}
+2 75 {4}
+3 36 {5}
+4 26 {1}
+5 49 {7}
+6 95 {3}
+7 16 {7}
+8 93 {9}
+9 72 {5}
+Round  78, Devices participated 10, Average loss 0.027, Central accuracy on global test data 81.030, Ensemble accuracy on global test data 80.859, Local accuracy on global train data 31.807, Local accuracy on local train data 98.983
+
+
+delta var = 0.00223716301843524, alpha = 0.1928623902838689
+0 59 {3}
+1 53 {1}
+2 65 {9}
+3 8 {0}
+4 68 {7}
+5 35 {8}
+6 13 {4}
+7 55 {3}
+8 23 {7}
+9 97 {3}
+Round  79, Devices participated 10, Average loss 0.016, Central accuracy on global test data 75.073, Ensemble accuracy on global test data 76.782, Local accuracy on global train data 36.785, Local accuracy on local train data 99.500
+
+
+delta var = 0.0021659790072590113, alpha = 0.19308935663470006
+0 74 {4}
+1 98 {5}
+2 22 {3}
+3 45 {6}
+4 97 {3}
+5 87 {1}
+6 92 {8}
+7 71 {3, 4}
+8 47 {5}
+9 79 {6}
+Round  80, Devices participated 10, Average loss 0.019, Central accuracy on global test data 76.758, Ensemble accuracy on global test data 75.586, Local accuracy on global train data 33.975, Local accuracy on local train data 99.283
+
+
+delta var = 0.0012474782997742295, alpha = 0.19601903831504283
+0 35 {8}
+1 70 {5}
+2 59 {3}
+3 49 {7}
+4 36 {5}
+5 91 {1}
+6 82 {6}
+7 50 {8}
+8 26 {1}
+9 72 {5}
+Round  81, Devices participated 10, Average loss 0.012, Central accuracy on global test data 73.657, Ensemble accuracy on global test data 71.289, Local accuracy on global train data 32.043, Local accuracy on local train data 99.667
+
+
+delta var = 0.00103768368717283, alpha = 0.1966884305534955
+0 22 {3}
+1 83 {7}
+2 75 {4}
+3 29 {3}
+4 66 {6}
+5 48 {4}
+6 12 {1}
+7 10 {7}
+8 86 {0}
+9 1 {4}
+Round  82, Devices participated 10, Average loss 0.011, Central accuracy on global test data 73.486, Ensemble accuracy on global test data 71.997, Local accuracy on global train data 40.557, Local accuracy on local train data 99.717
+
+
+delta var = 0.011033660732209682, alpha = 0.1650693777884005
+0 76 {0, 1}
+1 33 {0}
+2 40 {2}
+3 59 {3}
+4 65 {9}
+5 63 {5}
+6 73 {1, 2}
+7 36 {5}
+8 99 {5}
+9 82 {6}
+Round  83, Devices participated 10, Average loss 0.030, Central accuracy on global test data 68.652, Ensemble accuracy on global test data 68.701, Local accuracy on global train data 29.697, Local accuracy on local train data 98.933
+
+
+delta var = 0.00420355936512351, alpha = 0.18659996654484312
+0 85 {2}
+1 88 {6, 7}
+2 54 {7}
+3 40 {2}
+4 70 {5}
+5 67 {1}
+6 86 {0}
+7 38 {4, 5}
+8 58 {8}
+9 42 {7}
+Round  84, Devices participated 10, Average loss 0.018, Central accuracy on global test data 79.346, Ensemble accuracy on global test data 80.029, Local accuracy on global train data 39.143, Local accuracy on local train data 99.433
+
+
+delta var = 0.008329050615429878, alpha = 0.17353994698236908
+0 89 {9}
+1 56 {0}
+2 12 {1}
+3 90 {5}
+4 94 {2, 3}
+5 86 {0}
+6 19 {9}
+7 78 {9}
+8 92 {8}
+9 59 {3}
+Round  85, Devices participated 10, Average loss 0.027, Central accuracy on global test data 76.416, Ensemble accuracy on global test data 75.610, Local accuracy on global train data 34.976, Local accuracy on local train data 98.983
+
+
+delta var = 0.003459542989730835, alpha = 0.18896753969997776
+0 7 {8}
+1 94 {2, 3}
+2 69 {5}
+3 44 {2}
+4 50 {8}
+5 26 {1}
+6 75 {4}
+7 24 {2}
+8 33 {0}
+9 18 {0}
+Round  86, Devices participated 10, Average loss 0.019, Central accuracy on global test data 81.519, Ensemble accuracy on global test data 82.764, Local accuracy on global train data 32.156, Local accuracy on local train data 99.300
+
+
+delta var = 0.003448333591222763, alpha = 0.18900322966820873
+0 89 {9}
+1 75 {4}
+2 84 {1}
+3 93 {9}
+4 35 {8}
+5 71 {3, 4}
+6 19 {9}
+7 63 {5}
+8 59 {3}
+9 94 {2, 3}
+Round  87, Devices participated 10, Average loss 0.022, Central accuracy on global test data 75.708, Ensemble accuracy on global test data 75.122, Local accuracy on global train data 31.086, Local accuracy on local train data 99.333
+
+
+delta var = 0.0046554747968912125, alpha = 0.18516331470863
+0 54 {7}
+1 66 {6}
+2 17 {8}
+3 43 {0}
+4 53 {1}
+5 40 {2}
+6 76 {0, 1}
+7 1 {4}
+8 4 {8}
+9 81 {0}
+Round  88, Devices participated 10, Average loss 0.015, Central accuracy on global test data 78.931, Ensemble accuracy on global test data 78.882, Local accuracy on global train data 35.923, Local accuracy on local train data 99.517
+
+
+delta var = 0.0027152588590979576, alpha = 0.19133840496946872
+0 52 {1}
+1 51 {5, 6}
+2 97 {3}
+3 7 {8}
+4 41 {8, 9}
+5 61 {1}
+6 29 {3}
+7 88 {6, 7}
+8 49 {7}
+9 26 {1}
+Round  89, Devices participated 10, Average loss 0.025, Central accuracy on global test data 81.128, Ensemble accuracy on global test data 80.273, Local accuracy on global train data 42.458, Local accuracy on local train data 99.133
+
+
+delta var = 0.003472564509138465, alpha = 0.1889260807563285
+0 21 {2}
+1 47 {5}
+2 20 {2}
+3 59 {3}
+4 85 {2}
+5 2 {4}
+6 99 {5}
+7 70 {5}
+8 54 {7}
+9 50 {8}
+Round  90, Devices participated 10, Average loss 0.022, Central accuracy on global test data 65.869, Ensemble accuracy on global test data 65.747, Local accuracy on global train data 23.477, Local accuracy on local train data 99.267
+
+
+delta var = 0.01091963890939951, alpha = 0.16542461838336445
+0 65 {9}
+1 98 {5}
+2 79 {6}
+3 6 {2}
+4 58 {8}
+5 92 {8}
+6 19 {9}
+7 37 {9}
+8 33 {0}
+9 75 {4}
+Round  91, Devices participated 10, Average loss 0.025, Central accuracy on global test data 69.043, Ensemble accuracy on global test data 66.772, Local accuracy on global train data 22.004, Local accuracy on local train data 99.033
+
+
+delta var = 0.007104360964149237, alpha = 0.17740222265689962
+0 44 {2}
+1 84 {1}
+2 56 {0}
+3 0 {8, 7}
+4 69 {5}
+5 15 {2}
+6 66 {6}
+7 78 {9}
+8 42 {7}
+9 95 {3}
+Round  92, Devices participated 10, Average loss 0.027, Central accuracy on global test data 81.519, Ensemble accuracy on global test data 80.933, Local accuracy on global train data 33.433, Local accuracy on local train data 99.317
+
+
+delta var = 0.0015324102714657784, alpha = 0.19511001956293028
+0 36 {5}
+1 20 {2}
+2 53 {1}
+3 26 {1}
+4 80 {1}
+5 67 {1}
+6 25 {6}
+7 37 {9}
+8 39 {1}
+9 10 {7}
+Round  93, Devices participated 10, Average loss 0.013, Central accuracy on global test data 75.073, Ensemble accuracy on global test data 74.927, Local accuracy on global train data 46.516, Local accuracy on local train data 99.633
+
+
+delta var = 0.00310989236459136, alpha = 0.1900810553569954
+0 54 {7}
+1 62 {0}
+2 65 {9}
+3 69 {5}
+4 82 {6}
+5 46 {3}
+6 64 {7}
+7 70 {5}
+8 59 {3}
+9 11 {4}
+Round  94, Devices participated 10, Average loss 0.018, Central accuracy on global test data 84.302, Ensemble accuracy on global test data 80.933, Local accuracy on global train data 33.916, Local accuracy on local train data 99.433
+
+
+delta var = 0.00408416660502553, alpha = 0.1869797066237727
+0 78 {9}
+1 89 {9}
+2 64 {7}
+3 25 {6}
+4 85 {2}
+5 9 {3}
+6 57 {9}
+7 41 {8, 9}
+8 97 {3}
+9 45 {6}
+Round  95, Devices participated 10, Average loss 0.023, Central accuracy on global test data 72.534, Ensemble accuracy on global test data 72.363, Local accuracy on global train data 36.194, Local accuracy on local train data 99.200
+
+
+delta var = 0.001808728906325996, alpha = 0.19422863128691722
+0 32 {2}
+1 8 {0}
+2 70 {5}
+3 41 {8, 9}
+4 12 {1}
+5 19 {9}
+6 88 {6, 7}
+7 20 {2}
+8 98 {5}
+9 33 {0}
+Round  96, Devices participated 10, Average loss 0.020, Central accuracy on global test data 74.609, Ensemble accuracy on global test data 74.316, Local accuracy on global train data 36.702, Local accuracy on local train data 99.400
+
+
+delta var = 0.005629285704344511, alpha = 0.18207180230766537
+0 50 {8}
+1 29 {3}
+2 81 {0}
+3 33 {0}
+4 44 {2}
+5 69 {5}
+6 2 {4}
+7 68 {7}
+8 93 {9}
+9 85 {2}
+Round  97, Devices participated 10, Average loss 0.018, Central accuracy on global test data 85.620, Ensemble accuracy on global test data 83.569, Local accuracy on global train data 30.518, Local accuracy on local train data 99.383
+
+
+delta var = 0.0017565746093168855, alpha = 0.19439497795436703
+0 5 {7}
+1 84 {1}
+2 70 {5}
+3 73 {1, 2}
+4 31 {4}
+5 62 {0}
+6 69 {5}
+7 13 {4}
+8 86 {0}
+9 74 {4}
+Round  98, Devices participated 10, Average loss 0.018, Central accuracy on global test data 77.319, Ensemble accuracy on global test data 76.758, Local accuracy on global train data 42.292, Local accuracy on local train data 99.417
+
+
+delta var = 0.008080157451331615, alpha = 0.1743236754694653
+0 69 {5}
+1 9 {3}
+2 41 {8, 9}
+3 83 {7}
+4 76 {0, 1}
+5 63 {5}
+6 34 {3}
+7 67 {1}
+8 36 {5}
+9 87 {1}
+Round  99, Devices participated 10, Average loss 0.024, Central accuracy on global test data 79.907, Ensemble accuracy on global test data 79.199, Local accuracy on global train data 38.118, Local accuracy on local train data 99.183
+
+
+delta var = 0.0036325431428849697, alpha = 0.18841679018354707
+0 40 {2}
+1 77 {6}
+2 95 {3}
+3 52 {1}
+4 25 {6}
+5 38 {4, 5}
+6 46 {3}
+7 47 {5}
+8 93 {9}
+9 88 {6, 7}
+Round 100, Devices participated 10, Average loss 0.019, Central accuracy on global test data 82.031, Ensemble accuracy on global test data 82.593, Local accuracy on global train data 36.191, Local accuracy on local train data 99.450
+
+
+delta var = 0.002552266698330641, alpha = 0.1918578792659271
+0 14 {6}
+1 22 {3}
+2 87 {1}
+3 6 {2}
+4 15 {2}
+5 36 {5}
+6 37 {9}
+7 44 {2}
+8 48 {4}
+9 38 {4, 5}
+Round 101, Devices participated 10, Average loss 0.015, Central accuracy on global test data 77.588, Ensemble accuracy on global test data 78.149, Local accuracy on global train data 36.279, Local accuracy on local train data 99.583
+
+
+delta var = 0.0011656044516712427, alpha = 0.19628026573618268
+0 14 {6}
+1 66 {6}
+2 74 {4}
+3 62 {0}
+4 49 {7}
+5 45 {6}
+6 18 {0}
+7 79 {6}
+8 15 {2}
+9 68 {7}
+Round 102, Devices participated 10, Average loss 0.010, Central accuracy on global test data 77.344, Ensemble accuracy on global test data 77.344, Local accuracy on global train data 46.509, Local accuracy on local train data 99.650
+
+
+delta var = 0.003379516303539276, alpha = 0.1892223512932291
+0 92 {8}
+1 32 {2}
+2 77 {6}
+3 87 {1}
+4 27 {9}
+5 13 {4}
+6 14 {6}
+7 47 {5}
+8 22 {3}
+9 73 {1, 2}
+Round 103, Devices participated 10, Average loss 0.019, Central accuracy on global test data 82.837, Ensemble accuracy on global test data 83.740, Local accuracy on global train data 36.858, Local accuracy on local train data 99.483
+
+
+delta var = 0.002525210613384843, alpha = 0.19194411855722116
+0 60 {8}
+1 31 {4}
+2 44 {2}
+3 3 {9}
+4 84 {1}
+5 25 {6}
+6 98 {5}
+7 73 {1, 2}
+8 52 {1}
+9 82 {6}
+Round 104, Devices participated 10, Average loss 0.015, Central accuracy on global test data 84.668, Ensemble accuracy on global test data 83.984, Local accuracy on global train data 43.123, Local accuracy on local train data 99.650
+
+
+delta var = 0.0012142079649493098, alpha = 0.1961251896908379
+0 66 {6}
+1 38 {4, 5}
+2 74 {4}
+3 49 {7}
+4 46 {3}
+5 45 {6}
+6 12 {1}
+7 0 {8, 7}
+8 81 {0}
+9 23 {7}
+Round 105, Devices participated 10, Average loss 0.016, Central accuracy on global test data 79.858, Ensemble accuracy on global test data 79.785, Local accuracy on global train data 46.116, Local accuracy on local train data 99.567
+
+
+delta var = 0.007433310616761446, alpha = 0.1763634047103634
+0 6 {2}
+1 14 {6}
+2 56 {0}
+3 8 {0}
+4 37 {9}
+5 71 {3, 4}
+6 68 {7}
+7 53 {1}
+8 88 {6, 7}
+9 65 {9}
+Round 106, Devices participated 10, Average loss 0.020, Central accuracy on global test data 83.838, Ensemble accuracy on global test data 83.960, Local accuracy on global train data 44.644, Local accuracy on local train data 99.350
+
+
+delta var = 0.001720121712423861, alpha = 0.19451124847454954
+0 76 {0, 1}
+1 40 {2}
+2 68 {7}
+3 38 {4, 5}
+4 91 {1}
+5 92 {8}
+6 18 {0}
+7 11 {4}
+8 69 {5}
+9 94 {2, 3}
+Round 107, Devices participated 10, Average loss 0.022, Central accuracy on global test data 83.447, Ensemble accuracy on global test data 84.497, Local accuracy on global train data 41.289, Local accuracy on local train data 99.267
+
+
+delta var = 0.001731579308398068, alpha = 0.19447470289602786
+0 0 {8, 7}
+1 23 {7}
+2 91 {1}
+3 83 {7}
+4 98 {5}
+5 64 {7}
+6 90 {5}
+7 32 {2}
+8 84 {1}
+9 36 {5}
+Round 108, Devices participated 10, Average loss 0.018, Central accuracy on global test data 74.121, Ensemble accuracy on global test data 70.605, Local accuracy on global train data 36.589, Local accuracy on local train data 99.467
+
+
+delta var = 0.0016513395821675658, alpha = 0.1947306445299631
+0 15 {2}
+1 9 {3}
+2 95 {3}
+3 71 {3, 4}
+4 80 {1}
+5 49 {7}
+6 39 {1}
+7 81 {0}
+8 30 {8}
+9 8 {0}
+Round 109, Devices participated 10, Average loss 0.018, Central accuracy on global test data 74.487, Ensemble accuracy on global test data 75.928, Local accuracy on global train data 36.384, Local accuracy on local train data 99.367
+
+
+delta var = 0.0031261302065104246, alpha = 0.1900293323317801
+0 29 {3}
+1 87 {1}
+2 67 {1}
+3 36 {5}
+4 35 {8}
+5 96 {0}
+6 15 {2}
+7 61 {1}
+8 24 {2}
+9 62 {0}
+Round 110, Devices participated 10, Average loss 0.012, Central accuracy on global test data 78.247, Ensemble accuracy on global test data 77.197, Local accuracy on global train data 38.928, Local accuracy on local train data 99.650
+
+
+delta var = 0.006963408552110195, alpha = 0.17784764811324472
+0 13 {4}
+1 58 {8}
+2 87 {1}
+3 52 {1}
+4 50 {8}
+5 60 {8}
+6 3 {9}
+7 19 {9}
+8 35 {8}
+9 0 {8, 7}
+Round 111, Devices participated 10, Average loss 0.019, Central accuracy on global test data 65.381, Ensemble accuracy on global test data 63.086, Local accuracy on global train data 33.994, Local accuracy on local train data 99.233
+
+
+delta var = 0.007858138531446457, alpha = 0.17502331367123408
+0 55 {3}
+1 46 {3}
+2 66 {6}
+3 67 {1}
+4 73 {1, 2}
+5 12 {1}
+6 51 {5, 6}
+7 1 {4}
+8 57 {9}
+9 90 {5}
+Round 112, Devices participated 10, Average loss 0.039, Central accuracy on global test data 77.515, Ensemble accuracy on global test data 77.246, Local accuracy on global train data 29.805, Local accuracy on local train data 98.700
+
+
+delta var = 0.010561179369688034, alpha = 0.16654256117459704
+0 40 {2}
+1 72 {5}
+2 92 {8}
+3 86 {0}
+4 89 {9}
+5 90 {5}
+6 16 {7}
+7 98 {5}
+8 73 {1, 2}
+9 58 {8}
+Round 113, Devices participated 10, Average loss 0.036, Central accuracy on global test data 76.758, Ensemble accuracy on global test data 76.025, Local accuracy on global train data 22.827, Local accuracy on local train data 99.183
+
+
+delta var = 0.002854874823242426, alpha = 0.1908935061406851
+0 0 {8, 7}
+1 58 {8}
+2 47 {5}
+3 44 {2}
+4 94 {2, 3}
+5 66 {6}
+6 4 {8}
+7 7 {8}
+8 27 {9}
+9 2 {4}
+Round 114, Devices participated 10, Average loss 0.025, Central accuracy on global test data 73.535, Ensemble accuracy on global test data 73.633, Local accuracy on global train data 27.925, Local accuracy on local train data 99.150
+
+
+delta var = 0.0023343253415077925, alpha = 0.19255261692186829
+0 58 {8}
+1 87 {1}
+2 14 {6}
+3 78 {9}
+4 40 {2}
+5 83 {7}
+6 73 {1, 2}
+7 18 {0}
+8 52 {1}
+9 31 {4}
+Round 115, Devices participated 10, Average loss 0.019, Central accuracy on global test data 80.688, Ensemble accuracy on global test data 84.131, Local accuracy on global train data 41.401, Local accuracy on local train data 99.433
+
+
+delta var = 0.0019225511932745576, alpha = 0.19386561597464538
+0 99 {5}
+1 22 {3}
+2 62 {0}
+3 86 {0}
+4 5 {7}
+5 20 {2}
+6 9 {3}
+7 51 {5, 6}
+8 7 {8}
+9 54 {7}
+Round 116, Devices participated 10, Average loss 0.018, Central accuracy on global test data 82.153, Ensemble accuracy on global test data 82.104, Local accuracy on global train data 37.048, Local accuracy on local train data 99.417
+
+
+delta var = 0.0018746356945484877, alpha = 0.1940184299073431
+0 97 {3}
+1 37 {9}
+2 42 {7}
+3 7 {8}
+4 22 {3}
+5 5 {7}
+6 24 {2}
+7 56 {0}
+8 69 {5}
+9 12 {1}
+Round 117, Devices participated 10, Average loss 0.013, Central accuracy on global test data 82.397, Ensemble accuracy on global test data 81.494, Local accuracy on global train data 37.239, Local accuracy on local train data 99.583
+
+
+delta var = 0.001396499341353774, alpha = 0.19554359834770757
+0 96 {0}
+1 22 {3}
+2 76 {0, 1}
+3 44 {2}
+4 59 {3}
+5 78 {9}
+6 12 {1}
+7 68 {7}
+8 94 {2, 3}
+9 87 {1}
+Round 118, Devices participated 10, Average loss 0.015, Central accuracy on global test data 75.659, Ensemble accuracy on global test data 73.926, Local accuracy on global train data 41.868, Local accuracy on local train data 99.550
+
+
+delta var = 0.002424422651529312, alpha = 0.1922653933530154
+0 45 {6}
+1 7 {8}
+2 65 {9}
+3 19 {9}
+4 95 {3}
+5 16 {7}
+6 35 {8}
+7 23 {7}
+8 83 {7}
+9 88 {6, 7}
+Round 119, Devices participated 10, Average loss 0.014, Central accuracy on global test data 73.706, Ensemble accuracy on global test data 72.998, Local accuracy on global train data 34.983, Local accuracy on local train data 99.533
+
+
+delta var = 0.001990973250940442, alpha = 0.1936474115393299
+0 12 {1}
+1 91 {1}
+2 4 {8}
+3 90 {5}
+4 47 {5}
+5 66 {6}
+6 33 {0}
+7 9 {3}
+8 61 {1}
+9 84 {1}
+Round 120, Devices participated 10, Average loss 0.013, Central accuracy on global test data 78.711, Ensemble accuracy on global test data 79.297, Local accuracy on global train data 42.390, Local accuracy on local train data 99.617
+
+
+delta var = 0.0036746079567819834, alpha = 0.18828289666141862
+0 46 {3}
+1 60 {8}
+2 83 {7}
+3 2 {4}
+4 37 {9}
+5 70 {5}
+6 93 {9}
+7 29 {3}
+8 3 {9}
+9 43 {0}
+Round 121, Devices participated 10, Average loss 0.014, Central accuracy on global test data 77.832, Ensemble accuracy on global test data 77.612, Local accuracy on global train data 35.950, Local accuracy on local train data 99.600
+
+
+delta var = 0.0041376324370503426, alpha = 0.18680964415068166
+0 27 {9}
+1 45 {6}
+2 49 {7}
+3 4 {8}
+4 31 {4}
+5 62 {0}
+6 9 {3}
+7 95 {3}
+8 69 {5}
+9 72 {5}
+Round 122, Devices participated 10, Average loss 0.014, Central accuracy on global test data 84.009, Ensemble accuracy on global test data 84.375, Local accuracy on global train data 31.882, Local accuracy on local train data 99.517
+
+
+delta var = 0.0019822425674647093, alpha = 0.19367525386425608
+0 27 {9}
+1 28 {6}
+2 1 {4}
+3 92 {8}
+4 55 {3}
+5 48 {4}
+6 74 {4}
+7 7 {8}
+8 99 {5}
+9 62 {0}
+Round 123, Devices participated 10, Average loss 0.013, Central accuracy on global test data 75.195, Ensemble accuracy on global test data 74.683, Local accuracy on global train data 35.063, Local accuracy on local train data 99.617
+
+
+delta var = 0.009684691205620766, alpha = 0.16928312558227301
+0 24 {2}
+1 0 {8, 7}
+2 9 {3}
+3 11 {4}
+4 31 {4}
+5 45 {6}
+6 58 {8}
+7 35 {8}
+8 69 {5}
+9 21 {2}
+Round 124, Devices participated 10, Average loss 0.023, Central accuracy on global test data 78.271, Ensemble accuracy on global test data 77.344, Local accuracy on global train data 28.450, Local accuracy on local train data 99.367
+
+
+delta var = 0.0018354883650317788, alpha = 0.19414328414279486
+0 42 {7}
+1 98 {5}
+2 67 {1}
+3 21 {2}
+4 24 {2}
+5 81 {0}
+6 20 {2}
+7 75 {4}
+8 29 {3}
+9 36 {5}
+Round 125, Devices participated 10, Average loss 0.015, Central accuracy on global test data 75.293, Ensemble accuracy on global test data 76.636, Local accuracy on global train data 33.210, Local accuracy on local train data 99.583
+
+
+delta var = 0.0016166353598237038, alpha = 0.1948413452524631
+0 49 {7}
+1 75 {4}
+2 33 {0}
+3 60 {8}
+4 42 {7}
+5 64 {7}
+6 69 {5}
+7 11 {4}
+8 47 {5}
+9 70 {5}
+Round 126, Devices participated 10, Average loss 0.013, Central accuracy on global test data 71.094, Ensemble accuracy on global test data 73.779, Local accuracy on global train data 38.884, Local accuracy on local train data 99.650
+
+
+delta var = 0.006311662960797548, alpha = 0.1799094569775142
+0 96 {0}
+1 60 {8}
+2 16 {7}
+3 70 {5}
+4 73 {1, 2}
+5 40 {2}
+6 11 {4}
+7 24 {2}
+8 87 {1}
+9 93 {9}
+Round 127, Devices participated 10, Average loss 0.022, Central accuracy on global test data 80.151, Ensemble accuracy on global test data 79.736, Local accuracy on global train data 35.771, Local accuracy on local train data 99.283
+
+
+delta var = 0.007673401385545731, alpha = 0.17560584035798713
+0 37 {9}
+1 16 {7}
+2 85 {2}
+3 31 {4}
+4 69 {5}
+5 36 {5}
+6 54 {7}
+7 25 {6}
+8 32 {2}
+9 38 {4, 5}
+Round 128, Devices participated 10, Average loss 0.015, Central accuracy on global test data 80.322, Ensemble accuracy on global test data 81.030, Local accuracy on global train data 34.268, Local accuracy on local train data 99.550
+
+
+delta var = 0.002789973746985197, alpha = 0.19110031064628202
+0 80 {1}
+1 92 {8}
+2 61 {1}
+3 76 {0, 1}
+4 19 {9}
+5 28 {6}
+6 7 {8}
+7 73 {1, 2}
+8 67 {1}
+9 38 {4, 5}
+Round 129, Devices participated 10, Average loss 0.018, Central accuracy on global test data 80.737, Ensemble accuracy on global test data 79.663, Local accuracy on global train data 46.614, Local accuracy on local train data 99.383
+
+
+delta var = 0.002774433232843876, alpha = 0.1911498320662514
+0 78 {9}
+1 26 {1}
+2 35 {8}
+3 44 {2}
+4 29 {3}
+5 85 {2}
+6 64 {7}
+7 66 {6}
+8 97 {3}
+9 21 {2}
+Round 130, Devices participated 10, Average loss 0.015, Central accuracy on global test data 79.053, Ensemble accuracy on global test data 81.860, Local accuracy on global train data 34.509, Local accuracy on local train data 99.433
+
+
+delta var = 0.0026924125850200653, alpha = 0.19141121319218873
+0 78 {9}
+1 73 {1, 2}
+2 10 {7}
+3 52 {1}
+4 54 {7}
+5 24 {2}
+6 44 {2}
+7 70 {5}
+8 99 {5}
+9 90 {5}
+Round 131, Devices participated 10, Average loss 0.019, Central accuracy on global test data 77.173, Ensemble accuracy on global test data 75.171, Local accuracy on global train data 33.933, Local accuracy on local train data 99.417
+
+
+delta var = 0.004433399066329002, alpha = 0.1858691558953921
+0 96 {0}
+1 38 {4, 5}
+2 1 {4}
+3 4 {8}
+4 36 {5}
+5 19 {9}
+6 77 {6}
+7 52 {1}
+8 41 {8, 9}
+9 49 {7}
+Round 132, Devices participated 10, Average loss 0.023, Central accuracy on global test data 86.133, Ensemble accuracy on global test data 86.133, Local accuracy on global train data 42.886, Local accuracy on local train data 99.233
+
+
+delta var = 0.0018698805943131447, alpha = 0.19403359535581835
+0 87 {1}
+1 55 {3}
+2 49 {7}
+3 7 {8}
+4 51 {5, 6}
+5 67 {1}
+6 40 {2}
+7 21 {2}
+8 34 {3}
+9 0 {8, 7}
+Round 133, Devices participated 10, Average loss 0.019, Central accuracy on global test data 86.279, Ensemble accuracy on global test data 85.620, Local accuracy on global train data 39.417, Local accuracy on local train data 99.417
+
+
+delta var = 0.0013241874985396862, alpha = 0.19577429893971715
+0 74 {4}
+1 63 {5}
+2 39 {1}
+3 14 {6}
+4 96 {0}
+5 82 {6}
+6 21 {2}
+7 45 {6}
+8 88 {6, 7}
+9 13 {4}
+Round 134, Devices participated 10, Average loss 0.011, Central accuracy on global test data 80.713, Ensemble accuracy on global test data 80.347, Local accuracy on global train data 50.112, Local accuracy on local train data 99.667
+
+
+delta var = 0.009371433407068253, alpha = 0.1702649093881634
+0 1 {4}
+1 26 {1}
+2 23 {7}
+3 59 {3}
+4 22 {3}
+5 57 {9}
+6 27 {9}
+7 60 {8}
+8 18 {0}
+9 69 {5}
+Round 135, Devices participated 10, Average loss 0.015, Central accuracy on global test data 82.471, Ensemble accuracy on global test data 82.056, Local accuracy on global train data 42.234, Local accuracy on local train data 99.400
+
+
+delta var = 0.0012718708021566272, alpha = 0.19594121341373175
+0 34 {3}
+1 87 {1}
+2 43 {0}
+3 64 {7}
+4 27 {9}
+5 92 {8}
+6 78 {9}
+7 55 {3}
+8 68 {7}
+9 7 {8}
+Round 136, Devices participated 10, Average loss 0.014, Central accuracy on global test data 73.120, Ensemble accuracy on global test data 78.125, Local accuracy on global train data 41.465, Local accuracy on local train data 99.583
+
+
+delta var = 0.0025227328296750784, alpha = 0.19195201642970156
+0 67 {1}
+1 20 {2}
+2 34 {3}
+3 69 {5}
+4 85 {2}
+5 14 {6}
+6 86 {0}
+7 81 {0}
+8 36 {5}
+9 76 {0, 1}
+Round 137, Devices participated 10, Average loss 0.017, Central accuracy on global test data 80.469, Ensemble accuracy on global test data 80.347, Local accuracy on global train data 36.584, Local accuracy on local train data 99.483
+
+
+delta var = 0.006315364968031645, alpha = 0.17989773569644069
+0 57 {9}
+1 7 {8}
+2 53 {1}
+3 49 {7}
+4 74 {4}
+5 65 {9}
+6 76 {0, 1}
+7 29 {3}
+8 78 {9}
+9 80 {1}
+Round 138, Devices participated 10, Average loss 0.016, Central accuracy on global test data 75.903, Ensemble accuracy on global test data 78.076, Local accuracy on global train data 40.176, Local accuracy on local train data 99.467
+
+
+delta var = 0.0031487708911299706, alpha = 0.1899572158385516
+0 71 {3, 4}
+1 25 {6}
+2 7 {8}
+3 77 {6}
+4 39 {1}
+5 51 {5, 6}
+6 87 {1}
+7 5 {7}
+8 45 {6}
+9 11 {4}
+Round 139, Devices participated 10, Average loss 0.021, Central accuracy on global test data 79.102, Ensemble accuracy on global test data 77.808, Local accuracy on global train data 46.355, Local accuracy on local train data 99.250
+
+
+delta var = 0.019893022254109383, alpha = 0.1381466116959221
+0 60 {8}
+1 21 {2}
+2 34 {3}
+3 0 {8, 7}
+4 98 {5}
+5 92 {8}
+6 44 {2}
+7 65 {9}
+8 66 {6}
+9 3 {9}
+Round 140, Devices participated 10, Average loss 0.021, Central accuracy on global test data 78.662, Ensemble accuracy on global test data 77.197, Local accuracy on global train data 27.544, Local accuracy on local train data 99.233
+
+
+delta var = 0.006433454342186451, alpha = 0.1795238994319732
+0 36 {5}
+1 59 {3}
+2 66 {6}
+3 20 {2}
+4 0 {8, 7}
+5 16 {7}
+6 86 {0}
+7 71 {3, 4}
+8 90 {5}
+9 56 {0}
+Round 141, Devices participated 10, Average loss 0.021, Central accuracy on global test data 87.134, Ensemble accuracy on global test data 86.963, Local accuracy on global train data 31.152, Local accuracy on local train data 99.333
+
+
+delta var = 0.0010351409437134862, alpha = 0.1966965440732723
+0 19 {9}
+1 22 {3}
+2 51 {5, 6}
+3 45 {6}
+4 91 {1}
+5 26 {1}
+6 14 {6}
+7 83 {7}
+8 15 {2}
+9 67 {1}
+Round 142, Devices participated 10, Average loss 0.013, Central accuracy on global test data 83.887, Ensemble accuracy on global test data 83.984, Local accuracy on global train data 52.810, Local accuracy on local train data 99.633
+
+
+delta var = 0.00321779097430408, alpha = 0.18973738160100806
+0 62 {0}
+1 14 {6}
+2 3 {9}
+3 92 {8}
+4 78 {9}
+5 33 {0}
+6 89 {9}
+7 48 {4}
+8 70 {5}
+9 31 {4}
+Round 143, Devices participated 10, Average loss 0.015, Central accuracy on global test data 83.569, Ensemble accuracy on global test data 83.203, Local accuracy on global train data 42.117, Local accuracy on local train data 99.550
+
+
+delta var = 0.002841189969331026, alpha = 0.19093711107930345
+0 37 {9}
+1 10 {7}
+2 88 {6, 7}
+3 63 {5}
+4 53 {1}
+5 68 {7}
+6 2 {4}
+7 52 {1}
+8 26 {1}
+9 59 {3}
+Round 144, Devices participated 10, Average loss 0.014, Central accuracy on global test data 85.425, Ensemble accuracy on global test data 85.010, Local accuracy on global train data 44.038, Local accuracy on local train data 99.567
+
+
+delta var = 0.002374745439738035, alpha = 0.19242375759033745
+0 59 {3}
+1 71 {3, 4}
+2 85 {2}
+3 49 {7}
+4 20 {2}
+5 10 {7}
+6 3 {9}
+7 86 {0}
+8 88 {6, 7}
+9 33 {0}
+Round 145, Devices participated 10, Average loss 0.014, Central accuracy on global test data 82.471, Ensemble accuracy on global test data 81.250, Local accuracy on global train data 42.981, Local accuracy on local train data 99.533
+
+
+delta var = 0.00393911637365818, alpha = 0.18744115219688562
+0 9 {3}
+1 0 {8, 7}
+2 18 {0}
+3 66 {6}
+4 44 {2}
+5 17 {8}
+6 92 {8}
+7 95 {3}
+8 64 {7}
+9 96 {0}
+Round 146, Devices participated 10, Average loss 0.020, Central accuracy on global test data 79.175, Ensemble accuracy on global test data 77.612, Local accuracy on global train data 37.263, Local accuracy on local train data 99.400
+
+
+delta var = 0.0057096718810498714, alpha = 0.1818168907801384
+0 70 {5}
+1 58 {8}
+2 24 {2}
+3 57 {9}
+4 32 {2}
+5 19 {9}
+6 43 {0}
+7 65 {9}
+8 5 {7}
+9 88 {6, 7}
+Round 147, Devices participated 10, Average loss 0.014, Central accuracy on global test data 79.419, Ensemble accuracy on global test data 80.762, Local accuracy on global train data 32.983, Local accuracy on local train data 99.350
+
+
+delta var = 0.006666500121355057, alpha = 0.17878648018257742
+0 61 {1}
+1 75 {4}
+2 68 {7}
+3 2 {4}
+4 6 {2}
+5 26 {1}
+6 1 {4}
+7 56 {0}
+8 78 {9}
+9 74 {4}
+Round 148, Devices participated 10, Average loss 0.017, Central accuracy on global test data 77.979, Ensemble accuracy on global test data 78.467, Local accuracy on global train data 41.704, Local accuracy on local train data 99.250
+
+
+delta var = 0.019001774489879608, alpha = 0.14078381419544256
+0 8 {0}
+1 57 {9}
+2 22 {3}
+3 90 {5}
+4 46 {3}
+5 9 {3}
+6 56 {0}
+7 99 {5}
+8 89 {9}
+9 4 {8}
+Round 149, Devices participated 10, Average loss 0.026, Central accuracy on global test data 80.493, Ensemble accuracy on global test data 80.664, Local accuracy on global train data 29.956, Local accuracy on local train data 99.217
+
+
+delta var = 0.0016738338163122535, alpha = 0.19465889300004746
+0 83 {7}
+1 41 {8, 9}
+2 69 {5}
+3 7 {8}
+4 63 {5}
+5 51 {5, 6}
+6 78 {9}
+7 89 {9}
+8 43 {0}
+9 81 {0}
+Round 150, Devices participated 10, Average loss 0.024, Central accuracy on global test data 74.829, Ensemble accuracy on global test data 74.487, Local accuracy on global train data 34.788, Local accuracy on local train data 99.400
+
+
+delta var = 0.005864121485501528, alpha = 0.18132724959877275
+0 74 {4}
+1 76 {0, 1}
+2 14 {6}
+3 98 {5}
+4 73 {1, 2}
+5 37 {9}
+6 94 {2, 3}
+7 68 {7}
+8 39 {1}
+9 11 {4}
+Round 151, Devices participated 10, Average loss 0.032, Central accuracy on global test data 87.793, Ensemble accuracy on global test data 85.962, Local accuracy on global train data 41.826, Local accuracy on local train data 99.067
+
+
+delta var = 0.0015905856853350997, alpha = 0.19492444103561543
+0 38 {4, 5}
+1 78 {9}
+2 17 {8}
+3 56 {0}
+4 90 {5}
+5 34 {3}
+6 42 {7}
+7 0 {8, 7}
+8 1 {4}
+9 12 {1}
+Round 152, Devices participated 10, Average loss 0.014, Central accuracy on global test data 86.475, Ensemble accuracy on global test data 85.376, Local accuracy on global train data 47.334, Local accuracy on local train data 99.567
+
+
+delta var = 0.0012667689006775618, alpha = 0.1959574910813357
+0 45 {6}
+1 36 {5}
+2 95 {3}
+3 8 {0}
+4 99 {5}
+5 75 {4}
+6 93 {9}
+7 4 {8}
+8 24 {2}
+9 58 {8}
+Round 153, Devices participated 10, Average loss 0.012, Central accuracy on global test data 85.449, Ensemble accuracy on global test data 86.499, Local accuracy on global train data 36.240, Local accuracy on local train data 99.717
+
+
+delta var = 0.0017663455801084638, alpha = 0.19436381287290308
+0 66 {6}
+1 46 {3}
+2 89 {9}
+3 23 {7}
+4 4 {8}
+5 97 {3}
+6 78 {9}
+7 26 {1}
+8 79 {6}
+9 52 {1}
+Round 154, Devices participated 10, Average loss 0.014, Central accuracy on global test data 83.740, Ensemble accuracy on global test data 82.739, Local accuracy on global train data 39.985, Local accuracy on local train data 99.583
+
+
+delta var = 0.0020982755813747644, alpha = 0.19330523832367602
+0 71 {3, 4}
+1 79 {6}
+2 23 {7}
+3 7 {8}
+4 97 {3}
+5 86 {0}
+6 72 {5}
+7 57 {9}
+8 70 {5}
+9 64 {7}
+Round 155, Devices participated 10, Average loss 0.016, Central accuracy on global test data 86.816, Ensemble accuracy on global test data 87.012, Local accuracy on global train data 38.345, Local accuracy on local train data 99.450
+
+
+delta var = 0.0016478521283715963, alpha = 0.19474176881626737
+0 55 {3}
+1 14 {6}
+2 21 {2}
+3 43 {0}
+4 5 {7}
+5 30 {8}
+6 35 {8}
+7 15 {2}
+8 28 {6}
+9 34 {3}
+Round 156, Devices participated 10, Average loss 0.013, Central accuracy on global test data 83.789, Ensemble accuracy on global test data 82.153, Local accuracy on global train data 36.663, Local accuracy on local train data 99.717
+
+
+delta var = 0.002303451532498002, alpha = 0.19265104595016105
+0 54 {7}
+1 51 {5, 6}
+2 22 {3}
+3 85 {2}
+4 73 {1, 2}
+5 90 {5}
+6 4 {8}
+7 69 {5}
+8 75 {4}
+9 6 {2}
+Round 157, Devices participated 10, Average loss 0.021, Central accuracy on global test data 84.473, Ensemble accuracy on global test data 82.202, Local accuracy on global train data 29.722, Local accuracy on local train data 99.300
+
+
+delta var = 0.002016775542870164, alpha = 0.19356512864692643
+0 78 {9}
+1 98 {5}
+2 48 {4}
+3 28 {6}
+4 76 {0, 1}
+5 96 {0}
+6 97 {3}
+7 69 {5}
+8 66 {6}
+9 65 {9}
+Round 158, Devices participated 10, Average loss 0.011, Central accuracy on global test data 86.426, Ensemble accuracy on global test data 85.864, Local accuracy on global train data 39.978, Local accuracy on local train data 99.717
+
+
+delta var = 0.0015859974082559347, alpha = 0.19493907731101703
+0 52 {1}
+1 54 {7}
+2 70 {5}
+3 39 {1}
+4 89 {9}
+5 14 {6}
+6 77 {6}
+7 74 {4}
+8 15 {2}
+9 88 {6, 7}
+Round 159, Devices participated 10, Average loss 0.010, Central accuracy on global test data 84.839, Ensemble accuracy on global test data 85.498, Local accuracy on global train data 48.137, Local accuracy on local train data 99.700
+
+
+delta var = 0.002060633385553956, alpha = 0.19342527097608236
+0 58 {8}
+1 12 {1}
+2 87 {1}
+3 84 {1}
+4 91 {1}
+5 62 {0}
+6 82 {6}
+7 57 {9}
+8 6 {2}
+9 21 {2}
+Round 160, Devices participated 10, Average loss 0.010, Central accuracy on global test data 84.766, Ensemble accuracy on global test data 86.011, Local accuracy on global train data 45.928, Local accuracy on local train data 99.750
+
+
+delta var = 0.0015004855813458562, alpha = 0.1952118615803764
+0 59 {3}
+1 99 {5}
+2 54 {7}
+3 55 {3}
+4 14 {6}
+5 63 {5}
+6 7 {8}
+7 88 {6, 7}
+8 91 {1}
+9 52 {1}
+Round 161, Devices participated 10, Average loss 0.014, Central accuracy on global test data 86.108, Ensemble accuracy on global test data 85.596, Local accuracy on global train data 40.469, Local accuracy on local train data 99.617
+
+
+delta var = 0.001477204728871584, alpha = 0.1952861303776795
+0 44 {2}
+1 73 {1, 2}
+2 39 {1}
+3 28 {6}
+4 18 {0}
+5 92 {8}
+6 52 {1}
+7 79 {6}
+8 54 {7}
+9 77 {6}
+Round 162, Devices participated 10, Average loss 0.011, Central accuracy on global test data 86.377, Ensemble accuracy on global test data 85.376, Local accuracy on global train data 51.482, Local accuracy on local train data 99.733
+
+
+delta var = 0.0030543371103703976, alpha = 0.1902580255235854
+0 59 {3}
+1 70 {5}
+2 54 {7}
+3 27 {9}
+4 89 {9}
+5 21 {2}
+6 42 {7}
+7 25 {6}
+8 60 {8}
+9 49 {7}
+Round 163, Devices participated 10, Average loss 0.013, Central accuracy on global test data 84.375, Ensemble accuracy on global test data 84.180, Local accuracy on global train data 36.404, Local accuracy on local train data 99.650
+
+
+delta var = 0.003946023061871529, alpha = 0.1874191776574476
+0 2 {4}
+1 56 {0}
+2 59 {3}
+3 80 {1}
+4 62 {0}
+5 19 {9}
+6 42 {7}
+7 33 {0}
+8 72 {5}
+9 35 {8}
+Round 164, Devices participated 10, Average loss 0.012, Central accuracy on global test data 87.720, Ensemble accuracy on global test data 88.818, Local accuracy on global train data 42.788, Local accuracy on local train data 99.633
+
+
+delta var = 0.0018389899050816894, alpha = 0.19413211638559905
+0 53 {1}
+1 17 {8}
+2 11 {4}
+3 78 {9}
+4 66 {6}
+5 39 {1}
+6 94 {2, 3}
+7 4 {8}
+8 47 {5}
+9 90 {5}
+Round 165, Devices participated 10, Average loss 0.017, Central accuracy on global test data 84.009, Ensemble accuracy on global test data 84.058, Local accuracy on global train data 37.922, Local accuracy on local train data 99.500
+
+
+delta var = 0.0015673123998567462, alpha = 0.19499868158883574
+0 48 {4}
+1 51 {5, 6}
+2 34 {3}
+3 78 {9}
+4 92 {8}
+5 54 {7}
+6 96 {0}
+7 84 {1}
+8 88 {6, 7}
+9 74 {4}
+Round 166, Devices participated 10, Average loss 0.012, Central accuracy on global test data 86.621, Ensemble accuracy on global test data 85.815, Local accuracy on global train data 47.278, Local accuracy on local train data 99.667
+
+
+delta var = 0.002255647210404277, alpha = 0.19280345678830896
+0 15 {2}
+1 25 {6}
+2 50 {8}
+3 89 {9}
+4 72 {5}
+5 20 {2}
+6 85 {2}
+7 47 {5}
+8 1 {4}
+9 3 {9}
+Round 167, Devices participated 10, Average loss 0.017, Central accuracy on global test data 77.148, Ensemble accuracy on global test data 79.565, Local accuracy on global train data 24.839, Local accuracy on local train data 99.517
+
+
+delta var = 0.0054816449992358685, alpha = 0.1825401035010987
+0 91 {1}
+1 39 {1}
+2 11 {4}
+3 12 {1}
+4 93 {9}
+5 64 {7}
+6 30 {8}
+7 79 {6}
+8 29 {3}
+9 49 {7}
+Round 168, Devices participated 10, Average loss 0.018, Central accuracy on global test data 86.572, Ensemble accuracy on global test data 86.450, Local accuracy on global train data 39.739, Local accuracy on local train data 99.483
+
+
+delta var = 0.007139693945646286, alpha = 0.1772905942922879
+0 21 {2}
+1 88 {6, 7}
+2 95 {3}
+3 65 {9}
+4 60 {8}
+5 8 {0}
+6 46 {3}
+7 31 {4}
+8 63 {5}
+9 72 {5}
+Round 169, Devices participated 10, Average loss 0.014, Central accuracy on global test data 85.913, Ensemble accuracy on global test data 86.865, Local accuracy on global train data 31.643, Local accuracy on local train data 99.467
+
+
+delta var = 0.0010897256433963776, alpha = 0.1965223742491687
+0 96 {0}
+1 63 {5}
+2 58 {8}
+3 77 {6}
+4 95 {3}
+5 23 {7}
+6 61 {1}
+7 29 {3}
+8 91 {1}
+9 59 {3}
+Round 170, Devices participated 10, Average loss 0.010, Central accuracy on global test data 81.592, Ensemble accuracy on global test data 80.664, Local accuracy on global train data 41.958, Local accuracy on local train data 99.733
+
+
+delta var = 0.004202142357826233, alpha = 0.18660447302920047
+0 8 {0}
+1 69 {5}
+2 44 {2}
+3 89 {9}
+4 49 {7}
+5 36 {5}
+6 77 {6}
+7 19 {9}
+8 92 {8}
+9 72 {5}
+Round 171, Devices participated 10, Average loss 0.015, Central accuracy on global test data 74.731, Ensemble accuracy on global test data 74.292, Local accuracy on global train data 27.742, Local accuracy on local train data 99.433
+
+
+delta var = 0.009972183033823967, alpha = 0.16838314203250138
+0 47 {5}
+1 49 {7}
+2 1 {4}
+3 80 {1}
+4 27 {9}
+5 9 {3}
+6 83 {7}
+7 72 {5}
+8 76 {0, 1}
+9 92 {8}
+Round 172, Devices participated 10, Average loss 0.018, Central accuracy on global test data 86.133, Ensemble accuracy on global test data 88.525, Local accuracy on global train data 33.137, Local accuracy on local train data 99.433
+
+
+delta var = 0.0018709748983383179, alpha = 0.19403010528552908
+0 10 {7}
+1 57 {9}
+2 54 {7}
+3 1 {4}
+4 80 {1}
+5 76 {0, 1}
+6 56 {0}
+7 39 {1}
+8 14 {6}
+9 20 {2}
+Round 173, Devices participated 10, Average loss 0.010, Central accuracy on global test data 85.547, Ensemble accuracy on global test data 85.864, Local accuracy on global train data 49.075, Local accuracy on local train data 99.700
+
+
+delta var = 0.001543294987641275, alpha = 0.1950752970026495
+0 6 {2}
+1 62 {0}
+2 31 {4}
+3 90 {5}
+4 3 {9}
+5 51 {5, 6}
+6 24 {2}
+7 91 {1}
+8 23 {7}
+9 55 {3}
+Round 174, Devices participated 10, Average loss 0.013, Central accuracy on global test data 86.353, Ensemble accuracy on global test data 86.646, Local accuracy on global train data 42.021, Local accuracy on local train data 99.667
+
+
+delta var = 0.0012192646972835064, alpha = 0.19610905571402226
+0 98 {5}
+1 18 {0}
+2 78 {9}
+3 89 {9}
+4 27 {9}
+5 80 {1}
+6 33 {0}
+7 86 {0}
+8 88 {6, 7}
+9 15 {2}
+Round 175, Devices participated 10, Average loss 0.008, Central accuracy on global test data 76.831, Ensemble accuracy on global test data 77.295, Local accuracy on global train data 48.376, Local accuracy on local train data 99.717
+
+
+delta var = 0.004715858027338982, alpha = 0.1849714437071192
+0 85 {2}
+1 12 {1}
+2 59 {3}
+3 60 {8}
+4 73 {1, 2}
+5 80 {1}
+6 0 {8, 7}
+7 10 {7}
+8 23 {7}
+9 13 {4}
+Round 176, Devices participated 10, Average loss 0.025, Central accuracy on global test data 81.104, Ensemble accuracy on global test data 80.371, Local accuracy on global train data 34.192, Local accuracy on local train data 99.083
+
+
+delta var = 0.00462834257632494, alpha = 0.18524953585848228
+0 35 {8}
+1 46 {3}
+2 54 {7}
+3 87 {1}
+4 84 {1}
+5 51 {5, 6}
+6 27 {9}
+7 95 {3}
+8 21 {2}
+9 61 {1}
+Round 177, Devices participated 10, Average loss 0.015, Central accuracy on global test data 85.693, Ensemble accuracy on global test data 85.229, Local accuracy on global train data 43.555, Local accuracy on local train data 99.483
+
+
+delta var = 0.00344018149189651, alpha = 0.18902918574889926
+0 64 {7}
+1 6 {2}
+2 96 {0}
+3 98 {5}
+4 27 {9}
+5 71 {3, 4}
+6 18 {0}
+7 3 {9}
+8 1 {4}
+9 95 {3}
+Round 178, Devices participated 10, Average loss 0.017, Central accuracy on global test data 87.402, Ensemble accuracy on global test data 88.477, Local accuracy on global train data 43.850, Local accuracy on local train data 99.567
+
+
+delta var = 0.0012404501903802156, alpha = 0.196041461854011
+0 88 {6, 7}
+1 90 {5}
+2 96 {0}
+3 35 {8}
+4 69 {5}
+5 11 {4}
+6 60 {8}
+7 48 {4}
+8 23 {7}
+9 42 {7}
+Round 179, Devices participated 10, Average loss 0.013, Central accuracy on global test data 79.980, Ensemble accuracy on global test data 80.029, Local accuracy on global train data 41.323, Local accuracy on local train data 99.583
+
+
+delta var = 0.0055689457803964615, alpha = 0.18226317578595252
+0 98 {5}
+1 88 {6, 7}
+2 43 {0}
+3 57 {9}
+4 48 {4}
+5 99 {5}
+6 63 {5}
+7 53 {1}
+8 94 {2, 3}
+9 55 {3}
+Round 180, Devices participated 10, Average loss 0.018, Central accuracy on global test data 80.957, Ensemble accuracy on global test data 83.081, Local accuracy on global train data 34.507, Local accuracy on local train data 99.367
+
+
+delta var = 0.0021304553374648094, alpha = 0.1932026271897166
+0 96 {0}
+1 75 {4}
+2 74 {4}
+3 76 {0, 1}
+4 39 {1}
+5 80 {1}
+6 34 {3}
+7 12 {1}
+8 60 {8}
+9 20 {2}
+Round 181, Devices participated 10, Average loss 0.012, Central accuracy on global test data 78.662, Ensemble accuracy on global test data 79.956, Local accuracy on global train data 48.184, Local accuracy on local train data 99.683
+
+
+delta var = 0.0019830630626529455, alpha = 0.1936726372804056
+0 20 {2}
+1 47 {5}
+2 38 {4, 5}
+3 59 {3}
+4 64 {7}
+5 82 {6}
+6 60 {8}
+7 45 {6}
+8 63 {5}
+9 85 {2}
+Round 182, Devices participated 10, Average loss 0.014, Central accuracy on global test data 79.077, Ensemble accuracy on global test data 80.640, Local accuracy on global train data 36.890, Local accuracy on local train data 99.600
+
+
+delta var = 0.0017347066896036267, alpha = 0.19446472773375914
+0 32 {2}
+1 6 {2}
+2 51 {5, 6}
+3 4 {8}
+4 8 {0}
+5 22 {3}
+6 72 {5}
+7 86 {0}
+8 55 {3}
+9 12 {1}
+Round 183, Devices participated 10, Average loss 0.013, Central accuracy on global test data 79.858, Ensemble accuracy on global test data 80.591, Local accuracy on global train data 37.261, Local accuracy on local train data 99.517
+
+
+delta var = 0.005199498031288385, alpha = 0.18343546312691533
+0 45 {6}
+1 71 {3, 4}
+2 84 {1}
+3 65 {9}
+4 61 {1}
+5 83 {7}
+6 87 {1}
+7 53 {1}
+8 77 {6}
+9 51 {5, 6}
+Round 184, Devices participated 10, Average loss 0.015, Central accuracy on global test data 82.837, Ensemble accuracy on global test data 82.495, Local accuracy on global train data 55.264, Local accuracy on local train data 99.550
+
+
+delta var = 0.0034216446802020073, alpha = 0.189088207577171
+0 13 {4}
+1 71 {3, 4}
+2 56 {0}
+3 63 {5}
+4 49 {7}
+5 44 {2}
+6 85 {2}
+7 76 {0, 1}
+8 50 {8}
+9 93 {9}
+Round 185, Devices participated 10, Average loss 0.019, Central accuracy on global test data 85.425, Ensemble accuracy on global test data 84.668, Local accuracy on global train data 32.488, Local accuracy on local train data 99.450
+
+
+delta var = 0.0028867146465927362, alpha = 0.1907920554867567
+0 45 {6}
+1 52 {1}
+2 95 {3}
+3 68 {7}
+4 64 {7}
+5 15 {2}
+6 29 {3}
+7 54 {7}
+8 43 {0}
+9 93 {9}
+Round 186, Devices participated 10, Average loss 0.012, Central accuracy on global test data 79.248, Ensemble accuracy on global test data 79.761, Local accuracy on global train data 41.145, Local accuracy on local train data 99.600
+
+
+delta var = 0.004248670767992735, alpha = 0.1864565051440671
+0 58 {8}
+1 70 {5}
+2 25 {6}
+3 56 {0}
+4 87 {1}
+5 27 {9}
+6 94 {2, 3}
+7 1 {4}
+8 74 {4}
+9 44 {2}
+Round 187, Devices participated 10, Average loss 0.014, Central accuracy on global test data 84.033, Ensemble accuracy on global test data 83.716, Local accuracy on global train data 40.889, Local accuracy on local train data 99.450
+
+
+delta var = 0.0018871264765039086, alpha = 0.19397859329522743
+0 2 {4}
+1 7 {8}
+2 31 {4}
+3 45 {6}
+4 81 {0}
+5 62 {0}
+6 23 {7}
+7 97 {3}
+8 18 {0}
+9 27 {9}
+Round 188, Devices participated 10, Average loss 0.010, Central accuracy on global test data 82.300, Ensemble accuracy on global test data 82.861, Local accuracy on global train data 48.115, Local accuracy on local train data 99.717
+
+
+delta var = 0.00431453250348568, alpha = 0.18624707418332767
+0 25 {6}
+1 13 {4}
+2 40 {2}
+3 64 {7}
+4 52 {1}
+5 44 {2}
+6 22 {3}
+7 48 {4}
+8 3 {9}
+9 46 {3}
+Round 189, Devices participated 10, Average loss 0.012, Central accuracy on global test data 84.448, Ensemble accuracy on global test data 84.180, Local accuracy on global train data 38.875, Local accuracy on local train data 99.650
+
+
+delta var = 0.0026770879048854113, alpha = 0.19146005203899383
+0 84 {1}
+1 9 {3}
+2 72 {5}
+3 56 {0}
+4 13 {4}
+5 98 {5}
+6 21 {2}
+7 79 {6}
+8 71 {3, 4}
+9 32 {2}
+Round 190, Devices participated 10, Average loss 0.016, Central accuracy on global test data 79.004, Ensemble accuracy on global test data 78.345, Local accuracy on global train data 34.785, Local accuracy on local train data 99.500
+
+
+delta var = 0.0046983277425169945, alpha = 0.18502714490235767
+0 32 {2}
+1 2 {4}
+2 36 {5}
+3 91 {1}
+4 58 {8}
+5 81 {0}
+6 87 {1}
+7 68 {7}
+8 25 {6}
+9 5 {7}
+Round 191, Devices participated 10, Average loss 0.014, Central accuracy on global test data 83.618, Ensemble accuracy on global test data 83.228, Local accuracy on global train data 44.231, Local accuracy on local train data 99.667
+
+
+delta var = 0.00912612397223711, alpha = 0.17103454292189613
+0 25 {6}
+1 41 {8, 9}
+2 74 {4}
+3 21 {2}
+4 97 {3}
+5 69 {5}
+6 4 {8}
+7 17 {8}
+8 3 {9}
+9 88 {6, 7}
+Round 192, Devices participated 10, Average loss 0.023, Central accuracy on global test data 83.203, Ensemble accuracy on global test data 84.351, Local accuracy on global train data 37.693, Local accuracy on local train data 99.200
+
+
+delta var = 0.003028635634109378, alpha = 0.19033990114649235
+0 80 {1}
+1 19 {9}
+2 97 {3}
+3 75 {4}
+4 60 {8}
+5 93 {9}
+6 78 {9}
+7 40 {2}
+8 32 {2}
+9 87 {1}
+Round 193, Devices participated 10, Average loss 0.011, Central accuracy on global test data 83.032, Ensemble accuracy on global test data 82.275, Local accuracy on global train data 38.491, Local accuracy on local train data 99.633
+
+
+delta var = 0.002160573611035943, alpha = 0.1931065920243932
+0 70 {5}
+1 59 {3}
+2 68 {7}
+3 16 {7}
+4 36 {5}
+5 72 {5}
+6 71 {3, 4}
+7 45 {6}
+8 91 {1}
+9 56 {0}
+Round 194, Devices participated 10, Average loss 0.016, Central accuracy on global test data 80.908, Ensemble accuracy on global test data 80.005, Local accuracy on global train data 35.745, Local accuracy on local train data 99.467
+
+
+delta var = 0.0006246669800020754, alpha = 0.1980064033054566
+0 83 {7}
+1 81 {0}
+2 9 {3}
+3 39 {1}
+4 2 {4}
+5 67 {1}
+6 66 {6}
+7 98 {5}
+8 80 {1}
+9 51 {5, 6}
+Round 195, Devices participated 10, Average loss 0.011, Central accuracy on global test data 77.588, Ensemble accuracy on global test data 77.661, Local accuracy on global train data 50.474, Local accuracy on local train data 99.767
+
+
+delta var = 0.01564437337219715, alpha = 0.15087323188188334
+0 43 {0}
+1 64 {7}
+2 42 {7}
+3 4 {8}
+4 78 {9}
+5 0 {8, 7}
+6 39 {1}
+7 57 {9}
+8 37 {9}
+9 98 {5}
+Round 196, Devices participated 10, Average loss 0.018, Central accuracy on global test data 76.440, Ensemble accuracy on global test data 75.879, Local accuracy on global train data 39.727, Local accuracy on local train data 99.233
+
+
+delta var = 0.02006591111421585, alpha = 0.13763716983658805
+0 11 {4}
+1 6 {2}
+2 16 {7}
+3 48 {4}
+4 14 {6}
+5 19 {9}
+6 68 {7}
+7 82 {6}
+8 94 {2, 3}
+9 39 {1}
+Round 197, Devices participated 10, Average loss 0.026, Central accuracy on global test data 86.768, Ensemble accuracy on global test data 85.791, Local accuracy on global train data 37.937, Local accuracy on local train data 99.300
+
+
+delta var = 0.003675826359540224, alpha = 0.1882790185730232
+0 0 {8, 7}
+1 7 {8}
+2 93 {9}
+3 77 {6}
+4 78 {9}
+5 38 {4, 5}
+6 46 {3}
+7 99 {5}
+8 42 {7}
+9 54 {7}
+Round 198, Devices participated 10, Average loss 0.015, Central accuracy on global test data 84.619, Ensemble accuracy on global test data 84.058, Local accuracy on global train data 39.136, Local accuracy on local train data 99.433
+
+
+delta var = 0.0027395314536988735, alpha = 0.1912610532209905
+0 36 {5}
+1 70 {5}
+2 71 {3, 4}
+3 57 {9}
+4 63 {5}
+5 73 {1, 2}
+6 69 {5}
+7 17 {8}
+8 48 {4}
+9 47 {5}
+Round 199, Devices participated 10, Average loss 0.019, Central accuracy on global test data 62.939, Ensemble accuracy on global test data 59.741, Local accuracy on global train data 28.325, Local accuracy on local train data 99.417
+
+
+Testing accuracy on test data: 61.02, Testing loss: 1.06
+

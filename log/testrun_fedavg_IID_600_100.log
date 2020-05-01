@@ -1,0 +1,2033 @@
+python main_fedavg.py --dataset mnist --model mlp --epochs 200 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --iid --store_models testrun_fedavg_IID_600_100
+
+
+
+]0;root@da8c0c2f5553: /workspace/deepedgeroot@da8c0c2f5553:/workspace/deepedge# [Kpython main_fedavg.py --dataset mnist --model mlp --epochs 200 --gpu 0 --num_chan
+nnels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --iid --store_models testrun_fedavg_IID_600_100
+  File "main_fedavg.py", line 37
+    trans_mnist = transforms.Compose([transforms.Resize((32, 32)),[transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+                                                                                                                                     ^
+SyntaxError: invalid syntax
+]0;root@da8c0c2f5553: /workspace/deepedgeroot@da8c0c2f5553:/workspace/deepedge# [Kpython main_fedavg.py --dataset mnist --model mlp --epochs 200 --gpu 0 --num_chan
+nnels 1 --local_bs 10 --frac 0.1 --local_ep 1 --momentum 0.5 --iid --store_models testrun_fedavg_IID_600_100
+MLP(
+  (layer_input): Linear(in_features=1024, out_features=200, bias=True)
+  (relu): ReLU()
+  (layer_hidden1): Linear(in_features=200, out_features=200, bias=True)
+  (layer_hidden2): Linear(in_features=200, out_features=10, bias=True)
+)
+Round   0, Devices participated 10, Average loss 2.062, Central accuracy on global test data 68.677, Local accuracy on global train data 61.426, Local accuracy on local train data 41.217
+0 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   1, Devices participated 10, Average loss 1.217, Central accuracy on global test data 82.593, Local accuracy on global train data 75.354, Local accuracy on local train data 70.950
+0 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   2, Devices participated 10, Average loss 0.707, Central accuracy on global test data 86.133, Local accuracy on global train data 82.341, Local accuracy on local train data 80.467
+0 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   3, Devices participated 10, Average loss 0.554, Central accuracy on global test data 88.965, Local accuracy on global train data 84.487, Local accuracy on local train data 84.033
+0 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   4, Devices participated 10, Average loss 0.487, Central accuracy on global test data 88.867, Local accuracy on global train data 86.184, Local accuracy on local train data 85.917
+0 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   5, Devices participated 10, Average loss 0.439, Central accuracy on global test data 90.674, Local accuracy on global train data 87.209, Local accuracy on local train data 86.950
+0 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   6, Devices participated 10, Average loss 0.394, Central accuracy on global test data 90.063, Local accuracy on global train data 86.995, Local accuracy on local train data 88.167
+0 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   7, Devices participated 10, Average loss 0.382, Central accuracy on global test data 90.527, Local accuracy on global train data 87.776, Local accuracy on local train data 88.267
+0 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   8, Devices participated 10, Average loss 0.367, Central accuracy on global test data 90.918, Local accuracy on global train data 88.867, Local accuracy on local train data 88.983
+0 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round   9, Devices participated 10, Average loss 0.344, Central accuracy on global test data 91.553, Local accuracy on global train data 89.089, Local accuracy on local train data 89.700
+0 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  10, Devices participated 10, Average loss 0.339, Central accuracy on global test data 91.748, Local accuracy on global train data 89.939, Local accuracy on local train data 89.683
+0 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  11, Devices participated 10, Average loss 0.296, Central accuracy on global test data 91.528, Local accuracy on global train data 90.066, Local accuracy on local train data 91.117
+0 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  12, Devices participated 10, Average loss 0.306, Central accuracy on global test data 92.480, Local accuracy on global train data 90.129, Local accuracy on local train data 90.983
+0 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  13, Devices participated 10, Average loss 0.314, Central accuracy on global test data 92.236, Local accuracy on global train data 90.212, Local accuracy on local train data 90.733
+0 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  14, Devices participated 10, Average loss 0.306, Central accuracy on global test data 91.675, Local accuracy on global train data 90.486, Local accuracy on local train data 90.817
+0 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  15, Devices participated 10, Average loss 0.289, Central accuracy on global test data 92.847, Local accuracy on global train data 91.355, Local accuracy on local train data 91.017
+0 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  16, Devices participated 10, Average loss 0.284, Central accuracy on global test data 92.603, Local accuracy on global train data 91.533, Local accuracy on local train data 91.517
+0 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  17, Devices participated 10, Average loss 0.264, Central accuracy on global test data 92.627, Local accuracy on global train data 91.199, Local accuracy on local train data 92.100
+0 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  18, Devices participated 10, Average loss 0.276, Central accuracy on global test data 93.921, Local accuracy on global train data 91.689, Local accuracy on local train data 92.017
+0 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  19, Devices participated 10, Average loss 0.254, Central accuracy on global test data 93.652, Local accuracy on global train data 91.816, Local accuracy on local train data 92.283
+0 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  20, Devices participated 10, Average loss 0.272, Central accuracy on global test data 93.677, Local accuracy on global train data 92.175, Local accuracy on local train data 92.333
+0 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  21, Devices participated 10, Average loss 0.239, Central accuracy on global test data 93.530, Local accuracy on global train data 91.785, Local accuracy on local train data 92.650
+0 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  22, Devices participated 10, Average loss 0.236, Central accuracy on global test data 94.092, Local accuracy on global train data 92.317, Local accuracy on local train data 92.967
+0 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  23, Devices participated 10, Average loss 0.220, Central accuracy on global test data 93.799, Local accuracy on global train data 92.874, Local accuracy on local train data 93.517
+0 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  24, Devices participated 10, Average loss 0.221, Central accuracy on global test data 93.921, Local accuracy on global train data 92.246, Local accuracy on local train data 93.450
+0 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  25, Devices participated 10, Average loss 0.229, Central accuracy on global test data 94.263, Local accuracy on global train data 92.703, Local accuracy on local train data 93.050
+0 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  26, Devices participated 10, Average loss 0.223, Central accuracy on global test data 94.824, Local accuracy on global train data 92.842, Local accuracy on local train data 93.200
+0 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  27, Devices participated 10, Average loss 0.215, Central accuracy on global test data 93.994, Local accuracy on global train data 92.751, Local accuracy on local train data 93.433
+0 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  28, Devices participated 10, Average loss 0.200, Central accuracy on global test data 94.653, Local accuracy on global train data 93.267, Local accuracy on local train data 94.083
+0 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  29, Devices participated 10, Average loss 0.203, Central accuracy on global test data 94.873, Local accuracy on global train data 93.379, Local accuracy on local train data 94.050
+0 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  30, Devices participated 10, Average loss 0.206, Central accuracy on global test data 94.556, Local accuracy on global train data 93.237, Local accuracy on local train data 93.683
+0 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  31, Devices participated 10, Average loss 0.184, Central accuracy on global test data 94.507, Local accuracy on global train data 93.308, Local accuracy on local train data 94.250
+0 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  32, Devices participated 10, Average loss 0.190, Central accuracy on global test data 94.800, Local accuracy on global train data 93.513, Local accuracy on local train data 94.517
+0 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  33, Devices participated 10, Average loss 0.195, Central accuracy on global test data 94.287, Local accuracy on global train data 93.491, Local accuracy on local train data 94.250
+0 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  34, Devices participated 10, Average loss 0.170, Central accuracy on global test data 95.068, Local accuracy on global train data 94.001, Local accuracy on local train data 95.133
+0 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  35, Devices participated 10, Average loss 0.183, Central accuracy on global test data 95.166, Local accuracy on global train data 93.691, Local accuracy on local train data 94.617
+0 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  36, Devices participated 10, Average loss 0.168, Central accuracy on global test data 95.020, Local accuracy on global train data 93.787, Local accuracy on local train data 95.433
+0 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  37, Devices participated 10, Average loss 0.172, Central accuracy on global test data 95.239, Local accuracy on global train data 93.909, Local accuracy on local train data 95.083
+0 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  38, Devices participated 10, Average loss 0.178, Central accuracy on global test data 95.459, Local accuracy on global train data 93.960, Local accuracy on local train data 94.600
+0 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  39, Devices participated 10, Average loss 0.166, Central accuracy on global test data 95.703, Local accuracy on global train data 94.158, Local accuracy on local train data 94.783
+0 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  40, Devices participated 10, Average loss 0.171, Central accuracy on global test data 95.337, Local accuracy on global train data 94.019, Local accuracy on local train data 94.683
+0 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  41, Devices participated 10, Average loss 0.163, Central accuracy on global test data 95.459, Local accuracy on global train data 94.558, Local accuracy on local train data 95.150
+0 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  42, Devices participated 10, Average loss 0.165, Central accuracy on global test data 95.728, Local accuracy on global train data 94.441, Local accuracy on local train data 95.100
+0 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  43, Devices participated 10, Average loss 0.153, Central accuracy on global test data 95.776, Local accuracy on global train data 94.478, Local accuracy on local train data 95.317
+0 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  44, Devices participated 10, Average loss 0.157, Central accuracy on global test data 95.435, Local accuracy on global train data 94.331, Local accuracy on local train data 95.433
+0 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  45, Devices participated 10, Average loss 0.159, Central accuracy on global test data 95.654, Local accuracy on global train data 94.641, Local accuracy on local train data 95.167
+0 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  46, Devices participated 10, Average loss 0.143, Central accuracy on global test data 95.679, Local accuracy on global train data 94.895, Local accuracy on local train data 95.650
+0 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  47, Devices participated 10, Average loss 0.160, Central accuracy on global test data 95.093, Local accuracy on global train data 94.697, Local accuracy on local train data 95.300
+0 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  48, Devices participated 10, Average loss 0.160, Central accuracy on global test data 95.825, Local accuracy on global train data 94.834, Local accuracy on local train data 94.800
+0 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  49, Devices participated 10, Average loss 0.149, Central accuracy on global test data 96.582, Local accuracy on global train data 94.905, Local accuracy on local train data 95.533
+0 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  50, Devices participated 10, Average loss 0.140, Central accuracy on global test data 95.874, Local accuracy on global train data 94.641, Local accuracy on local train data 96.017
+0 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  51, Devices participated 10, Average loss 0.142, Central accuracy on global test data 95.996, Local accuracy on global train data 94.910, Local accuracy on local train data 95.800
+0 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  52, Devices participated 10, Average loss 0.133, Central accuracy on global test data 96.094, Local accuracy on global train data 94.954, Local accuracy on local train data 96.117
+0 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  53, Devices participated 10, Average loss 0.137, Central accuracy on global test data 95.923, Local accuracy on global train data 94.846, Local accuracy on local train data 95.850
+0 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  54, Devices participated 10, Average loss 0.136, Central accuracy on global test data 95.996, Local accuracy on global train data 95.061, Local accuracy on local train data 95.950
+0 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  55, Devices participated 10, Average loss 0.125, Central accuracy on global test data 95.728, Local accuracy on global train data 95.398, Local accuracy on local train data 96.267
+0 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  56, Devices participated 10, Average loss 0.135, Central accuracy on global test data 95.361, Local accuracy on global train data 95.215, Local accuracy on local train data 95.967
+0 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  57, Devices participated 10, Average loss 0.131, Central accuracy on global test data 96.021, Local accuracy on global train data 95.295, Local accuracy on local train data 95.933
+0 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  58, Devices participated 10, Average loss 0.145, Central accuracy on global test data 95.898, Local accuracy on global train data 95.400, Local accuracy on local train data 95.867
+0 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  59, Devices participated 10, Average loss 0.130, Central accuracy on global test data 96.167, Local accuracy on global train data 95.557, Local accuracy on local train data 96.367
+0 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  60, Devices participated 10, Average loss 0.114, Central accuracy on global test data 96.143, Local accuracy on global train data 95.420, Local accuracy on local train data 96.650
+0 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  61, Devices participated 10, Average loss 0.128, Central accuracy on global test data 96.094, Local accuracy on global train data 95.566, Local accuracy on local train data 96.033
+0 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  62, Devices participated 10, Average loss 0.131, Central accuracy on global test data 96.143, Local accuracy on global train data 95.701, Local accuracy on local train data 96.417
+0 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  63, Devices participated 10, Average loss 0.127, Central accuracy on global test data 96.411, Local accuracy on global train data 95.754, Local accuracy on local train data 96.200
+0 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  64, Devices participated 10, Average loss 0.123, Central accuracy on global test data 96.582, Local accuracy on global train data 95.669, Local accuracy on local train data 96.583
+0 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  65, Devices participated 10, Average loss 0.107, Central accuracy on global test data 96.387, Local accuracy on global train data 95.884, Local accuracy on local train data 96.817
+0 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  66, Devices participated 10, Average loss 0.121, Central accuracy on global test data 96.631, Local accuracy on global train data 95.601, Local accuracy on local train data 96.450
+0 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  67, Devices participated 10, Average loss 0.109, Central accuracy on global test data 96.606, Local accuracy on global train data 95.798, Local accuracy on local train data 96.767
+0 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  68, Devices participated 10, Average loss 0.120, Central accuracy on global test data 96.411, Local accuracy on global train data 95.876, Local accuracy on local train data 96.650
+0 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  69, Devices participated 10, Average loss 0.103, Central accuracy on global test data 95.996, Local accuracy on global train data 95.925, Local accuracy on local train data 97.133
+0 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  70, Devices participated 10, Average loss 0.101, Central accuracy on global test data 96.558, Local accuracy on global train data 95.933, Local accuracy on local train data 96.833
+0 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  71, Devices participated 10, Average loss 0.099, Central accuracy on global test data 96.143, Local accuracy on global train data 96.069, Local accuracy on local train data 96.967
+0 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  72, Devices participated 10, Average loss 0.114, Central accuracy on global test data 96.631, Local accuracy on global train data 95.898, Local accuracy on local train data 96.550
+0 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  73, Devices participated 10, Average loss 0.112, Central accuracy on global test data 96.265, Local accuracy on global train data 96.128, Local accuracy on local train data 96.833
+0 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  74, Devices participated 10, Average loss 0.113, Central accuracy on global test data 96.680, Local accuracy on global train data 95.867, Local accuracy on local train data 96.517
+0 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  75, Devices participated 10, Average loss 0.109, Central accuracy on global test data 96.680, Local accuracy on global train data 96.018, Local accuracy on local train data 96.733
+0 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  76, Devices participated 10, Average loss 0.101, Central accuracy on global test data 96.509, Local accuracy on global train data 96.118, Local accuracy on local train data 97.217
+0 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  77, Devices participated 10, Average loss 0.093, Central accuracy on global test data 96.875, Local accuracy on global train data 96.155, Local accuracy on local train data 97.200
+0 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  78, Devices participated 10, Average loss 0.097, Central accuracy on global test data 97.021, Local accuracy on global train data 96.162, Local accuracy on local train data 97.067
+0 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  79, Devices participated 10, Average loss 0.099, Central accuracy on global test data 96.460, Local accuracy on global train data 96.208, Local accuracy on local train data 97.283
+0 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  80, Devices participated 10, Average loss 0.103, Central accuracy on global test data 96.533, Local accuracy on global train data 96.199, Local accuracy on local train data 97.133
+0 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  81, Devices participated 10, Average loss 0.103, Central accuracy on global test data 96.655, Local accuracy on global train data 96.309, Local accuracy on local train data 96.850
+0 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  82, Devices participated 10, Average loss 0.094, Central accuracy on global test data 96.558, Local accuracy on global train data 96.133, Local accuracy on local train data 97.250
+0 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  83, Devices participated 10, Average loss 0.100, Central accuracy on global test data 96.436, Local accuracy on global train data 96.274, Local accuracy on local train data 97.017
+0 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  84, Devices participated 10, Average loss 0.083, Central accuracy on global test data 96.680, Local accuracy on global train data 96.562, Local accuracy on local train data 97.383
+0 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  85, Devices participated 10, Average loss 0.096, Central accuracy on global test data 96.509, Local accuracy on global train data 96.387, Local accuracy on local train data 96.800
+0 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  86, Devices participated 10, Average loss 0.091, Central accuracy on global test data 96.655, Local accuracy on global train data 96.567, Local accuracy on local train data 97.383
+0 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  87, Devices participated 10, Average loss 0.085, Central accuracy on global test data 96.802, Local accuracy on global train data 96.387, Local accuracy on local train data 97.417
+0 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  88, Devices participated 10, Average loss 0.096, Central accuracy on global test data 96.655, Local accuracy on global train data 96.345, Local accuracy on local train data 97.233
+0 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  89, Devices participated 10, Average loss 0.077, Central accuracy on global test data 96.411, Local accuracy on global train data 96.689, Local accuracy on local train data 97.667
+0 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  90, Devices participated 10, Average loss 0.086, Central accuracy on global test data 96.851, Local accuracy on global train data 96.619, Local accuracy on local train data 97.500
+0 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  91, Devices participated 10, Average loss 0.098, Central accuracy on global test data 96.436, Local accuracy on global train data 96.375, Local accuracy on local train data 97.067
+0 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  92, Devices participated 10, Average loss 0.083, Central accuracy on global test data 96.460, Local accuracy on global train data 96.550, Local accuracy on local train data 97.533
+0 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  93, Devices participated 10, Average loss 0.102, Central accuracy on global test data 96.777, Local accuracy on global train data 96.321, Local accuracy on local train data 96.900
+0 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  94, Devices participated 10, Average loss 0.085, Central accuracy on global test data 96.558, Local accuracy on global train data 96.841, Local accuracy on local train data 97.600
+0 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  95, Devices participated 10, Average loss 0.082, Central accuracy on global test data 96.680, Local accuracy on global train data 96.567, Local accuracy on local train data 97.800
+0 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  96, Devices participated 10, Average loss 0.086, Central accuracy on global test data 96.777, Local accuracy on global train data 96.694, Local accuracy on local train data 97.450
+0 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  97, Devices participated 10, Average loss 0.084, Central accuracy on global test data 96.826, Local accuracy on global train data 96.663, Local accuracy on local train data 97.333
+0 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  98, Devices participated 10, Average loss 0.087, Central accuracy on global test data 96.460, Local accuracy on global train data 96.650, Local accuracy on local train data 97.400
+0 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round  99, Devices participated 10, Average loss 0.073, Central accuracy on global test data 96.655, Local accuracy on global train data 96.553, Local accuracy on local train data 97.800
+0 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 100, Devices participated 10, Average loss 0.086, Central accuracy on global test data 96.802, Local accuracy on global train data 96.719, Local accuracy on local train data 97.467
+0 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 101, Devices participated 10, Average loss 0.095, Central accuracy on global test data 96.509, Local accuracy on global train data 96.697, Local accuracy on local train data 97.433
+0 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 102, Devices participated 10, Average loss 0.081, Central accuracy on global test data 96.777, Local accuracy on global train data 96.436, Local accuracy on local train data 97.483
+0 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 103, Devices participated 10, Average loss 0.081, Central accuracy on global test data 97.388, Local accuracy on global train data 96.687, Local accuracy on local train data 97.533
+0 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 104, Devices participated 10, Average loss 0.080, Central accuracy on global test data 96.460, Local accuracy on global train data 96.904, Local accuracy on local train data 97.583
+0 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 105, Devices participated 10, Average loss 0.088, Central accuracy on global test data 96.606, Local accuracy on global train data 96.707, Local accuracy on local train data 97.467
+0 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 106, Devices participated 10, Average loss 0.074, Central accuracy on global test data 96.826, Local accuracy on global train data 96.726, Local accuracy on local train data 97.883
+0 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 107, Devices participated 10, Average loss 0.073, Central accuracy on global test data 97.070, Local accuracy on global train data 97.009, Local accuracy on local train data 97.950
+0 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 108, Devices participated 10, Average loss 0.078, Central accuracy on global test data 96.875, Local accuracy on global train data 96.704, Local accuracy on local train data 97.583
+0 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 109, Devices participated 10, Average loss 0.078, Central accuracy on global test data 97.046, Local accuracy on global train data 96.824, Local accuracy on local train data 97.833
+0 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 110, Devices participated 10, Average loss 0.070, Central accuracy on global test data 97.144, Local accuracy on global train data 96.919, Local accuracy on local train data 97.967
+0 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 111, Devices participated 10, Average loss 0.087, Central accuracy on global test data 97.070, Local accuracy on global train data 96.887, Local accuracy on local train data 97.483
+0 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 112, Devices participated 10, Average loss 0.071, Central accuracy on global test data 96.973, Local accuracy on global train data 96.765, Local accuracy on local train data 98.117
+0 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 113, Devices participated 10, Average loss 0.078, Central accuracy on global test data 97.144, Local accuracy on global train data 96.831, Local accuracy on local train data 97.600
+0 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 114, Devices participated 10, Average loss 0.078, Central accuracy on global test data 97.021, Local accuracy on global train data 96.995, Local accuracy on local train data 97.733
+0 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 115, Devices participated 10, Average loss 0.072, Central accuracy on global test data 96.729, Local accuracy on global train data 96.768, Local accuracy on local train data 97.867
+0 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 116, Devices participated 10, Average loss 0.072, Central accuracy on global test data 97.144, Local accuracy on global train data 97.080, Local accuracy on local train data 97.983
+0 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 117, Devices participated 10, Average loss 0.069, Central accuracy on global test data 96.948, Local accuracy on global train data 96.870, Local accuracy on local train data 97.900
+0 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 118, Devices participated 10, Average loss 0.071, Central accuracy on global test data 96.948, Local accuracy on global train data 97.031, Local accuracy on local train data 97.900
+0 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 119, Devices participated 10, Average loss 0.067, Central accuracy on global test data 97.095, Local accuracy on global train data 97.107, Local accuracy on local train data 97.983
+0 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 120, Devices participated 10, Average loss 0.062, Central accuracy on global test data 97.168, Local accuracy on global train data 96.995, Local accuracy on local train data 98.483
+0 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 121, Devices participated 10, Average loss 0.074, Central accuracy on global test data 96.997, Local accuracy on global train data 96.851, Local accuracy on local train data 97.817
+0 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 122, Devices participated 10, Average loss 0.077, Central accuracy on global test data 97.119, Local accuracy on global train data 96.929, Local accuracy on local train data 97.533
+0 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 123, Devices participated 10, Average loss 0.069, Central accuracy on global test data 97.266, Local accuracy on global train data 97.192, Local accuracy on local train data 97.833
+0 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 124, Devices participated 10, Average loss 0.059, Central accuracy on global test data 97.144, Local accuracy on global train data 97.080, Local accuracy on local train data 98.433
+0 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 125, Devices participated 10, Average loss 0.068, Central accuracy on global test data 97.095, Local accuracy on global train data 97.122, Local accuracy on local train data 97.983
+0 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 126, Devices participated 10, Average loss 0.062, Central accuracy on global test data 97.241, Local accuracy on global train data 97.295, Local accuracy on local train data 98.117
+0 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 67 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 127, Devices participated 10, Average loss 0.070, Central accuracy on global test data 96.899, Local accuracy on global train data 97.080, Local accuracy on local train data 98.050
+0 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 128, Devices participated 10, Average loss 0.065, Central accuracy on global test data 97.095, Local accuracy on global train data 97.251, Local accuracy on local train data 98.233
+0 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 129, Devices participated 10, Average loss 0.069, Central accuracy on global test data 97.314, Local accuracy on global train data 97.219, Local accuracy on local train data 97.783
+0 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 130, Devices participated 10, Average loss 0.054, Central accuracy on global test data 96.802, Local accuracy on global train data 97.239, Local accuracy on local train data 98.483
+0 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 131, Devices participated 10, Average loss 0.061, Central accuracy on global test data 97.363, Local accuracy on global train data 97.261, Local accuracy on local train data 98.200
+0 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 132, Devices participated 10, Average loss 0.066, Central accuracy on global test data 97.388, Local accuracy on global train data 97.173, Local accuracy on local train data 98.067
+0 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 133, Devices participated 10, Average loss 0.057, Central accuracy on global test data 97.192, Local accuracy on global train data 97.112, Local accuracy on local train data 98.250
+0 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 134, Devices participated 10, Average loss 0.064, Central accuracy on global test data 97.144, Local accuracy on global train data 97.266, Local accuracy on local train data 98.117
+0 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 135, Devices participated 10, Average loss 0.065, Central accuracy on global test data 97.290, Local accuracy on global train data 97.078, Local accuracy on local train data 98.050
+0 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 136, Devices participated 10, Average loss 0.059, Central accuracy on global test data 97.192, Local accuracy on global train data 97.292, Local accuracy on local train data 98.367
+0 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 137, Devices participated 10, Average loss 0.054, Central accuracy on global test data 97.241, Local accuracy on global train data 97.432, Local accuracy on local train data 98.383
+0 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 138, Devices participated 10, Average loss 0.049, Central accuracy on global test data 96.777, Local accuracy on global train data 97.366, Local accuracy on local train data 98.500
+0 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 139, Devices participated 10, Average loss 0.053, Central accuracy on global test data 96.899, Local accuracy on global train data 97.334, Local accuracy on local train data 98.600
+0 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 34 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 140, Devices participated 10, Average loss 0.056, Central accuracy on global test data 97.168, Local accuracy on global train data 97.244, Local accuracy on local train data 98.483
+0 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 141, Devices participated 10, Average loss 0.048, Central accuracy on global test data 97.192, Local accuracy on global train data 97.456, Local accuracy on local train data 98.733
+0 32 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 142, Devices participated 10, Average loss 0.058, Central accuracy on global test data 97.485, Local accuracy on global train data 97.231, Local accuracy on local train data 98.400
+0 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 44 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 143, Devices participated 10, Average loss 0.060, Central accuracy on global test data 96.997, Local accuracy on global train data 97.415, Local accuracy on local train data 98.300
+0 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 81 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 144, Devices participated 10, Average loss 0.050, Central accuracy on global test data 97.168, Local accuracy on global train data 97.390, Local accuracy on local train data 98.650
+0 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 145, Devices participated 10, Average loss 0.062, Central accuracy on global test data 97.217, Local accuracy on global train data 97.490, Local accuracy on local train data 98.200
+0 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 146, Devices participated 10, Average loss 0.060, Central accuracy on global test data 97.290, Local accuracy on global train data 97.031, Local accuracy on local train data 98.333
+0 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 147, Devices participated 10, Average loss 0.055, Central accuracy on global test data 97.266, Local accuracy on global train data 97.429, Local accuracy on local train data 98.433
+0 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 4 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 148, Devices participated 10, Average loss 0.051, Central accuracy on global test data 97.168, Local accuracy on global train data 97.466, Local accuracy on local train data 98.400
+0 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 13 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 149, Devices participated 10, Average loss 0.060, Central accuracy on global test data 96.973, Local accuracy on global train data 97.295, Local accuracy on local train data 98.450
+0 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 150, Devices participated 10, Average loss 0.054, Central accuracy on global test data 97.412, Local accuracy on global train data 97.273, Local accuracy on local train data 98.333
+0 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 151, Devices participated 10, Average loss 0.057, Central accuracy on global test data 97.339, Local accuracy on global train data 97.483, Local accuracy on local train data 98.400
+0 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 152, Devices participated 10, Average loss 0.058, Central accuracy on global test data 97.437, Local accuracy on global train data 97.451, Local accuracy on local train data 98.200
+0 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 153, Devices participated 10, Average loss 0.057, Central accuracy on global test data 97.144, Local accuracy on global train data 97.263, Local accuracy on local train data 98.300
+0 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 69 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 29 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 154, Devices participated 10, Average loss 0.049, Central accuracy on global test data 97.583, Local accuracy on global train data 97.610, Local accuracy on local train data 98.617
+0 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 51 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 155, Devices participated 10, Average loss 0.047, Central accuracy on global test data 97.412, Local accuracy on global train data 97.544, Local accuracy on local train data 98.733
+0 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 156, Devices participated 10, Average loss 0.049, Central accuracy on global test data 97.437, Local accuracy on global train data 97.405, Local accuracy on local train data 98.550
+0 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 157, Devices participated 10, Average loss 0.049, Central accuracy on global test data 97.461, Local accuracy on global train data 97.427, Local accuracy on local train data 98.550
+0 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 158, Devices participated 10, Average loss 0.049, Central accuracy on global test data 96.802, Local accuracy on global train data 97.478, Local accuracy on local train data 98.567
+0 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 77 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 159, Devices participated 10, Average loss 0.045, Central accuracy on global test data 97.192, Local accuracy on global train data 97.585, Local accuracy on local train data 98.717
+0 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 160, Devices participated 10, Average loss 0.049, Central accuracy on global test data 97.705, Local accuracy on global train data 97.361, Local accuracy on local train data 98.417
+0 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 161, Devices participated 10, Average loss 0.043, Central accuracy on global test data 97.095, Local accuracy on global train data 97.732, Local accuracy on local train data 98.767
+0 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 85 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 162, Devices participated 10, Average loss 0.043, Central accuracy on global test data 97.461, Local accuracy on global train data 97.590, Local accuracy on local train data 98.850
+0 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 163, Devices participated 10, Average loss 0.042, Central accuracy on global test data 97.412, Local accuracy on global train data 97.634, Local accuracy on local train data 98.917
+0 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 3 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 164, Devices participated 10, Average loss 0.039, Central accuracy on global test data 97.412, Local accuracy on global train data 97.673, Local accuracy on local train data 98.983
+0 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 22 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 98 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 36 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 19 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 50 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 165, Devices participated 10, Average loss 0.055, Central accuracy on global test data 97.290, Local accuracy on global train data 97.407, Local accuracy on local train data 98.267
+0 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 82 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 166, Devices participated 10, Average loss 0.041, Central accuracy on global test data 97.607, Local accuracy on global train data 97.485, Local accuracy on local train data 98.967
+0 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 49 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 30 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 37 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 167, Devices participated 10, Average loss 0.048, Central accuracy on global test data 97.681, Local accuracy on global train data 97.446, Local accuracy on local train data 98.717
+0 89 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 73 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 8 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 43 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 47 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 168, Devices participated 10, Average loss 0.042, Central accuracy on global test data 97.119, Local accuracy on global train data 97.798, Local accuracy on local train data 98.750
+0 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 28 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 39 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 90 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 169, Devices participated 10, Average loss 0.050, Central accuracy on global test data 97.290, Local accuracy on global train data 97.380, Local accuracy on local train data 98.600
+0 84 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 16 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 0 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 5 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 170, Devices participated 10, Average loss 0.049, Central accuracy on global test data 96.924, Local accuracy on global train data 97.747, Local accuracy on local train data 98.600
+0 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 9 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 64 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 171, Devices participated 10, Average loss 0.043, Central accuracy on global test data 97.583, Local accuracy on global train data 97.634, Local accuracy on local train data 98.917
+0 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 11 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 71 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 7 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 23 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 66 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 172, Devices participated 10, Average loss 0.049, Central accuracy on global test data 97.363, Local accuracy on global train data 97.820, Local accuracy on local train data 98.600
+0 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 6 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 55 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 173, Devices participated 10, Average loss 0.055, Central accuracy on global test data 97.534, Local accuracy on global train data 97.534, Local accuracy on local train data 98.467
+0 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 18 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 92 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 25 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 174, Devices participated 10, Average loss 0.045, Central accuracy on global test data 97.363, Local accuracy on global train data 97.734, Local accuracy on local train data 98.617
+0 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 35 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 78 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 21 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 48 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 57 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 175, Devices participated 10, Average loss 0.042, Central accuracy on global test data 97.290, Local accuracy on global train data 97.837, Local accuracy on local train data 98.850
+0 17 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 27 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 96 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 46 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 14 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 72 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 176, Devices participated 10, Average loss 0.043, Central accuracy on global test data 97.729, Local accuracy on global train data 97.656, Local accuracy on local train data 98.817
+0 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 97 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 42 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 12 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 68 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 1 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 177, Devices participated 10, Average loss 0.046, Central accuracy on global test data 97.485, Local accuracy on global train data 97.617, Local accuracy on local train data 98.883
+0 80 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 76 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 60 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 59 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 41 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 62 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 40 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 26 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 94 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 10 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 178, Devices participated 10, Average loss 0.039, Central accuracy on global test data 97.437, Local accuracy on global train data 97.808, Local accuracy on local train data 98.983
+0 79 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 54 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 88 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 83 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 20 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 24 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 33 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 87 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 179, Devices participated 10, Average loss 0.042, Central accuracy on global test data 97.583, Local accuracy on global train data 97.549, Local accuracy on local train data 98.867
+0 95 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 52 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 65 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 93 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 91 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 74 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 75 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 38 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 61 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 63 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+Round 180, Devices participated 10, Average loss 0.050, Central accuracy on global test data 97.607, Local accuracy on global train data 97.769, Local accuracy on local train data 98.483
+0 31 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+1 53 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+2 58 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+3 45 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+4 2 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+5 56 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+6 70 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+7 99 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+8 15 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+9 86 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+^CTraceback (most recent call last):
+  File "main_fedavg.py", line 148, in <module>
+    acc_l, _ = test_img(local_user[idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
+  File "/workspace/deepedge/models/test.py", line 21, in test_img
+    for idx, (data, target) in enumerate(data_loader):
+  File "/opt/conda/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 345, in __next__
+    data = self._next_data()
+  File "/opt/conda/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 385, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/opt/conda/lib/python3.7/site-packages/torch/utils/data/_utils/fetch.py", line 44, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/opt/conda/lib/python3.7/site-packages/torch/utils/data/_utils/fetch.py", line 44, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/opt/conda/lib/python3.7/site-packages/torchvision/datasets/mnist.py", line 97, in __getitem__
+    img = self.transform(img)
+  File "/opt/conda/lib/python3.7/site-packages/torchvision/transforms/transforms.py", line 70, in __call__
+    img = t(img)
+  File "/opt/conda/lib/python3.7/site-packages/torchvision/transforms/transforms.py", line 207, in __call__
+    return F.resize(img, self.size, self.interpolation)
+  File "/opt/conda/lib/python3.7/site-packages/torchvision/transforms/functional.py", line 256, in resize
+    return img.resize(size[::-1], interpolation)
+  File "/opt/conda/lib/python3.7/site-packages/PIL/Image.py", line 1873, in resize
+    return self._new(self.im.resize(size, resample, box))
+KeyboardInterrupt

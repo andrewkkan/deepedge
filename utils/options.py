@@ -61,6 +61,8 @@ def args_parser():
                         help='how many batches to wait before logging training status')
     parser.add_argument('--nn_refresh', type=int, default=0, help='Re-initialize Generator and Global NNs every round for DFAN (default 0: none)')
     parser.add_argument('--store_models', type=str, default="testrun", help='Directory for model storage under deepedge/data')
+    parser.add_argument('--alpha_scale', type=float, default=0.5)
+    parser.add_argument('--noniid_hard', action='store_true')
 
 
     args = parser.parse_args()

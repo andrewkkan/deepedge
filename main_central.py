@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        trans_mnist = transforms.Compose([transforms.Resize((32, 32)),transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
         dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
@@ -85,6 +85,9 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr, momentum=args.momentum)
 
     for epoch_idx in range(args.epochs):
+
+        torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
+
         w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
         if args.rand_d2s == 0.0: # default
