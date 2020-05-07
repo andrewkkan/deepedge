@@ -17,6 +17,7 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 from scipy.stats import norm
 
 from models.Fed import FedAvg
+from models.test import test_img
 
 from IPython import embed
 
@@ -104,42 +105,42 @@ def ensemble(teacher, input, detach=True, mode=1):
     return t_sm_out
 
 
+def DFAN_multigen(args, teacher, gen_sd, ref_sd, student, proxy, generator, optimizer, epoch):
 
-def DFAN_multigen(args, teacher, student, generator, optimizer, epoch):
-
-    loss_G = []
     for ii in range(10):
         teacher[ii].eval()
-        generator[ii].train()
-        loss_G.append(torch.tensor(0.0))
+    generator.train()
+    proxy.train()
     student.train()
-    loss_S = torch.tensor(0.0)
-    optimizer_S, optimizer_G = optimizer
+    optimizer_P, optimizer_G = optimizer
     sm = torch.nn.Softmax()
 
+    # w_locals = []
+    # for local in teacher:
+    #     w_locals.append(copy.deepcopy(local.state_dict()))
+    # w_fedavg = FedAvg(w_locals)
+    mlpt = fusion_neuron_MLP_mg(teacher, ref_sd, 1024, 200, 10)
+    mlpt = mlpt.to(args.device)
+    mlpt.eval()
+    print(mlpt.alpha)
+
+    proxy_sd, loss_S1 = [], []
+    for ii in range(10):
+        proxy_sd.append(copy.deepcopy(mlpt.state_dict()))
+        loss_S1.append(None)
+
     for i in range(args.epoch_itrs):
-        for j in range(5):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            optimizer_S.zero_grad()
-            oneMinus_P_S = []
-            for ii in range(10):
-                fake = generator[ii](z).detach()
+        z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+        for ii in range(10):
+            if loss_S1[ii] and loss_S1[ii] < -0.670:
+                continue
+            generator.load_state_dict(gen_sd[ii])
+            proxy.load_state_dict(proxy_sd[ii]) 
+            for k in range(2):
+                optimizer_G.zero_grad()
+                fake = generator(z)
                 fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-                s_logit = student(fake)
-                t_logit = teacher[ii](fake).detach()
-                oneMinus_P_S.append(torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit))))
-            loss_S = torch.log(1. / (2. - oneMinus_P_S[0]))
-            for ii in range(1,10):
-                loss_S += torch.log(1. / (2. - oneMinus_P_S[ii]))
-            loss_S.backward()
-            optimizer_S.step()
-        for k in range(1):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            for ii in range(10):
-                optimizer_G[ii].zero_grad()
-                fake = generator[ii](z)
-                fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-                s_logit = student(fake)
+                s_logit = proxy(fake)
                 t_logit = teacher[ii](fake)
                 oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
                 max_Gout = torch.max(torch.abs(fake))
@@ -149,7 +150,34 @@ def DFAN_multigen(args, teacher, student, generator, optimizer, epoch):
                 else:
                     loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
                 loss_G.backward()                   
-                optimizer_G[ii].step()
+                optimizer_G.step()
+            for j in range(5):
+                optimizer_P.zero_grad()
+                fake = generator(z).detach()
+                fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+                s_logit = proxy(fake)
+                t_logit = teacher[ii](fake).detach()
+                oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+                loss_S1[ii] = torch.log(1. / (2. - oneMinus_P_S))
+
+                diff_L2 = torch.FloatTensor([0.]).to(args.device)
+                for ln, proxy_w, fedavg_w in zip(proxy.state_dict().keys(), proxy.parameters(), mlpt.parameters()):
+                    diff_L2 += ((fedavg_w - proxy_w) * mlpt.alpha[ln].to(args.device)).norm(2) * args.alpha_scale
+                if epoch == 0:
+                    loss_S2 = 0
+                else:
+                    loss_S2 = diff_L2
+                loss_S2 = diff_L2
+
+                loss_S = loss_S1[ii] + loss_S2
+                loss_S.backward()
+                optimizer_P.step()
+                # print(i, ii, loss_S1.cpu().detach().numpy(), loss_S2.cpu().detach().numpy(), loss_S.cpu().detach().numpy())
+            gen_sd[ii] = copy.deepcopy(generator.state_dict())
+            proxy_sd[ii] = copy.deepcopy(proxy.state_dict())
+
+        w_fedavg = FedAvg(proxy_sd)
+        student.load_state_dict(w_fedavg)
 
         if args.verbose and i % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tG_Loss: {:.6f} S_loss: {:.6f}'.format(
@@ -292,7 +320,7 @@ def DFAN_reg_cossim(args, teacher, student, generator, optimizer, epoch):
 
 
 
-def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
+def DFAN_regavg(args, teacher, student, generator, optimizer, epoch, dataset_test):
 
     for local in teacher:
         local.eval()
@@ -311,23 +339,29 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
     # mlpa, mlpt = model_fusion_MLP(teacher, 1024, 200, 10)
     # mlpa, mlpt = mlpa.to(args.device), mlpt.to(args.device)
     # w_mlpt = mlpt.state_dict()
-    mlpa, mlpt = fusion_layer_MLP(teacher, student, 1024, 200, 10)
+    mlpa, mlpt = fusion_neuron_MLP(teacher, student, 1024, 200, 10)
     mlpa = mlpa.to(args.device)
     mlpt = mlpt.to(args.device)
     mlpa.eval()
     mlpt.eval()
-    print(mlpt.alpha)
 
     w_fedavg = mlpt.state_dict()
 
+    # acc_mlpa, _ = test_img(mlpa, dataset_test, args, shuffle=True)
+    # acc_mlpt, _ = test_img(mlpt, dataset_test, args, shuffle=True)
+    # print("MLPA accuracy = ", acc_mlpa)
+    # print("MLPT accuracy = ", acc_mlpt)
     for i in range(args.epoch_itrs):
-        for k in range(1):
+        # acc_glob, _ = test_img(student, dataset_test, args, shuffle=True)
+        # print("Net_glob accuracy = ", acc_glob)
+        for k in range(2):
             z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
             optimizer_G.zero_grad()
             fake = generator(z)
             fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
             s_logit = student(fake)
             # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
+            # oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), t_sm))
             # t_logit = torch.zeros_like(teacher[0](fake))
             # for k in range(10):
             #     t_logit += teacher[k](fake) 
@@ -348,6 +382,7 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
             fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
             s_logit = student(fake)
             # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
+            # # oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), t_sm))
             # t_logit = torch.zeros_like(teacher[0](fake).detach())
             # for k in range(10):
             #     t_logit += teacher[k](fake).detach()
@@ -357,7 +392,7 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
 
             diff_L2 = torch.FloatTensor([0.]).to(args.device)
             for ln, student_w, fedavg_w in zip(student.state_dict().keys(), student.parameters(), w_fedavg.values()):
-                diff_L2 += (fedavg_w - student_w).norm(2) * mlpt.alpha[ln] * args.alpha_scale
+                diff_L2 += ((fedavg_w - student_w) * mlpt.alpha[ln].to(args.device)).norm(2) * args.alpha_scale
             if epoch == 0:
                 loss_S2 = 0
             else:
@@ -368,6 +403,8 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
             #     diff_L2 += ((mlpt_w - student_w)*mlpt_w.abs()).norm(2)
             # loss_S2 = diff_L2 * alpha
 
+            # print(loss_S1, loss_S2)
+
             loss_S = loss_S1 + loss_S2
             loss_S.backward()
             optimizer_S.step()
@@ -377,9 +414,12 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch):
                 epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
             #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
 
+        if loss_S1 < -0.65:
+            break
+
 
 def fusion_layer_MLP(models, ref, dim_in, dim_hidden, dim_out):
-    eps= 0.5
+    eps= 0.25
     num_models = len(models)
 
     layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
@@ -478,7 +518,10 @@ class MLP_agg_layer(nn.Module):
                         weights_to_average[nita_idx, :] = neurons_ensemble[ln+'.weight'][nita][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]]
                     weights_averaged = weights_to_average.mean(dim=0)
                     for nita_idx, nita in enumerate(neuron_indices_to_average):
-                        neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = weights_averaged
+                        if nita_idx == 0:
+                            neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = weights_averaged
+                        else:
+                            neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = torch.zeros_like(weights_averaged)
                     neurons_row_reduced[ln+'.bias'][row_index] = neurons_ensemble[ln+'.bias'][cmap_ci*num_neurons_original[ln]+ni].mean(dim=0)
                     row_index += 1
 
@@ -619,35 +662,59 @@ class MLP_trimmed_layer(nn.Module):
 
 
 
-
-
-
-def fusion_neuron_MLP(models, dim_in, dim_hidden, dim_out):
-    eps_agg, eps_trimmed = 0.001, 0.1
-    num_models = len(models)
-
-    neurons = {
-        'layer_input': torch.zeros(dim_hidden, num_models, dim_in+1),
-        'layer_hidden1': torch.zeros(dim_hidden, num_models, dim_hidden+1),
-        'layer_hidden2': torch.zeros(dim_out, num_models, dim_hidden+1),
+def fusion_neuron_MLP_mg(models, s_sd, dim_in, dim_hidden, dim_out):
+    eps = 0.25
+    neurons_delta = {
+        'layer_input': torch.zeros(dim_hidden, len(models), dim_in+1),
+        'layer_hidden1': torch.zeros(dim_hidden, len(models), dim_hidden+1),
+        'layer_hidden2': torch.zeros(dim_out, len(models), dim_hidden+1),
     }
     for mi, mnn in enumerate(models):
-        for ln in neurons.keys():
-            neurons[ln][:, mi, :] = torch.cat([mnn.state_dict()[ln+'.weight'], mnn.state_dict()[ln+'.bias'].unsqueeze(dim=1)], dim=1)
-    cluster_labels_agg = {
-        'layer_input': np.zeros((dim_hidden, num_models)),
-        'layer_hidden1': np.zeros((dim_hidden, num_models)),
-        'layer_hidden2': np.zeros((dim_out, num_models)),
+        # s_sd = ref.state_dict()
+        for ln in neurons_delta.keys():
+            neurons_delta[ln][:, mi, :] = torch.cat([
+                (mnn.state_dict()[ln+'.weight'] - s_sd[ln+'.weight']), 
+                (mnn.state_dict()[ln+'.bias'] - s_sd[ln+'.bias']).unsqueeze(dim=1),
+            ], dim=1)
+    cluster_labels = {
+        'layer_input': np.zeros((dim_hidden, len(models))),
+        'layer_hidden1': np.zeros((dim_hidden, len(models))),
+        'layer_hidden2': np.zeros((dim_out, len(models))),
     }
-    cluster_labels_trimmed = copy.deepcopy(cluster_labels_agg)
-    for ln, nl in neurons.items():
-        for n_idx in range(nl.shape[0]):
-            db_agg = DBSCAN(eps=eps_agg, min_samples=1).fit(nl[n_idx,:,:])
-            cluster_labels_agg[ln][n_idx,:] = db_agg.labels_
-            db_trimmed = DBSCAN(eps=eps_trimmed, min_samples=1).fit(nl[n_idx,:,:])            
-            cluster_labels_trimmed[ln][n_idx,:] = db_trimmed.labels_
+    for ln, nd in neurons_delta.items():
+        for n_idx in range(nd.shape[0]):
+            db = DBSCAN(eps=eps, min_samples=1).fit(nd[n_idx,:,:])
+            cluster_labels[ln][n_idx,:] = db.labels_
 
-    return MLP_agg_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels_agg), MLP_trimmed_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels_trimmed)
+    return MLP_trimmed_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels)
+
+
+def fusion_neuron_MLP(models, ref, dim_in, dim_hidden, dim_out):
+    eps = 0.5
+    s_sd = ref.state_dict()
+    neurons_delta = {
+        'layer_input': torch.zeros(dim_hidden, len(models), dim_in+1),
+        'layer_hidden1': torch.zeros(dim_hidden, len(models), dim_hidden+1),
+        'layer_hidden2': torch.zeros(dim_out, len(models), dim_hidden+1),
+    }
+    for mi, mnn in enumerate(models):
+        for ln in neurons_delta.keys():
+            neurons_delta[ln][:, mi, :] = torch.cat([
+                (mnn.state_dict()[ln+'.weight'] - s_sd[ln+'.weight']), 
+                (mnn.state_dict()[ln+'.bias'] - s_sd[ln+'.bias']).unsqueeze(dim=1),
+            ], dim=1)
+    cluster_labels = {
+        'layer_input': np.zeros((dim_hidden, len(models))),
+        'layer_hidden1': np.zeros((dim_hidden, len(models))),
+        'layer_hidden2': np.zeros((dim_out, len(models))),
+    }
+    for ln, nd in neurons_delta.items():
+        for n_idx in range(nd.shape[0]):
+            db = DBSCAN(eps=eps, min_samples=1).fit(nd[n_idx,:,:])
+            cluster_labels[ln][n_idx,:] = db.labels_
+
+    return MLP_agg_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels), MLP_trimmed_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels)
+    # return MLP_trimmed_neuron(dim_in, dim_hidden, dim_out, models, cluster_labels)
 
 class MLP_agg_neuron(nn.Module):
     def __init__(self, dim_in, dim_hidden, dim_out, models, cluster_labels):
@@ -692,9 +759,9 @@ class MLP_agg_neuron(nn.Module):
             neurons_ensemble['layer_hidden2.bias'][mi*dim_out:(mi+1)*dim_out] = msd['layer_hidden2.bias']
             neurons_ensemble['ensemble_out.weight'][:, mi*dim_out:(mi+1)*dim_out] = torch.eye(dim_out)
         neuron_cluster_to_model_mappings = {
-                                            'layer_input': [],
-                                            'layer_hidden1': [],
-                                            'layer_hidden2': [],
+            'layer_input': [],
+            'layer_hidden1': [],
+            'layer_hidden2': [],
         }
         for ln, cl in cluster_labels.items():
             for ni, nc in enumerate(num_clusters[ln]): # ni indexes neurons per layer, i.e. index of cluster_labels[ln].shape[0]
@@ -729,7 +796,10 @@ class MLP_agg_neuron(nn.Module):
                         weights_to_average[nita_idx, :] = neurons_ensemble[ln+'.weight'][nita][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]]
                     weights_averaged = weights_to_average.mean(dim=0)
                     for nita_idx, nita in enumerate(neuron_indices_to_average):
-                        neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = weights_averaged
+                        if nita_idx == 0:
+                            neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = weights_averaged
+                        else:
+                            neurons_row_reduced[ln+'.weight'][row_index][cmap_ci[nita_idx]*num_synapses_original[ln]:(cmap_ci[nita_idx]+1)*num_synapses_original[ln]] = torch.zeros_like(weights_averaged)
                     neurons_row_reduced[ln+'.bias'][row_index] = neurons_ensemble[ln+'.bias'][cmap_ci*num_neurons_original[ln]+ni].mean(dim=0)
                     row_index += 1
         # Column reduction with weight averaging
@@ -812,10 +882,15 @@ class MLP_trimmed_neuron(nn.Module):
             'layer_hidden2.weight':     torch.zeros(dim_out, dim_hidden),
             'layer_hidden2.bias':       torch.zeros(dim_out),
         }
-        self.minavg_cluster_ratio = 1.0
-        self.avg_cluster_ratio = 0.
+        self.alpha = {
+            'layer_input.weight':       torch.zeros(dim_hidden, dim_in),
+            'layer_input.bias':         torch.zeros(dim_hidden),
+            'layer_hidden1.weight':     torch.zeros(dim_hidden, dim_hidden),
+            'layer_hidden1.bias':       torch.zeros(dim_hidden),
+            'layer_hidden2.weight':     torch.zeros(dim_out, dim_hidden),
+            'layer_hidden2.bias':       torch.zeros(dim_out),   
+        }
         for ln, cl in cluster_labels.items():
-            cluster_ratio = 0.0
             for n_idx in range(cl.shape[0]):
                 highest_cluster_idx = cluster_labels[ln][n_idx,:].max().astype(np.int)
                 cluster_sizes = np.zeros(highest_cluster_idx+1)
@@ -823,7 +898,7 @@ class MLP_trimmed_neuron(nn.Module):
                     cluster_sizes[hci] = (cluster_labels[ln][n_idx,:] == hci).sum()
                 largest_cluster = np.argmax(cluster_sizes)
                 largest_cluster_idx = np.argwhere(cluster_labels[ln][n_idx,:] == largest_cluster).flatten()
-                cluster_ratio += float(len(largest_cluster_idx)) / float(len(models)) / float(cl.shape[0])
+                self.alpha[ln+'.weight'][n_idx, :] = (float(len(largest_cluster_idx) - 1) / float(len(models) - 1)) * torch.ones_like(self.alpha[ln+'.weight'][n_idx, :])
                 neuron_cluster = torch.zeros(len(largest_cluster_idx), neurons_fedavg[ln+'.weight'].shape[1])
                 neuron_bias = 0.
                 for lcii, lci in enumerate(largest_cluster_idx):
@@ -831,8 +906,7 @@ class MLP_trimmed_neuron(nn.Module):
                     neuron_bias += models[lci].state_dict()[ln+'.bias'][n_idx]
                 neurons_fedavg[ln+'.weight'][n_idx] = neuron_cluster.mean(dim=0)
                 neurons_fedavg[ln+'.bias'][n_idx] = neuron_bias / len(largest_cluster_idx)
-            self.minavg_cluster_ratio = min(self.minavg_cluster_ratio, cluster_ratio)
-            self.avg_cluster_ratio += cluster_ratio / len(cluster_labels.keys())
+            self.alpha[ln+'.bias'] = self.alpha[ln+'.weight'][:, 0]
 
         self.layer_input = nn.Linear(dim_in, dim_hidden)
         self.layer_hidden1 = nn.Linear(dim_hidden, dim_hidden)

@@ -145,7 +145,7 @@ if __name__ == '__main__':
             acc_locals_on_local.append(acc_ll)
 
         # update global weights
-        DFAN_regavg(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        DFAN_regavg(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx, dataset_test)
 
         for idx, user_idx in enumerate(idxs_users):
             torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))

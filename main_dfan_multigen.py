@@ -48,7 +48,7 @@ if __name__ == '__main__':
             # dict_users = mnist_iid(dataset_train, args.num_users)
             dict_users = mnist_sample_iid(dataset_train, args.num_users)
         else:
-            dict_users = mnist_noniid(dataset_train, args.num_users)
+            dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
     elif args.dataset == 'cifar':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
@@ -71,15 +71,16 @@ if __name__ == '__main__':
         net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
                        dim_out=args.num_classes,
                        weight_init=args.weight_init, bias_init=args.bias_init)
-        optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                         weight_decay=args.weight_decay, momentum=0.9)
         net_glob = net_glob.to(args.device)
-        generator = []
-        optimizer_gen = []
-        for ii in range(10):
-            generator.append(GeneratorA(nz=args.nz, nc=1, img_size=args.img_size))
-            optimizer_gen.append(torch.optim.Adam(generator[ii].parameters(), lr=args.lr_G))
-            generator[ii] = generator[ii].to(args.device)
+        generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
+        generator = generator.to(args.device)
+        optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
+        net_proxy = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200, dim_out=args.num_classes)
+        net_proxy.to(args.device)
+        optimizer_proxy = torch.optim.SGD(
+            net_proxy.parameters(), lr=args.lr_S,
+            weight_decay=args.weight_decay, momentum=0.9
+        )
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -95,13 +96,17 @@ if __name__ == '__main__':
     net_best = None
     best_loss = None
     val_acc_list, net_list = [], []
+    net_glob_past = []
 
-    local_user = []
+    local_user, local_generator, last_update = [],[],[]
     for idx in range(args.num_users):
         local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
+        local_generator.append(copy.deepcopy(generator.state_dict()))
+        last_update.append(-1) 
 
+    net_glob_past.append(copy.deepcopy(net_glob.state_dict())) # Indexed -1
     for epoch_idx in range(args.epochs):
-        net_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
+        net_locals, gensd_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], []
 
         if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
@@ -118,6 +123,10 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
+        if args.async_s2d != 1:
+            net_glob_past.append(copy.deepcopy(net_glob.state_dict()))
+
+        latest_update = -1
         for user_idx in idxs_users:
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
                 w, loss, acc_ll = local_user[user_idx].train()
@@ -128,15 +137,22 @@ if __name__ == '__main__':
                 local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
             elif args.async_s2d == 0:  # synchronous mode, updates before training
                 local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                last_update[user_idx] = epoch_idx
                 w, loss, acc_ll = local_user[user_idx].train()
                 net_locals.append(copy.deepcopy(local_user[user_idx].net))
+            gensd_locals.append(local_generator[user_idx])
+
             acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
             loss_locals.append(loss)
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
+            latest_update = max(latest_update, last_update[user_idx]) # This reflects the latest update BEFORE local training
+
+            if args.async_s2d == 2:
+                last_update[user_idx] = epoch_idx # Weights got updated, but devices arent trained till next time
 
         # update global weights
-        DFAN_multigen(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        DFAN_multigen(args, net_locals, gensd_locals, net_glob_past[latest_update+1], net_glob, net_proxy, generator, (optimizer_proxy, optimizer_gen), epoch_idx)
 
         # for idx, user_idx in enumerate(idxs_users):
         #     torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
@@ -146,6 +162,8 @@ if __name__ == '__main__':
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
             for user_idx in idxs_users:
                 local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
+                last_update[user_idx] = epoch_idx
+            net_glob_past.append(copy.deepcopy(net_glob.state_dict()))
 
         # Calculate accuracy for each round
         acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)

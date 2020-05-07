@@ -153,6 +153,6 @@ if __name__ == '__main__':
     net_glob.eval()
     # acc_train, loss_train = test_img(net_glob, dataset_train, args)
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
     #print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))

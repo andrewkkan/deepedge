@@ -66,7 +66,7 @@ def test_img_ensem(net_locals, datatest, args, stop_at_batch=-1, shuffle=False):
 
     accuracy = 100.00 * correct.float() / dataset_len
     if args.verbose:
-        print('\nTest set: \nAccuracy: {}/{} ({:.2f}%)\n'.format(
+        print('\nTest set: \nEnsemble Accuracy: {}/{} ({:.2f}%)\n'.format(
             correct, dataset_len, accuracy))
     return accuracy, test_loss
 

@@ -17,7 +17,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.test import test_img, test_img_ensem
-from models.DFAN import DFAN_single
+from models.DFAN import DFAN_regavg
 from models.Fed import FedAvg
 from network.gan import GeneratorA, GeneratorB
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             # dict_users = mnist_iid(dataset_train, args.num_users)
             dict_users = mnist_sample_iid(dataset_train, args.num_users)
         else:
-            dict_users = mnist_noniid(dataset_train, args.num_users)
+            dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
     elif args.dataset == 'cifar':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     for idx in range(args.num_users):
         local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
 
-    for epoch_idx in range(args.epochs):
+    for epoch_idx in range(args.epochs + 1):
         net_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
         if args.rand_d2s == 0.0: # default
@@ -117,77 +117,25 @@ if __name__ == '__main__':
                 m = 1
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
-        if epoch_idx < 35:
-            continue
 
-        if epoch_idx == 35:
-            net_glob.load_state_dict( torch.load('data/models/testrun6/netglob-epoch34-modelmlp-datasetmnist.pt'))
-            generator.load_state_dict( torch.load('data/models/testrun6/netgen-epoch34-datasetmnist.pt'))
-
-        for user_idx in idxs_users:
-            if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
-                w, loss, acc_ll = local_user[user_idx].train()
-                net_locals.append(copy.deepcopy(local_user[user_idx].net))
-            elif args.async_s2d == 2:  # async mode 2 updates before FedAvg
-                w, loss, acc_ll = local_user[user_idx].train()
-                net_locals.append(copy.deepcopy(local_user[user_idx].net))
-                local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-            elif args.async_s2d == 0:  # synchronous mode, updates before training
-                local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                w, loss, acc_ll = local_user[user_idx].train()
-                net_locals.append(copy.deepcopy(local_user[user_idx].net))
-            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
-            loss_locals.append(loss)
-            acc_locals.append(acc_l)
-            acc_locals_on_local.append(acc_ll)
-
-        w_locals = []
-        for net in net_locals:
-            w_locals.append(net.state_dict())
-        w_fedavg = FedAvg(w_locals)
-        net_fedavg = copy.deepcopy(net_glob)
-        net_fedavg.load_state_dict(w_fedavg)
-
-        # update global weights
-        # DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
-        DFAN_single(args, net_fedavg, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
-
-        for idx, user_idx in enumerate(idxs_users):
-            torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
-            print(idx, user_idx,
-                  local_user[user_idx].labels)
-        torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
-        torch.save(generator.state_dict(),"data/models/%s/netgen-epoch%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.dataset))
-
-        if args.async_s2d == 1:  # async mode 1 updates after FedAvg
-            for user_idx in idxs_users:
-                local_user[user_idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-
-        # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
-        acc_loc = sum(acc_locals) / len(acc_locals)
-        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
-        acc_ensem, _ = test_img_ensem(net_locals, dataset_test, args, stop_at_batch=16, shuffle=True)
-
-        # print status
-        loss_avg = sum(loss_locals) / len(loss_locals)
-        print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Ensemble accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n\n'.\
-                format(epoch_idx, m, loss_avg, acc_glob, acc_ensem, acc_loc, acc_lloc)
-        )
-        loss_train.append(loss_avg)
+    net_glob.load_state_dict( torch.load('data/models/%s/netglob-epoch%d-modelmlp-datasetmnist.pt'%(args.store_models, epoch_idx-1)))
+    generator.load_state_dict( torch.load('data/models/%s/netgen-epoch%d-datasetmnist.pt'%(args.store_models, epoch_idx-1)))
+    for ii in range(10):
+        net_locals.append(MLP(dim_in=1024, dim_hidden=200, dim_out=10).to(args.device))
+        net_locals[ii].load_state_dict(torch.load('data/models/%s/netlocal%d-epoch%d-modelmlp-datasetmnist.pt'%(args.store_models,ii,epoch_idx)))
 
 
-    # plot loss curve
-    # plt.figure()
-    # plt.plot(range(len(loss_train)), loss_train)
-    # plt.ylabel('train_loss')
-    # plt.savefig('./log/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
+    # update global weights
+    DFAN_regavg(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx, dataset_test)
 
-    # testing
-    net_glob.eval()
-    # acc_train, loss_train = test_img(net_glob, dataset_train, args)
-    # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
-    #print("Training accuracy: {:.2f}".format(acc_train))
-    print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))
+
+    # Calculate accuracy for each round
+    acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
+    acc_ensem, _ = test_img_ensem(net_locals, dataset_test, args, shuffle=True)
+
+    # print status
+    print(
+            'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Ensemble accuracy on global test data {:.3f}\n\n'.\
+            format(epoch_idx, m, loss_avg, acc_glob, acc_ensem)
+    )
+

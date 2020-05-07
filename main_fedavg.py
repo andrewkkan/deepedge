@@ -164,7 +164,7 @@ if __name__ == '__main__':
                                                      omega_sum=omega_sum, N_omega=N_omega)
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
         acc_loc = sum(acc_locals) / len(acc_locals)
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
