@@ -133,7 +133,7 @@ if __name__ == '__main__':
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, stop_at_batch=16, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
 
         # print status
         loss_avg = sum(epoch_loss) / len(epoch_loss)

@@ -13,16 +13,15 @@ from torch import nn
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-from sklearn.cluster import MeanShift, estimate_bandwidth
 from scipy.stats import norm
 
 from models.Fed import FedAvg
-from models.test import test_img
+from models.test import test_img, test_img_ensem
+from models.Nets import MLP
 
 from IPython import embed
 
 def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
-
     for local in teacher:
         local.eval()
     generator.train()
@@ -32,7 +31,10 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
     optimizer_S, optimizer_G = optimizer
     sm = torch.nn.Softmax()
 
+    loss_S1 = 0.0
     for i in range(args.epoch_itrs):
+        if loss_S1 < -0.69:
+            break
         for k in range(1):
             z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
             optimizer_G.zero_grad()
@@ -41,8 +43,8 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
             s_logit = student(fake)
             # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
             t_logit = torch.zeros_like(teacher[0](fake))
-            for k in range(10):
-                t_logit += teacher[k](fake)
+            for t in teacher:
+                t_logit += t(fake)
             oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
             max_Gout = torch.max(torch.abs(fake))
             if max_Gout > 8.0:
@@ -50,6 +52,7 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
                 print(max_Gout)
             else:
                 loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
+            # loss_G += -(sm(t_logit) * sm(t_logit).log()).mean() * 0.001
             loss_G.backward()                   
             optimizer_G.step()
         for j in range(5):
@@ -60,10 +63,15 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
             s_logit = student(fake)
             # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
             t_logit = torch.zeros_like(teacher[0](fake).detach())
-            for k in range(10):
-                t_logit += teacher[k](fake).detach()
+            for t in teacher:
+                t_logit += t(fake).detach()
             oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            loss_S = torch.log(1. / (2. - oneMinus_P_S))
+            loss_S1 = torch.log(1. / (2. - oneMinus_P_S))
+            loss_S2 = torch.zeros_like(loss_S1)
+            # if w_reg and alpha > 0.0:
+            #     for wr, ws in zip(w_reg.values(), student.parameters()):
+            #         loss_S2 += (wr - ws).pow(2.).sum() * alpha
+            loss_S = loss_S1 + loss_S2
             loss_S.backward()
             optimizer_S.step()
 
@@ -71,7 +79,6 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tG_Loss: {:.6f} S_loss: {:.6f}'.format(
                 epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
             #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
-
 
 def ensemble(teacher, input, detach=True, mode=1):
     sm = torch.nn.Softmax()
@@ -96,43 +103,56 @@ def ensemble(teacher, input, detach=True, mode=1):
             t_scale.append(t_ent_inv / t_scale_sum)
         t_sm_out = torch.zeros_like(t_logit[0])
         for t_l, t_S in zip(t_logit, t_scale):
-            t_sm_out += sm(t_l) * t_s.reshape(-1,1).repeat(1,10)
+            t_sm_out += sm(t_l) * t_s.reshape(-1,1).repeat(1,len(teacher))
     elif mode == 0:
         t_sm_out = torch.zeros_like(t_logit[0])
         for t_l in t_logit:
-            t_sm_out += sm(t_l) / 10.
+            t_sm_out += sm(t_l) / float(len(teacher))
 
     return t_sm_out
 
 
-def DFAN_multigen(args, teacher, gen_sd, ref_sd, student, proxy, generator, optimizer, epoch):
+def DFAN_multigen(args, teacher, gen_sd, ref_sd, student, proxy, generator, optimizer, epoch, dataset_test):
 
-    for ii in range(10):
-        teacher[ii].eval()
+    for t in teacher:
+        t.eval()
     generator.train()
     proxy.train()
     student.train()
     optimizer_P, optimizer_G = optimizer
     sm = torch.nn.Softmax()
+    layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
 
-    # w_locals = []
-    # for local in teacher:
-    #     w_locals.append(copy.deepcopy(local.state_dict()))
-    # w_fedavg = FedAvg(w_locals)
-    mlpt = fusion_neuron_MLP_mg(teacher, ref_sd, 1024, 200, 10)
-    mlpt = mlpt.to(args.device)
-    mlpt.eval()
-    print(mlpt.alpha)
+    student.load_state_dict(ref_sd)
+    acc_dfan_ensem, _ = test_img(student, dataset_test, args)
+    temp_student = []
+    for t in teacher:
+        temp_student.append(copy.deepcopy(t))
+    acc_ensem, _ = test_img_ensem(temp_student, dataset_test, args)
+    print("-1 ", acc_dfan_ensem, acc_ensem)
+    # mlpt = fusion_neuron_MLP_mg(teacher, ref_sd, 1024, 200, 10)
+    # mlpt = mlpt.to(args.device)
+    # mlpt.eval()
+    # print(mlpt.alpha)
+    # ref_sd = student.state_dict()
+    proxy_sd, loss_S = [], []
+    for ti in enumerate(teacher):
+        # proxy_sd.append(copy.deepcopy(mlpt.state_dict()))
+        proxy_sd.append(copy.deepcopy(ref_sd))
+        # proxy_sd.append(copy.deepcopy(w_fedavg))
+        loss_S.append(0.)
 
-    proxy_sd, loss_S1 = [], []
-    for ii in range(10):
-        proxy_sd.append(copy.deepcopy(mlpt.state_dict()))
-        loss_S1.append(None)
-
+    w_fedavg_start = FedAvg(proxy_sd)
+    sign_changes = torch.BoolTensor([False for idx in range(len(proxy_sd))])
+    w_proxy_cossim_last = None
     for i in range(args.epoch_itrs):
         z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-        for ii in range(10):
-            if loss_S1[ii] and loss_S1[ii] < -0.670:
+        # if loss_S1[0] and np.sum(np.array(loss_S1) < -0.69) == 10:
+        #     break
+        if np.sum(np.array(loss_S) < -0.68) == len(teacher):
+            break
+        for ii in range(len(teacher)):
+            if loss_S[ii] and loss_S[ii] < -0.68:
                 continue
             generator.load_state_dict(gen_sd[ii])
             proxy.load_state_dict(proxy_sd[ii]) 
@@ -158,31 +178,56 @@ def DFAN_multigen(args, teacher, gen_sd, ref_sd, student, proxy, generator, opti
                 s_logit = proxy(fake)
                 t_logit = teacher[ii](fake).detach()
                 oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-                loss_S1[ii] = torch.log(1. / (2. - oneMinus_P_S))
-
-                diff_L2 = torch.FloatTensor([0.]).to(args.device)
-                for ln, proxy_w, fedavg_w in zip(proxy.state_dict().keys(), proxy.parameters(), mlpt.parameters()):
-                    diff_L2 += ((fedavg_w - proxy_w) * mlpt.alpha[ln].to(args.device)).norm(2) * args.alpha_scale
-                if epoch == 0:
-                    loss_S2 = 0
-                else:
-                    loss_S2 = diff_L2
-                loss_S2 = diff_L2
-
-                loss_S = loss_S1[ii] + loss_S2
-                loss_S.backward()
+                loss_S[ii] = torch.log(1. / (2. - oneMinus_P_S))
+                loss_R = torch.FloatTensor([0.]).to(args.device)
+                for ref_w, proxy_w in zip(ref_sd.values(), proxy.parameters()):
+                    loss_R += (ref_w - proxy_w).pow(2.).sum() * args.alpha_scale
+                loss_SR = loss_S[ii] + loss_R
+                loss_SR.backward()
                 optimizer_P.step()
                 # print(i, ii, loss_S1.cpu().detach().numpy(), loss_S2.cpu().detach().numpy(), loss_S.cpu().detach().numpy())
             gen_sd[ii] = copy.deepcopy(generator.state_dict())
             proxy_sd[ii] = copy.deepcopy(proxy.state_dict())
 
-        w_fedavg = FedAvg(proxy_sd)
-        student.load_state_dict(w_fedavg)
+        if args.cossim_filter:
+            w_fedavg_optim = FedAvg(proxy_sd)
+            w_fedavg_delta = {}
+            for ln in layers:
+                w_fedavg_delta[ln] = torch.cat((w_fedavg_optim[ln+'.weight'], w_fedavg_optim[ln+'.bias'].unsqueeze(1)), dim=1) - torch.cat((w_fedavg_start[ln+'.weight'], w_fedavg_start[ln+'.bias'].unsqueeze(1)), dim=1)
+            w_proxy_cossim = torch.zeros(len(teacher))
+            for ii in range(len(teacher)):
+                for ln in layers:
+                    w_proxy_delta = torch.cat((proxy_sd[ii][ln+'.weight'], proxy_sd[ii][ln+'.bias'].unsqueeze(1)), dim=1) - torch.cat((w_fedavg_optim[ln+'.weight'], w_fedavg_optim[ln+'.bias'].unsqueeze(1)), dim=1)
+                    w_proxy_cossim[ii] += (w_fedavg_delta[ln] * w_proxy_delta).sum() / w_fedavg_delta[ln].norm(2) / w_proxy_delta.norm(2) / float(len(layers))
+            if w_proxy_cossim_last != None:
+                sign_changes |= ((w_proxy_cossim * w_proxy_cossim_last).sign() < 0)
+            w_proxy_cossim_last = copy.deepcopy(w_proxy_cossim)
 
-        if args.verbose and i % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tG_Loss: {:.6f} S_loss: {:.6f}'.format(
-                epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
-            #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
+            print(sign_changes, w_proxy_cossim)
+
+            if sign_changes.sum() >= 5:
+                cossimfilt_proxy_sd = []
+                for pi, psd in enumerate(proxy_sd):
+                    if sign_changes[pi] == True or w_proxy_cossim[pi].abs() < 0.1:
+                        cossimfilt_proxy_sd.append(proxy_sd[pi]) 
+                student.load_state_dict(FedAvg(cossimfilt_proxy_sd))
+                break
+
+        # if epoch > -1:
+        #     acc_glob, _ = test_img(student, dataset_test, args)
+        #     temp_student = []
+        #     for ri in range(10):
+        #         temp_student.append(MLP(1024, 200, 10).to(args.device))
+        #         temp_student[ri].load_state_dict(proxy_sd[ri])
+        #     acc_ensem, _ = test_img_ensem(temp_student, dataset_test, args)
+        #     print(i, acc_glob, acc_ensem)
+        # if (i%4) == 1:
+        #     ref_sd = w_fedavg
+        #     for ii in range(10):
+        #         proxy_sd[ii] = copy.deepcopy(ref_sd)
+    w_fedavg = FedAvg(proxy_sd)
+    student.load_state_dict(w_fedavg)
+    return proxy_sd
 
 
 def DFAN_single(args, teacher, student, generator, optimizer, epoch):
@@ -231,94 +276,6 @@ def DFAN_single(args, teacher, student, generator, optimizer, epoch):
                 epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
             #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
 
-def DFAN_reg_cossim(args, teacher, student, generator, optimizer, epoch):
-
-    for local in teacher:
-        local.eval()
-    generator.train()
-    student.train()
-    loss_G = torch.tensor(0.0)
-    loss_S = torch.tensor(0.0)
-    optimizer_S, optimizer_G = optimizer
-    sm = torch.nn.Softmax()
-
-    layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
-    s_sd = student.state_dict()
-    delta = {}
-    for lni, ln in enumerate(layers):
-        delta[ln] = torch.zeros(len(teacher), s_sd[ln+'.weight'].shape[0], s_sd[ln+'.weight'].shape[1]+1)
-        for ii, t in enumerate(teacher):
-            t_sd = t.state_dict()
-            delta[ln][ii, :, 0:s_sd[ln+'.weight'].shape[1]] = t_sd[ln+'.weight'] - s_sd[ln+'.weight']
-            delta[ln][ii, :, s_sd[ln+'.weight'].shape[1]] = t_sd[ln+'.bias'] - s_sd[ln+'.bias']
-    cossim = {}
-    for lni, ln in enumerate(layers):
-        cossim[ln] = torch.zeros(len(teacher), len(teacher))
-        for ii in range(len(teacher)):
-            for jj in range(ii, len(teacher)):
-                delt1, delt2 = delta[ln][ii, :], delta[ln][jj, :]
-                delt1_norm, delt2_norm = delt1.norm(2), delt2.norm(2)
-                if delt1_norm == 0. or delt2_norm == 0.:
-                    cossim[ln][ii,jj] = 2.0 # This value should be impossible since valid values are -1.0 <= cosine <= 1.0
-                else:
-                    cossim[ln][ii,jj] = (delt1 * delt2).sum() / delt1_norm / delt2_norm
-
-
-    for i in range(args.epoch_itrs):
-        for k in range(1):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            optimizer_G.zero_grad()
-            fake = generator(z)
-            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-            s_logit = student(fake)
-            # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
-            t_logit = torch.zeros_like(teacher[0](fake))
-            for k in range(10):
-                t_logit += teacher[k](fake) 
-            # t_logit = mlpa(fake)
-            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            max_Gout = torch.max(torch.abs(fake))
-            if max_Gout > 8.0:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
-                print(max_Gout)
-            else:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
-            loss_G.backward()                   
-            optimizer_G.step()
-        for j in range(5):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            optimizer_S.zero_grad()
-            fake = generator(z).detach()
-            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-            s_logit = student(fake)
-            # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
-            t_logit = torch.zeros_like(teacher[0](fake).detach())
-            for k in range(10):
-                t_logit += teacher[k](fake).detach()
-            # t_logit = mlpa(fake).detach()
-            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            loss_S1 = torch.log(1. / (2. - oneMinus_P_S))
-
-            diff_L2 = torch.FloatTensor([0.]).to(args.device)
-            for student_w, fedavg_w in zip(student.parameters(), w_fedavg.values()):
-                diff_L2 += (fedavg_w - student_w).norm(2)
-            loss_S2 = diff_L2 * alpha
-
-            # diff_L2 = torch.FloatTensor([0.]).to(args.device)
-            # for student_w, mlpt_w in zip(student.parameters(), w_mlpt.values()):
-            #     diff_L2 += ((mlpt_w - student_w)*mlpt_w.abs()).norm(2)
-            # loss_S2 = diff_L2 * alpha
-
-            loss_S = loss_S1 + loss_S2
-            loss_S.backward()
-            optimizer_S.step()
-
-        if args.verbose and i % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tG_Loss: {:.6f} S_loss: {:.6f}'.format(
-                epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
-            #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
-
-
 
 def DFAN_regavg(args, teacher, student, generator, optimizer, epoch, dataset_test):
 
@@ -339,7 +296,7 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch, dataset_tes
     # mlpa, mlpt = model_fusion_MLP(teacher, 1024, 200, 10)
     # mlpa, mlpt = mlpa.to(args.device), mlpt.to(args.device)
     # w_mlpt = mlpt.state_dict()
-    mlpa, mlpt = fusion_neuron_MLP(teacher, student, 1024, 200, 10)
+    mlpa, mlpt = fusion_layer_MLP(args, teacher, student, args.img_size[0]*args.img_size[1]*args.img_size[2], 200, args.num_classes)
     mlpa = mlpa.to(args.device)
     mlpt = mlpt.to(args.device)
     mlpa.eval()
@@ -391,8 +348,10 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch, dataset_tes
             loss_S1 = torch.log(1. / (2. - oneMinus_P_S))
 
             diff_L2 = torch.FloatTensor([0.]).to(args.device)
-            for ln, student_w, fedavg_w in zip(student.state_dict().keys(), student.parameters(), w_fedavg.values()):
-                diff_L2 += ((fedavg_w - student_w) * mlpt.alpha[ln].to(args.device)).norm(2) * args.alpha_scale
+            # for ln, student_w, fedavg_w in zip(student.state_dict().keys(), student.parameters(), w_fedavg.values()):
+            #     diff_L2 += ((fedavg_w - student_w) * mlpt.alpha[ln].to(args.device)).norm(2) * args.alpha_scale
+            for ln, student_w, mlpt_w in zip(student.state_dict().keys(), student.parameters(), mlpt.parameters()):
+                diff_L2 += ((mlpt_w - student_w)*mlpt.alpha[ln]).norm(2)
             if epoch == 0:
                 loss_S2 = 0
             else:
@@ -414,12 +373,13 @@ def DFAN_regavg(args, teacher, student, generator, optimizer, epoch, dataset_tes
                 epoch, i, args.epoch_itrs, 100 * float(i) / float(args.epoch_itrs), loss_G.item(), loss_S.item()))        #vp.add_scalar('Loss_S', (epoch-1)*args.epoch_itrs+i, loss_S.item())
             #vp.add_scalar('Loss_G', (epoch-1)*args.epoch_itrs+i, loss_G.item())
 
-        if loss_S1 < -0.65:
+        if loss_S1 < -0.69:
             break
 
 
-def fusion_layer_MLP(models, ref, dim_in, dim_hidden, dim_out):
-    eps= 0.25
+def fusion_layer_MLP(args, models, ref, dim_in, dim_hidden, dim_out):
+    # eps= 0.25
+    eps = args.fuse_eps
     num_models = len(models)
 
     layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
@@ -662,8 +622,9 @@ class MLP_trimmed_layer(nn.Module):
 
 
 
-def fusion_neuron_MLP_mg(models, s_sd, dim_in, dim_hidden, dim_out):
-    eps = 0.25
+def fusion_neuron_MLP_mg(args, models, s_sd, dim_in, dim_hidden, dim_out):
+    # eps = 0.25
+    eps = args.fuse_eps
     neurons_delta = {
         'layer_input': torch.zeros(dim_hidden, len(models), dim_in+1),
         'layer_hidden1': torch.zeros(dim_hidden, len(models), dim_hidden+1),
