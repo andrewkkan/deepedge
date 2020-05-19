@@ -192,7 +192,7 @@ if __name__ == '__main__':
         w_cluster_net = []
         for cn in cluster_net:
             w_cluster_net.append(copy.deepcopy(cn.state_dict()))
-        w_cluster_fedavg = FedAvg(w_cluster_net, cluster_size)
+        w_cluster_fedavg = FedAvg(w_cluster_net)
         net_glob.load_state_dict(w_cluster_fedavg)
 
         # w_locals = []
