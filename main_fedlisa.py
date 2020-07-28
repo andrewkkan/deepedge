@@ -170,8 +170,6 @@ if __name__ == '__main__':
         optimizer_glob.step(deltw_locals, deltos_locals, flatg_locals, epoch_idx)
         
         if args.scaffold_on == True:
-            for k,v in control_glob.items():
-                control_glob[k] = torch.zeros_like(v)
             for dc in deltc_locals:
                 for k,v in dc.items():
                     control_glob[k] += v / float(args.num_users)
