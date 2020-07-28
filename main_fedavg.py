@@ -14,7 +14,7 @@ import random
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar
+from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
 from models.Fed import FedAvg
 from models.test import test_img
 from models.FedMAS import do_MAS_Glob
@@ -59,6 +59,8 @@ if __name__ == '__main__':
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
         net_glob = CNNCifar(args=args).to(args.device)
+    elif args.model == 'lenet5' and args.dataset == 'cifar':
+        net_glob = LeNet5().to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
@@ -94,7 +96,7 @@ if __name__ == '__main__':
 
         if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-            idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+            idxs_users = np.random.choice(range(args.num_users), m, replace=False)   
         else:
             if args.rand_d2s == []:
                 frac_list = [args.frac]
@@ -108,12 +110,12 @@ if __name__ == '__main__':
                 idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
         if args.sync_params == True:
-            for epoch_idx in range(args.local_ep):
+            for local_epoch_idx in range(args.local_ep):
                 for batch_idx, (_,_) in enumerate(local_user[0].ldr_train):
                     w_locals = []
                     for idx in idxs_users:
                         local_user[idx].weight_update(net=copy.deepcopy(net_glob).to(args.device))
-                        w, loss, acc_ll = local_user[idx].train_batch(epoch_idx, batch_idx)
+                        w, loss, acc_ll = local_user[idx].train_batch(local_epoch_idx, batch_idx)
                         acc_locals_on_local.append(acc_ll)
                         loss_locals.append(loss)
                         w_locals.append(copy.deepcopy(w))

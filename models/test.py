@@ -7,6 +7,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
+from IPython import embed
 
 def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False):
     net_g.eval()
@@ -15,7 +16,9 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False):
     correct = 0
     data_loader = DataLoader(datatest, batch_size=args.bs, shuffle=shuffle)
     if stop_at_batch == -1:
-        dataset_len = len(data_loader) * args.bs
+        # dataset_len = len(data_loader) * args.bs
+        stop_at_batch = len(data_loader) - 1
+        dataset_len = stop_at_batch * args.bs
     else:
         dataset_len = stop_at_batch * args.bs
     for idx, (data, target) in enumerate(data_loader):

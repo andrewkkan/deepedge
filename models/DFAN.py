@@ -35,26 +35,27 @@ def DFAN_ensemble(args, teacher, student, generator, optimizer, epoch):
     for i in range(args.epoch_itrs):
         if loss_S1 < -0.69:
             break
-        for k in range(1):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            optimizer_G.zero_grad()
-            fake = generator(z)
-            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-            s_logit = student(fake)
-            # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
-            t_logit = torch.zeros_like(teacher[0](fake))
-            for t in teacher:
-                t_logit += t(fake)
-            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            max_Gout = torch.max(torch.abs(fake))
-            if max_Gout > 8.0:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
-                print(max_Gout)
-            else:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
-            # loss_G += -(sm(t_logit) * sm(t_logit).log()).mean() * 0.001
-            loss_G.backward()                   
-            optimizer_G.step()
+        if i > 0:
+            for k in range(1):
+                z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+                optimizer_G.zero_grad()
+                fake = generator(z)
+                fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+                s_logit = student(fake)
+                # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
+                t_logit = torch.zeros_like(teacher[0](fake))
+                for t in teacher:
+                    t_logit += t(fake)
+                oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+                max_Gout = torch.max(torch.abs(fake))
+                if max_Gout > 8.0:
+                    loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
+                    print(max_Gout)
+                else:
+                    loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
+                # loss_G += -(sm(t_logit) * sm(t_logit).log()).mean() * 0.001
+                loss_G.backward()                   
+                optimizer_G.step()
         for j in range(5):
             z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
             optimizer_S.zero_grad()
@@ -230,34 +231,39 @@ def DFAN_multigen(args, teacher, gen_sd, ref_sd, student, proxy, generator, opti
     return proxy_sd
 
 
-def DFAN_single(args, teacher, student, generator, optimizer, epoch):
+def DFAN_single(args, teacher, student, generator, optimizer, epoch, reg=False):
 
     teacher.eval()
     generator.train()
     student.train()
-    loss_G = torch.tensor(0.0)
-    loss_S = torch.tensor(0.0)
+    loss_G = torch.tensor(0.0).to(args.device)
+    loss_S1 = torch.tensor(0.0).to(args.device)
+    loss_S2 = torch.tensor(0.0).to(args.device)
     optimizer_S, optimizer_G = optimizer
     sm = torch.nn.Softmax()
 
+    ref_sd = copy.deepcopy(student.state_dict())
     for i in range(args.epoch_itrs):
-        for k in range(1):
-            z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
-            optimizer_G.zero_grad()
-            fake = generator(z)
-            fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
-            s_logit = student(fake)
-            # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
-            t_logit = teacher(fake)
-            oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            max_Gout = torch.max(torch.abs(fake))
-            if max_Gout > 8.0:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
-                print(max_Gout)
-            else:
-                loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
-            loss_G.backward()                   
-            optimizer_G.step()
+        if loss_S1 < -0.69:
+            break
+        if i > 0:
+            for k in range(1):
+                z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
+                optimizer_G.zero_grad()
+                fake = generator(z)
+                fake = fake.view(-1, args.img_size[0], args.img_size[1], args.img_size[2])
+                s_logit = student(fake)
+                # t_sm = ensemble(teacher, fake, detach=False, mode=args.ensemble_mode)
+                t_logit = teacher(fake)
+                oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
+                max_Gout = torch.max(torch.abs(fake))
+                if max_Gout > 8.0:
+                    loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0) + torch.pow(max_Gout - 8.0, 2.0)
+                    print(max_Gout)
+                else:
+                    loss_G = torch.log(2.-oneMinus_P_S) + torch.pow(fake.var() - 1.0, 2.0)
+                loss_G.backward()                   
+                optimizer_G.step()
         for j in range(5):
             z = torch.randn((args.batch_size, args.nz, 1, 1)).to(args.device)
             optimizer_S.zero_grad()
@@ -267,7 +273,12 @@ def DFAN_single(args, teacher, student, generator, optimizer, epoch):
             # t_sm = ensemble(teacher, fake, detach=True, mode=args.ensemble_mode)
             t_logit = teacher(fake).detach()
             oneMinus_P_S = torch.tanh(F.kl_div(F.log_softmax(s_logit, dim=1), sm(t_logit)))
-            loss_S = torch.log(1. / (2. - oneMinus_P_S))
+            loss_S1 = torch.log(1. / (2. - oneMinus_P_S))
+            if reg:
+                loss_S2 = torch.FloatTensor([0.]).to(args.device)
+                for ref_w, student_w in zip(ref_sd.values(), student.parameters()):
+                    loss_S2 += (ref_w - student_w).pow(2.).sum() * args.alpha_scale
+            loss_S = loss_S1 + loss_S2
             loss_S.backward()
             optimizer_S.step()
 

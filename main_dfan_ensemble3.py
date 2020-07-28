@@ -188,7 +188,7 @@ if __name__ == '__main__':
             net_ensemble[1].load_state_dict(copy.deepcopy(cluster_net[clui].state_dict()))
             generator.load_state_dict(cluster_w_gen[clui])
             DFAN_ensemble(args, net_ensemble, cluster_net[clui], generator, (optimizer_cn[clui], optimizer_gen), epoch_idx)
-         
+
         w_cluster_net = []
         for cn in cluster_net:
             w_cluster_net.append(copy.deepcopy(cn.state_dict()))

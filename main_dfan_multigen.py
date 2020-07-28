@@ -229,7 +229,7 @@ if __name__ == '__main__':
             net_glob_past.append(copy.deepcopy(net_glob.state_dict()))
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
         acc_loc = sum(acc_locals) / len(acc_locals)
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
         acc_ensem, _ = test_img_ensem(net_locals, dataset_test, args)

@@ -142,30 +142,18 @@ if __name__ == '__main__':
             if args.async_s2d == 2:
                 last_update[user_idx] = epoch_idx # Weights got updated, but devices arent trained till next time
 
-        # if args.nn_refresh == 2:
-        #     net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-        #                    dim_out=args.num_classes,
-        #                    weight_init=args.weight_init, bias_init=args.bias_init)
-        #     optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-        #                                      weight_decay=args.weight_decay, momentum=0.9)
-        #     net_glob = net_glob.to(args.device)
-        # elif args.nn_refresh == 1 or args.nn_refresh == 2:
-        #     generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-        #     optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-        #     generator = generator.to(args.device)
-        # elif args.nn_refresh == 3:
-        #     generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-        #     optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-        #     generator = generator.to(args.device)
-        #     generator.train()
+        if args.nn_refresh == 2:
+            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
+                           dim_out=args.num_classes,
+                           weight_init=args.weight_init, bias_init=args.bias_init)
+            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
+                                             weight_decay=args.weight_decay, momentum=0.9)
+            net_glob = net_glob.to(args.device)
+        elif args.nn_refresh == 1 or args.nn_refresh == 2:
+            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
+            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
+            generator = generator.to(args.device)
 
-        #     net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-        #                    dim_out=args.num_classes,
-        #                    weight_init=args.weight_init, bias_init=args.bias_init)
-        #     optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-        #                                      weight_decay=args.weight_decay, momentum=0.9)
-        #     net_glob = net_glob.to(args.device)
-        #     net_glob.train()
 
 
         w_locals = []

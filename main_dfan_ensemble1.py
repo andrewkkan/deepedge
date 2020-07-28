@@ -79,7 +79,7 @@ if __name__ == '__main__':
                        dim_out=args.num_classes,
                        weight_init=args.weight_init, bias_init=args.bias_init)
         optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                         weight_decay=args.weight_decay, momentum=0.9)
+                                         weight_decay=args.weight_decay, momentum=0.0)
         net_glob = net_glob.to(args.device)
         net_glob.train()
     else:
@@ -103,6 +103,7 @@ if __name__ == '__main__':
         local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
     last_update = np.ones(args.num_users) * -1
 
+    # net_glob_hist = []
     for epoch_idx in range(args.epochs):
         net_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
@@ -142,31 +143,18 @@ if __name__ == '__main__':
             if args.async_s2d == 2:
                 last_update[user_idx] = epoch_idx # Weights got updated, but devices arent trained till next time
 
-        # if args.nn_refresh == 2:
-        #     net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-        #                    dim_out=args.num_classes,
-        #                    weight_init=args.weight_init, bias_init=args.bias_init)
-        #     optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-        #                                      weight_decay=args.weight_decay, momentum=0.9)
-        #     net_glob = net_glob.to(args.device)
-        # elif args.nn_refresh == 1 or args.nn_refresh == 2:
-        #     generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-        #     optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-        #     generator = generator.to(args.device)
-        # elif args.nn_refresh == 3:
-        #     generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
-        #     optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
-        #     generator = generator.to(args.device)
-        #     generator.train()
-
-        #     net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-        #                    dim_out=args.num_classes,
-        #                    weight_init=args.weight_init, bias_init=args.bias_init)
-        #     optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-        #                                      weight_decay=args.weight_decay, momentum=0.9)
-        #     net_glob = net_glob.to(args.device)
-        #     net_glob.train()
-
+        if args.nn_refresh == 2:
+            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
+                           dim_out=args.num_classes,
+                           weight_init=args.weight_init, bias_init=args.bias_init)
+            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
+                                             weight_decay=args.weight_decay, momentum=0.0)
+            net_glob = net_glob.to(args.device)
+        elif args.nn_refresh == 1 or args.nn_refresh == 2:
+            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
+            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
+            generator = generator.to(args.device)
+            generator.train()
 
         w_locals = []
         for nli, localnet in enumerate(net_locals):
@@ -178,6 +166,7 @@ if __name__ == '__main__':
         # for ii in range(3):
         DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
 
+        # net_glob_hist.append(copy.deepcopy(net_glob.state_dict()))
         # w_ensemble = []
         # w_ensemble.append(copy.deepcopy(w_fedavg))
         # w_ensemble.append(copy.deepcopy(net_glob.state_dict()))

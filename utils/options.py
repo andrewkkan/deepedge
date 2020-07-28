@@ -13,8 +13,8 @@ def args_parser():
     parser.add_argument('--local_ep', type=int, default=5, help="the number of local epochs: E")
     parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
     parser.add_argument('--bs', type=int, default=256, help="test batch size")
-    parser.add_argument('--lr', type=float, default=0.01, help="learning rate")
-    parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
+    parser.add_argument('--lr', type=float, default=0.1, help="learning rate")
+    parser.add_argument('--momentum', type=float, default=0.0, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
     parser.add_argument('--async_s2d', type=int, default=0, help='async server-to-device update across all devices or not (default 0: synchronous)')
     parser.add_argument('--fedmas', type=float, default=0.0, help="Use FedMAS (memory-aware synapses) to mitigate catastrophic forgetting.  Provide value for lambda.")
@@ -30,7 +30,7 @@ def args_parser():
     parser.add_argument('--num_filters', type=int, default=32, help="number of filters for conv nets")
     parser.add_argument('--max_pool', type=str, default='True',
                         help="Whether use max pooling rather than strided convolutions")
-    parser.add_argument('--weight_init', type=str, default='xavier', help='weight initialization type. Recommended : xavier')
+    parser.add_argument('--weight_init', type=str, default='kaiming', help='weight initialization type. Recommended : xavier')
     parser.add_argument('--bias_init', type=str, default='zeros', help='bias initialization type.  Recommended: zeros')
 
     # other arguments
@@ -65,6 +65,24 @@ def args_parser():
     parser.add_argument('--noniid_hard', action='store_true')
     parser.add_argument('--fuse_eps', type=float, default=0.25)
     parser.add_argument('--cossim_filter', action='store_true')
+    parser.add_argument('--kd_t', type=float, default=1.0)
+    parser.add_argument('--num_leaders', type=int, default=0)
+    parser.add_argument('--fedavg_update', action='store_true')
+    parser.add_argument('--pretrain', action='store_true')
+    parser.add_argument('--lr_PT', type=float, default=0.00025, help="Pre-train learning rate")
+    parser.add_argument('--sync2async', type=int, default=0)
+    parser.add_argument('--dfan_align_alpha', type=float, default=0.0)
+    parser.add_argument('--use_stragglers', action='store_true')
+    parser.add_argument('--server_momentum', type=float, default=0.0)
+    parser.add_argument('--fedmaux_tau', type=int, default=1)
+    parser.add_argument('--server_lr', type=float, default=0.1)
+    parser.add_argument('--fedmaux_greedy', action='store_true')
+
+    parser.add_argument('--lbfgs_hist', type=int, default=100, metavar='LH',
+                        help='memory size of LBFGS (default: 100)')
+    parser.add_argument('--lr_g', type=float, default=1.0, help="global learning rate")
+    parser.add_argument('--sgd_conjugate', action='store_true')
+    parser.add_argument('--scaffold_on', action='store_true')
 
 
     args = parser.parse_args()

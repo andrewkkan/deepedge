@@ -9,6 +9,7 @@ import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
+import torch.nn.functional as F
 import random
 import os
 
@@ -61,6 +62,7 @@ if __name__ == '__main__':
 
     else:
         exit('Error: unrecognized dataset')
+
     args.img_size = dataset_train[0][0].shape
 
     generator = None
@@ -79,13 +81,58 @@ if __name__ == '__main__':
                        dim_out=args.num_classes,
                        weight_init=args.weight_init, bias_init=args.bias_init)
         optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
-                                         weight_decay=args.weight_decay, momentum=0.9)
+                                         weight_decay=args.weight_decay, momentum=0.0)
         net_glob = net_glob.to(args.device)
         net_glob.train()
     else:
         exit('Error: unrecognized model')
     print(net_glob)
     net_glob.train()
+
+    if args.pretrain:
+        pretrain_loader = torch.utils.data.DataLoader( 
+            datasets.CIFAR10('../data/cifar', train=True, download=True,
+                       transform=transforms.Compose([
+                            transforms.Grayscale(num_output_channels=1),
+                            transforms.Resize((28, 28)),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.473367,), (0.2009,)),
+            ])),
+            batch_size=args.local_bs, 
+            shuffle=True,
+        )
+        pretest_loader = torch.utils.data.DataLoader( 
+            datasets.CIFAR10('../data/cifar', train=False, download=True,
+                       transform=transforms.Compose([
+                            transforms.Grayscale(num_output_channels=1),
+                            transforms.Resize((28, 28)),
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.473367,), (0.2009,)),
+            ])),
+            shuffle=False,
+        )
+        optimizer_glob_pretrain = torch.optim.Adam(net_glob.parameters(), lr=args.lr_PT)
+        for ei in range(17):
+            for batch_idx, (data, target) in enumerate(pretrain_loader):
+                data, target = data.to(args.device), target.to(args.device)
+                optimizer_glob_pretrain.zero_grad()
+                output = net_glob(data)
+                loss = F.cross_entropy(output, target)
+                loss.backward()
+                optimizer_glob_pretrain.step()
+
+            test_loss = 0
+            correct = 0
+            with torch.no_grad():
+                for data, target in pretest_loader:
+                    data, target = data.to(args.device), target.to(args.device)
+                    output = net_glob(data)
+                    test_loss += F.cross_entropy(output, target, reduction='sum').item() # sum up batch loss
+                    pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
+                    correct += pred.eq(target.view_as(pred)).sum().item()
+
+            test_loss /= len(pretest_loader.dataset)
+            print(test_loss, 100. * correct / len(pretest_loader.dataset))
 
     # copy weights
     w_glob = net_glob.state_dict()
@@ -103,6 +150,7 @@ if __name__ == '__main__':
         local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx]))
     last_update = np.ones(args.num_users) * -1
 
+    # net_glob_hist = []
     for epoch_idx in range(args.epochs):
         net_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
@@ -142,57 +190,34 @@ if __name__ == '__main__':
             if args.async_s2d == 2:
                 last_update[user_idx] = epoch_idx # Weights got updated, but devices arent trained till next time
 
-        local_last_update = np.array([last_update[user_idx] for user_idx in idxs_users])
-        cluster_last_update = list(set(local_last_update))
-        cluster_w_fedavg, cluster_net, cluster_w_gen, optimizer_cn, cluster_size = [], [], [], [], []
-        largest_cluster, largest_cluster_index = 0, 0
-        init_w_gen = copy.deepcopy(generator.state_dict())
-        for clui, clu in enumerate(cluster_last_update):
-            cluster_local = np.argwhere(local_last_update == clu)
-            if cluster_local.size > largest_cluster:
-                largest_cluster = cluster_local.size
-                largest_cluster_index = clui
-            cluster_size.append(cluster_local.size)
-            if cluster_local.size == 1:
-                cluster_w_fedavg.append(copy.deepcopy(net_locals[int(cluster_local[0])].state_dict()))
-            else:
-                w_locals = []
-                for cli, cl in enumerate(cluster_local):
-                    w_locals.append(copy.deepcopy(net_locals[int(cl)].state_dict()))
-                cluster_w_fedavg.append(FedAvg(w_locals))
+        if args.nn_refresh == 2:
+            net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
+                           dim_out=args.num_classes,
+                           weight_init=args.weight_init, bias_init=args.bias_init)
+            optimizer_glob = torch.optim.SGD(net_glob.parameters(), lr=args.lr_S,
+                                             weight_decay=args.weight_decay, momentum=0.0)
+            net_glob = net_glob.to(args.device)
+        elif args.nn_refresh == 1 or args.nn_refresh == 2:
+            generator = GeneratorA(nz=args.nz, nc=1, img_size=args.img_size)
+            optimizer_gen = torch.optim.Adam(generator.parameters(), lr=args.lr_G)
+            generator = generator.to(args.device)
+            generator.train()
 
-            cluster_net.append(copy.deepcopy(net_glob))
-            cluster_net[clui].load_state_dict(copy.deepcopy(cluster_w_fedavg[clui]))
-            optimizer_cn.append(torch.optim.SGD(cluster_net[clui].parameters(), lr=args.lr_S,weight_decay=args.weight_decay, momentum=0.9))
-            generator.load_state_dict(copy.deepcopy(init_w_gen))
-            DFAN_ensemble(args, net_locals, cluster_net[clui], generator, (optimizer_cn[clui], optimizer_gen), epoch_idx)
-            cluster_w_gen.append(copy.deepcopy(generator.state_dict()))
+        w_locals = []
+        for nli, localnet in enumerate(net_locals):
+            w_locals.append(copy.deepcopy(localnet.state_dict()))
+        w_fedavg = FedAvg(w_locals)
 
-        for clui, clu in enumerate(cluster_last_update):        
-            net_ensemble = []
-            net_ensemble.append(MLP(
-                dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], 
-                dim_hidden=200,
-                dim_out=args.num_classes,
-                weight_init=args.weight_init, 
-                bias_init=args.bias_init
-            ).to(args.device).eval())
-            net_ensemble.append(MLP(
-                dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], 
-                dim_hidden=200,
-                dim_out=args.num_classes,
-                weight_init=args.weight_init, 
-                bias_init=args.bias_init
-            ).to(args.device).eval())
-            net_ensemble[0].load_state_dict(copy.deepcopy(cluster_w_fedavg[clui]))
-            net_ensemble[1].load_state_dict(copy.deepcopy(cluster_net[clui].state_dict()))
-            generator.load_state_dict(copy.deepcopy(cluster_w_gen[largest_cluster_index]))
-            DFAN_ensemble(args, net_ensemble, cluster_net[clui], generator, (optimizer_cn[clui], optimizer_gen), epoch_idx)
-            cluster_w_gen.append(copy.deepcopy(generator.state_dict()))
+        #net_glob.load_state_dict(copy.deepcopy(w_fedavg))
 
-        generator.load_state_dict(copy.deepcopy(cluster_w_gen[largest_cluster_index]))
-        net_glob.load_state_dict(copy.deepcopy(cluster_net[largest_cluster_index].state_dict()))
-        DFAN_ensemble(args, cluster_net, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+        # for ii in range(3):
+        DFAN_ensemble(args, net_locals, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+
+        # net_glob_hist.append(copy.deepcopy(net_glob.state_dict()))
+        # w_ensemble = []
+        # w_ensemble.append(copy.deepcopy(w_fedavg))
+        # w_ensemble.append(copy.deepcopy(net_glob.state_dict()))
+        # net_glob.load_state_dict(FedAvg(w_ensemble))
 
         # for idx, user_idx in enumerate(idxs_users):
         #     torch.save(net_locals[idx].state_dict(),"data/models/%s/netlocal%s-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(idx),str(epoch_idx),args.model,args.dataset))
