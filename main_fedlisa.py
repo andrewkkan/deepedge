@@ -11,13 +11,15 @@ from torchvision import datasets, transforms
 import torch
 import random
 import os
+import sys
+import datetime
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
 from models.test import test_img, test_img_ensem
-from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params
+from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params, gather_flat_states, add_states
 
 
 from IPython import embed
@@ -37,6 +39,11 @@ if __name__ == '__main__':
 
     if not os.path.exists('data/models/%s'%(args.store_models)):
         os.makedirs('data/models/%s'%(args.store_models))
+
+    if args.screendump_file:
+        sdf = open(args.screendump_file, "a")
+        sdf.write(str(sys.argv) + '\n')
+        sdf.write(str(datetime.datetime.now()) + '\n\n')
 
     # load dataset and split users
     if args.dataset == 'mnist':
@@ -85,14 +92,17 @@ if __name__ == '__main__':
         nD=float(len(dict_users[0])), 
         Bs=float(args.local_bs),
         sgd_conjugate=args.sgd_conjugate,
+        opt_mode=args.opt_mode,
+        vr_mode=args.vr_mode,
+        max_qndn=args.max_qndn,
     )
     net_glob = net_glob.to(args.device)
     print(net_glob)
     net_glob.train()
 
-    control_glob = copy.deepcopy(net_glob.state_dict())
-    for k,v in control_glob.items():
-        control_glob[k] = torch.zeros_like(v)
+    control_glob = torch.zeros_like(gather_flat_states(net_glob))
+    if args.vr_mode == 0:
+        args.vr_scale = 1.0
 
     # training
     loss_train = []
@@ -104,16 +114,15 @@ if __name__ == '__main__':
 
     local_user = []
     for idx in range(args.num_users):
-        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx], LiSA=True))
+        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx], LiSA=True, user_idx=idx))
     last_update = np.ones(args.num_users) * -1
 
     for epoch_idx in range(args.epochs):
-        deltw_locals, deltos_locals, deltc_locals, flatg_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], [], [], []
+        delts_locals, deltc_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], []
 
         if args.rand_d2s == 0.0: # default
             m = min(max(int(args.frac * args.num_users), 1), args.num_users)
             idxs_users = np.random.choice(range(args.num_users), m, replace=False)
-
             # idxs_users_start = (epoch_idx*m) % args.num_users
             # idxs_users_end = ((epoch_idx+1)*m) % args.num_users
             # idxs_users = list(range(idxs_users_start,idxs_users_end))
@@ -137,28 +146,23 @@ if __name__ == '__main__':
 
         for iu_idx, user_idx in enumerate(idxs_users):
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
-                delt_w, delt_os, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
-                deltw_locals.append(copy.deepcopy(delt_w))
-                if delt_os:
-                    deltos_locals.append(copy.deepcopy(delt_os))
-                deltc_locals.append(copy.deepcopy(delt_c))
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delts_locals.append(copy.deepcopy(delt_s))
+                if args.vr_mode == 1:
+                    deltc_locals.append(copy.deepcopy(delt_c))
             elif args.async_s2d == 2:  # async mode 2 updates before FedAvg
-                delt_w, delt_os, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
-                deltw_locals.append(copy.deepcopy(delt_w))
-                if delt_os:
-                    deltos_locals.append(copy.deepcopy(delt_os))
-                deltc_locals.append(copy.deepcopy(delt_c))
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delts_locals.append(copy.deepcopy(delt_s))
+                if args.vr_mode == 1:
+                    deltc_locals.append(copy.deepcopy(delt_c))
                 local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=copy.deepcopy(control_glob))
             elif args.async_s2d == 0:  # synchronous mode, updates before training
                 local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=copy.deepcopy(control_glob))
                 last_update[user_idx] = epoch_idx
-                # delt_w, delt_os, flat_g, loss, acc_ll = local_user[user_idx].train_grad_only()
-                delt_w, delt_os, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
-                deltw_locals.append(copy.deepcopy(delt_w))
-                if delt_os is not None:
-                    deltos_locals.append(copy.deepcopy(delt_os))
-                deltc_locals.append(copy.deepcopy(delt_c))
-                # flatg_locals.append(copy.deepcopy(flat_g))
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delts_locals.append(copy.deepcopy(delt_s))
+                if args.vr_mode == 1:
+                    deltc_locals.append(copy.deepcopy(delt_c))
             acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
             loss_locals.append(loss)
             acc_locals.append(acc_l)
@@ -167,12 +171,33 @@ if __name__ == '__main__':
             if args.async_s2d == 2:
                 last_update[user_idx] = epoch_idx
 
-        optimizer_glob.step(deltw_locals, deltos_locals, flatg_locals, epoch_idx)
-        
-        if args.scaffold_on == True:
-            for dc in deltc_locals:
-                for k,v in dc.items():
-                    control_glob[k] += v / float(args.num_users)
+        deltw_locals, deltos_locals = [], []
+        sdk = net_glob.state_dict().keys()
+        npk = dict(net_glob.named_parameters()).keys()
+        for delts in delts_locals:
+            wl, osl = [], []
+            offset = 0
+            for k in sdk:
+                numel = net_glob.state_dict()[k].numel()
+                if k in npk:
+                    wl.append(delts[offset:offset+numel])
+                else:
+                    osl.append(delts[offset:offset+numel])
+                offset += numel
+            deltw_locals.append(torch.cat(wl, 0))
+            if osl:
+                deltos_locals.append(torch.cat(osl, 0)) 
+
+        if args.vr_mode == 1:
+            control_glob += torch.stack(deltc_locals).mean(dim=0) * len(delts_locals) / float(args.num_users)
+            if args.screendump_file:
+                # sdf.write("Control norm = " + str(control_glob.norm()) + '\n')
+                sdf.flush()
+
+        if args.qn_mode == 0:
+            optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, flat_control=None, epoch_idx=epoch_idx)
+        elif args.qn_mode == 1:
+            optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, flat_control=control_glob, epoch_idx=epoch_idx)
 
         # torch.save(net_glob.state_dict(),"data/models/fedavg_updates/net_glob-async%d-round%d.pt"%(args.async_s2d, epoch_idx))
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
@@ -188,9 +213,15 @@ if __name__ == '__main__':
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n\n'.\
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(epoch_idx, m, loss_avg, acc_glob, acc_loc, acc_lloc)
         )
+        if args.screendump_file:
+            sdf.write(
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
+                format(epoch_idx, m, loss_avg, acc_glob, acc_loc, acc_lloc)
+            )
+            sdf.flush()
         loss_train.append(loss_avg)
 
 
@@ -206,4 +237,9 @@ if __name__ == '__main__':
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
     acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
     #print("Training accuracy: {:.2f}".format(acc_train))
-    print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))
+    print("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
+    if args.screendump_file:
+        sdf.write("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
+        sdf.write(str(datetime.datetime.now()) + '\n')
+        sdf.close()
+

@@ -82,7 +82,13 @@ def args_parser():
                         help='memory size of LBFGS (default: 100)')
     parser.add_argument('--lr_g', type=float, default=1.0, help="global learning rate")
     parser.add_argument('--sgd_conjugate', action='store_true')
-    parser.add_argument('--scaffold_on', action='store_true')
+    parser.add_argument('--vr_mode', type=int, default=0, help="Variance reduction mode.  0: None, 1: SAGA-Scaffold, 2: gd with qn control variate.")
+    parser.add_argument('--opt_mode', type=int, default=0, help="Optimization mode.  0: quasi newton with gradient descent, 1: gd only, no qn, 2: qn only, no gd")
+    parser.add_argument('--vr_scale', type=float, default=1.0, help="Used with vr_mode = 1.  For SAG, set at 1/n where n is number of users.  For SAGA, set at default 1.0.")
+    parser.add_argument('--max_qndn', type=float, default=1.0, help="Max quasi-newton step norm.")
+    parser.add_argument('--qn_mode', type=int, default=0, help="")
+
+    parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 
 
     args = parser.parse_args()

@@ -9,6 +9,12 @@ def gather_flat_params(model):
         flat_params.append(p.data.view(-1))
     return torch.cat(flat_params, 0)
 
+def gather_flat_params_with_grad(model):
+    flat_params = []
+    for p in model.parameters():
+        flat_params.append(p.view(-1))
+    return torch.cat(flat_params, 0)
+
 def gather_flat_other_states(model):
     sd = model.state_dict()
     pd = dict(model.named_parameters())
@@ -20,6 +26,23 @@ def gather_flat_other_states(model):
         return torch.cat(osl, 0)
     else:
         return None
+
+def gather_flat_states(model):
+    flat_states = []
+    for s in model.state_dict().values():
+        flat_states.append(s.data.view(-1))
+    return torch.cat(flat_states, 0)    
+
+def add_states(model, flat_states):
+    sd = model.state_dict()
+    offset = 0
+    for sdk in sd.keys():
+        numel = sd[sdk].numel()
+        if 'Long' in sd[sdk].type():
+            sd[sdk] += flat_states[offset:offset + numel].view_as(sd[sdk]).long()
+        else:
+            sd[sdk] += flat_states[offset:offset + numel].view_as(sd[sdk])
+        offset += numel
 
 def gather_flat_grad(model):
     views = []
@@ -72,7 +95,8 @@ class SdLBFGS_FedLiSA(Optimizer):
 
     def __init__(self, net, lr=1., lr_decay=False, weight_decay=0, max_iter=1, max_eval=None,
                  tolerance_grad=1e-5, tolerance_change=1e-9, history_size=100,
-                 line_search_fn=None, lr_l=0.1, E_l=1.0, nD=600., Bs=50., sgd_conjugate=False):
+                 line_search_fn=None, lr_l=0.1, E_l=1.0, nD=600., Bs=50., sgd_conjugate=False, 
+                 opt_mode=0, vr_mode=0, max_qndn=1.0):
         if max_eval is None:
             max_eval = max_iter * 5 // 4
         defaults = dict(lr=lr, lr_decay=lr_decay, weight_decay=weight_decay, max_iter=max_iter,
@@ -94,6 +118,9 @@ class SdLBFGS_FedLiSA(Optimizer):
         self._nD = nD
         self._Bs = Bs
         self._sgd_conjugate = sgd_conjugate
+        self._opt_mode = opt_mode
+        self._vr_mode = vr_mode
+        self._max_qndn = max_qndn
 
     def _numel(self):
         if self._numel_cache is None:
@@ -169,12 +196,23 @@ class SdLBFGS_FedLiSA(Optimizer):
         else:
             return betas[1]
 
+    def step_noQN(self, 
+            flat_deltw_list,
+            flat_deltos_list,
+        ):
+
+        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        self._add_grad(1.0, flat_deltw)
+        if flat_deltos_list:
+            flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
+            self._add_other_states(flat_deltos)
+
     def step(
             self, 
             # closure
             flat_deltw_list,
             flat_deltos_list,
-            flat_grad_list,
+            flat_control,
             epoch_idx,
         ):
         """Performs a single optimization step.
@@ -184,6 +222,10 @@ class SdLBFGS_FedLiSA(Optimizer):
                 and returns the loss.
         """
         assert len(self.param_groups) == 1
+
+        if self._opt_mode == 1:
+            self.step_noQN(flat_deltw_list, flat_deltos_list)
+            return
 
         group = self.param_groups[0]
         lr = group['lr']
@@ -211,11 +253,12 @@ class SdLBFGS_FedLiSA(Optimizer):
         else:
             flat_deltos = None
 
-        if not flat_grad_list:
-            flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+            
+        if flat_control is None:
             flat_grad = -flat_deltw / self._lr_l / self._E_l / (self._nD / self._Bs)
         else:
-            flat_grad = torch.stack(flat_grad_list).mean(dim=0)
+            flat_grad = flat_control
 
         abs_grad_sum = flat_grad.abs().sum()
 
@@ -332,8 +375,8 @@ class SdLBFGS_FedLiSA(Optimizer):
                 d = self._add_weight_decay(weight_decay, d)
 
             dnorm = d.norm()
-            if dnorm > 1/t:
-                d = d / d.norm() / t
+            if dnorm > self._max_qndn/t:
+                d = d / d.norm() / t * self._max_qndn 
 
             # directional derivative
             gtd = flat_grad.dot(d)  # g * d
@@ -344,19 +387,19 @@ class SdLBFGS_FedLiSA(Optimizer):
                 # perform line search, using user function
                 raise RuntimeError("line search function is not supported yet")
             else:
-                # no line search, simply move with fixed-step
-                self._add_grad(t, d)
+                if self._opt_mode == 0 or self._opt_mode == 2:
+                    # no line search, simply move with fixed-step 
+                    self._add_grad(t, d)
 
-                if self._sgd_conjugate == True:
-                    unit_d = d.div(d.norm())
-                    sgd_update = flat_deltw - flat_deltw*unit_d
-                    self._add_grad(1.0, sgd_update)
-                    print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", sgd_update.norm())
-
-                else:
-                    self._add_grad(1.0, flat_deltw)
-                    print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", flat_deltw.norm())
-
+                if self._opt_mode == 0: # opt_mode == 1 taken care of by self.step_noQN
+                    if self._sgd_conjugate == True:
+                        unit_d = d.div(d.norm())
+                        sgd_update = flat_deltw - flat_deltw*unit_d
+                        self._add_grad(1.0, sgd_update)
+                        # print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", sgd_update.norm())
+                    else:
+                        self._add_grad(1.0, flat_deltw)
+                        # print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", flat_deltw.norm())
 
                 if flat_deltos is not None:
                     self._add_other_states(flat_deltos)
@@ -408,4 +451,4 @@ class SdLBFGS_FedLiSA(Optimizer):
         state['prev_flat_grad'] = prev_flat_grad
         # state['prev_loss'] = prev_loss
 
-        return # orig_loss
+        return t*d

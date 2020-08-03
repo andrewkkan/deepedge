@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 import copy
 import torch.nn.functional as F
 from models.FedMAS import do_Omega_Local_Update, calculate_Regularization_Omega
-from models.sdlbfgs_fed import gather_flat_params, gather_flat_other_states, gather_flat_grad
+from models.sdlbfgs_fed import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states
 
 from IPython import embed
 
@@ -25,7 +25,7 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, net, dataset=None, idxs=None, LiSA=False):
+    def __init__(self, args, net, dataset=None, idxs=None, LiSA=False, user_idx=0):
         self.args = args
         # self.loss_func = nn.CrossEntropyLoss()
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
@@ -37,10 +37,9 @@ class LocalUpdate(object):
         self.control_i = None
         self.control_g = None
         if LiSA == True:
-            self.control_i = copy.deepcopy(self.net.state_dict())
-            for k,v in self.control_i.items():
-                self.control_i[k] = torch.zeros_like(v)
-            self.control_g = copy.deepcopy(self.control_i)
+            self.control_i = torch.zeros_like(gather_flat_states(self.net))
+            self.control_g = torch.zeros_like(gather_flat_states(self.net))
+        self.user_idx = user_idx
 
     def train(self):
         if not self.net:
@@ -81,7 +80,7 @@ class LocalUpdate(object):
         self.last_net = copy.deepcopy(self.net)
         self.net.train()
         # train and update
-        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr*self.args.vr_scale, momentum=self.args.momentum)
 
         epoch_loss = []
         epoch_accuracy = []
@@ -95,7 +94,7 @@ class LocalUpdate(object):
                 nn_outputs = self.net(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
                 # loss = self.loss_func(nn_outputs, labels)
-                loss = self.CrossEntropyLoss(nn_outputs, labels)
+                loss = self.CrossEntropyLoss(nn_outputs, labels) 
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
@@ -104,33 +103,21 @@ class LocalUpdate(object):
                 batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
                 loss.backward()
                 optimizer.step()
-                if self.args.scaffold_on == True:
-                    for k in self.net.state_dict().keys():
-                        self.net.state_dict()[k] -= self.args.lr * (self.control_g[k] - self.control_i[k])
+                if self.args.vr_mode != 0:
+                    add_states(self.net, -self.args.lr * (self.control_g - self.control_i*self.args.vr_scale))
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
-        control_delt = None
-        if self.args.scaffold_on == True:
-            control_iplus = copy.deepcopy(self.control_i)
-            control_delt = copy.deepcopy(self.control_i)
-            for k in control_iplus.keys():
-                control_iplus[k] = self.control_i[k] - self.control_g[k] + (self.last_net.state_dict()[k] - self.net.state_dict()[k]) / self.args.lr / self.args.local_ep / float(batch_idx + 1)
-                control_delt[k] = control_iplus[k] - self.control_i[k]
-            self.control_i = control_iplus
+        flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(self.last_net)
+        flat_delts = flat_net_states - flat_last_net_states
 
-        flat_params = gather_flat_params(self.net)
-        flat_last_params = gather_flat_params(self.last_net)
-        deltw = flat_params.sub(flat_last_params)
+        flat_deltc = None
+        if self.args.vr_mode != 0:
+            last_control_i = copy.deepcopy(self.control_i)
+            self.control_i = self.control_i - self.control_g * self.args.vr_scale + (flat_last_net_states - flat_net_states) / self.args.lr / self.args.local_ep / float(batch_idx + 1) *  self.args.vr_scale
+            flat_deltc = self.control_i - last_control_i
 
-        flat_other_states = gather_flat_other_states(self.net)
-        flat_last_other_states = gather_flat_other_states(self.last_net)
-        if flat_other_states is not None and flat_last_other_states is not None:
-            deltos = flat_other_states.sub(flat_last_other_states)
-        else:
-            deltos = None
-
-        return deltw, deltos, control_delt, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
+        return flat_delts, flat_deltc, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
     def train_grad_only(self):
         # delt_w, delt_os, loss, acc_ll = self.train_lisa()
