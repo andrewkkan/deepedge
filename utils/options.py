@@ -17,9 +17,6 @@ def args_parser():
     parser.add_argument('--momentum', type=float, default=0.0, help="SGD momentum (default: 0.5)")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
     parser.add_argument('--async_s2d', type=int, default=0, help='async server-to-device update across all devices or not (default 0: synchronous)')
-    parser.add_argument('--fedmas', type=float, default=0.0, help="Use FedMAS (memory-aware synapses) to mitigate catastrophic forgetting.  Provide value for lambda.")
-    parser.add_argument('--rand_d2s', type=float, nargs='*', default=0.0, help='random device-to-server update')
-    parser.add_argument('--sync_params', action='store_true', help='Sync params for each mini batch update from active devices.')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')
@@ -43,50 +40,18 @@ def args_parser():
     parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
 
-    # Below are imported from DFAN code
-    parser.add_argument('--batch_size', type=int, default=512, metavar='N',
-                        help='input batch size for training (default: 64)')
-    parser.add_argument('--lr_S', type=float, default=0.1, metavar='LR',
-                        help='learning rate (default: 0.1)')
-    parser.add_argument('--lr_G', type=float, default=0.01,
-                        help='learning rate (default: 0.1)')
-    parser.add_argument('--epoch_itrs', type=int, default=600)
-    parser.add_argument('--ensemble_mode', type=int, default=0, metavar='N',
-                        help='mode for ensemble (default: 0)')
-    parser.add_argument('--nz', type=int, default=100)
-    parser.add_argument('--weight_decay', type=float, default=1e-4)
-    # parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-    #                     help='SGD momentum (default: 0.9)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--nn_refresh', type=int, default=0, help='Re-initialize Generator and Global NNs every round for DFAN (default 0: none)')
     parser.add_argument('--store_models', type=str, default="testrun", help='Directory for model storage under deepedge/data')
-    parser.add_argument('--alpha_scale', type=float, default=0.5)
     parser.add_argument('--noniid_hard', action='store_true')
-    parser.add_argument('--fuse_eps', type=float, default=0.25)
-    parser.add_argument('--cossim_filter', action='store_true')
-    parser.add_argument('--kd_t', type=float, default=1.0)
-    parser.add_argument('--num_leaders', type=int, default=0)
-    parser.add_argument('--fedavg_update', action='store_true')
-    parser.add_argument('--pretrain', action='store_true')
-    parser.add_argument('--lr_PT', type=float, default=0.00025, help="Pre-train learning rate")
-    parser.add_argument('--sync2async', type=int, default=0)
-    parser.add_argument('--dfan_align_alpha', type=float, default=0.0)
-    parser.add_argument('--use_stragglers', action='store_true')
-    parser.add_argument('--server_momentum', type=float, default=0.0)
-    parser.add_argument('--fedmaux_tau', type=int, default=1)
-    parser.add_argument('--server_lr', type=float, default=0.1)
-    parser.add_argument('--fedmaux_greedy', action='store_true')
 
     parser.add_argument('--lbfgs_hist', type=int, default=100, metavar='LH',
                         help='memory size of LBFGS (default: 100)')
     parser.add_argument('--lr_g', type=float, default=1.0, help="global learning rate")
-    parser.add_argument('--sgd_conjugate', action='store_true')
     parser.add_argument('--vr_mode', type=int, default=0, help="Variance reduction mode.  0: None, 1: SAGA-Scaffold, 2: gd with qn control variate.")
-    parser.add_argument('--opt_mode', type=int, default=0, help="Optimization mode.  0: quasi newton with gradient descent, 1: gd only, no qn, 2: qn only, no gd")
+    parser.add_argument('--opt_mode', type=int, default=0, help="Server-side optimization mode.  0: Plain vanilla model averaging only (FedAvg, Scaffold, etc), no qn.  1. qn only, no model averaging.  2: qn + model averaging.")
     parser.add_argument('--vr_scale', type=float, default=1.0, help="Used with vr_mode = 1.  For SAG, set at 1/n where n is number of users.  For SAGA, set at default 1.0.")
     parser.add_argument('--max_qndn', type=float, default=1.0, help="Max quasi-newton step norm.")
-    parser.add_argument('--qn_mode', type=int, default=0, help="")
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 

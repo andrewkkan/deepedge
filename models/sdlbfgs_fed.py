@@ -95,7 +95,7 @@ class SdLBFGS_FedLiSA(Optimizer):
 
     def __init__(self, net, lr=1., lr_decay=False, weight_decay=0, max_iter=1, max_eval=None,
                  tolerance_grad=1e-5, tolerance_change=1e-9, history_size=100,
-                 line_search_fn=None, lr_l=0.1, E_l=1.0, nD=600., Bs=50., sgd_conjugate=False, 
+                 line_search_fn=None, lr_l=0.1, E_l=1.0, nD=600., Bs=50., 
                  opt_mode=0, vr_mode=0, max_qndn=1.0):
         if max_eval is None:
             max_eval = max_iter * 5 // 4
@@ -117,7 +117,6 @@ class SdLBFGS_FedLiSA(Optimizer):
         self._E_l = E_l
         self._nD = nD
         self._Bs = Bs
-        self._sgd_conjugate = sgd_conjugate
         self._opt_mode = opt_mode
         self._vr_mode = vr_mode
         self._max_qndn = max_qndn
@@ -196,24 +195,11 @@ class SdLBFGS_FedLiSA(Optimizer):
         else:
             return betas[1]
 
-    def step_noQN(self, 
-            flat_deltw_list,
-            flat_deltos_list,
-        ):
-
-        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
-        self._add_grad(1.0, flat_deltw)
-        if flat_deltos_list:
-            flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
-            self._add_other_states(flat_deltos)
-
     def step(
             self, 
             # closure
             flat_deltw_list,
             flat_deltos_list,
-            flat_control,
-            epoch_idx,
         ):
         """Performs a single optimization step.
 
@@ -223,9 +209,17 @@ class SdLBFGS_FedLiSA(Optimizer):
         """
         assert len(self.param_groups) == 1
 
-        if self._opt_mode == 1:
-            self.step_noQN(flat_deltw_list, flat_deltos_list)
-            return
+        if flat_deltos_list:
+            flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
+            self._add_other_states(flat_deltos)
+
+        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+
+        if self._opt_mode != 1:
+            # This steps does global model updating with plain-vanilla device-update averaging 
+            self._add_grad(1.0, flat_deltw)
+            if self._opt_mode == 0:
+                return
 
         group = self.param_groups[0]
         lr = group['lr']
@@ -247,19 +241,8 @@ class SdLBFGS_FedLiSA(Optimizer):
         # loss = orig_loss.item()
         current_evals = 1
         state['func_evals'] += 1
-
-        if flat_deltos_list:
-            flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
-        else:
-            flat_deltos = None
-
-        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
             
-        if flat_control is None:
-            flat_grad = -flat_deltw / self._lr_l / self._E_l / (self._nD / self._Bs)
-        else:
-            flat_grad = flat_control
-
+        flat_grad = -flat_deltw / self._lr_l / self._E_l / (self._nD / self._Bs)
         abs_grad_sum = flat_grad.abs().sum()
 
         if abs_grad_sum <= tolerance_grad:
@@ -387,22 +370,9 @@ class SdLBFGS_FedLiSA(Optimizer):
                 # perform line search, using user function
                 raise RuntimeError("line search function is not supported yet")
             else:
-                if self._opt_mode == 0 or self._opt_mode == 2:
+                if self._opt_mode == 1 or self._opt_mode == 2:
                     # no line search, simply move with fixed-step 
                     self._add_grad(t, d)
-
-                if self._opt_mode == 0: # opt_mode == 1 taken care of by self.step_noQN
-                    if self._sgd_conjugate == True:
-                        unit_d = d.div(d.norm())
-                        sgd_update = flat_deltw - flat_deltw*unit_d
-                        self._add_grad(1.0, sgd_update)
-                        # print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", sgd_update.norm())
-                    else:
-                        self._add_grad(1.0, flat_deltw)
-                        # print("t = ", t, " dt norm = ", (d.mul(t)).norm(), " sgd norm = ", flat_deltw.norm())
-
-                if flat_deltos is not None:
-                    self._add_other_states(flat_deltos)
 
                 if n_iter != max_iter:
                     # re-evaluate function only if not in last iteration
