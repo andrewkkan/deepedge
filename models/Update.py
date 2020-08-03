@@ -6,7 +6,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import copy
 import torch.nn.functional as F
-from models.FedMAS import do_Omega_Local_Update, calculate_Regularization_Omega
 from models.sdlbfgs_fed import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states
 
 from IPython import embed
@@ -174,38 +173,13 @@ class LocalUpdate(object):
 
     def weight_update(self, net):
         self.net = net
-        if self.args.fedmas > 0.0:
-            self.net_glob = copy.deepcopy(net)
 
     def weight_control_update(self, net, control):
         self.net = net
         self.control_g = copy.deepcopy(control)
 
-    def omega_update(self, net, omega_glob, N_omega):
-        do_Omega_Local_Update(local_user=self, net=net, omega_glob=omega_glob, N_omega=N_omega)
-
-    @property
-    def omega_local(self):
-        return self._omega_local
-
-    @omega_local.setter
-    def omega_local(self, omega_local):
-        self._omega_local = omega_local
-
-    @property
-    def omega_global(self):
-        return self._omega_global
-
-    @omega_global.setter
-    def omega_global(self, omega_global):
-        self._omega_global = omega_global
-
     def CrossEntropyLoss(self, outputs, labels):
         batch_size = outputs.size()[0]            # batch_size
         outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
         outputs = outputs[range(batch_size), labels] # pick the values corresponding to the labels
-        if self._omega_global and self.net_glob:
-            regularization_mas = calculate_Regularization_Omega(net_glob=self.net_glob, net_local=self.net, omega_glob=self.omega_global)
-        else:
-            regularization_mas = 0
-        return -torch.sum(outputs)/float(batch_size) +(self.args.fedmas * regularization_mas)
+        return -torch.sum(outputs)/float(batch_size) 

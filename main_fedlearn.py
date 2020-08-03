@@ -125,12 +125,6 @@ if __name__ == '__main__':
         m = min(max(int(args.frac * args.num_users), 1), args.num_users)
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
-        if args.sync2async > 0:
-            if epoch_idx > args.sync2async:
-                args.async_s2d = 1
-            else:
-                args.async_s2d = 0
-
         for iu_idx, user_idx in enumerate(idxs_users):
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
                 delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
