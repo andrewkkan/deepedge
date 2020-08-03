@@ -122,9 +122,8 @@ if __name__ == '__main__':
     for epoch_idx in range(args.epochs):
         delts_locals, deltc_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], []
 
-        if args.rand_d2s == 0.0: # default
-            m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-            idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        m = min(max(int(args.frac * args.num_users), 1), args.num_users)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
         if args.sync2async > 0:
             if epoch_idx > args.sync2async:
