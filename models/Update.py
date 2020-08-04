@@ -24,7 +24,7 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, net, dataset=None, idxs=None, LiSA=False, user_idx=0):
+    def __init__(self, args, net, dataset=None, idxs=None, user_idx=0):
         self.args = args
         # self.loss_func = nn.CrossEntropyLoss()
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
@@ -35,9 +35,9 @@ class LocalUpdate(object):
         self._omega_global = []
         self.control_i = None
         self.control_g = None
-        if LiSA == True:
-            self.control_i = torch.zeros_like(gather_flat_states(self.net))
-            self.control_g = torch.zeros_like(gather_flat_states(self.net))
+        if args.vr_mode != 0:
+            self.control_i = torch.zeros_like(gather_flat_states(self.net)).to(args.device)
+            self.control_g = torch.zeros_like(gather_flat_states(self.net)).to(args.device)
         self.user_idx = user_idx
 
     def train(self):
@@ -94,6 +94,8 @@ class LocalUpdate(object):
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
                 # loss = self.loss_func(nn_outputs, labels)
                 loss = self.CrossEntropyLoss(nn_outputs, labels) 
+                if self.args.fedprox > 0.0:
+                    loss += self.args.fedprox * (gather_flat_params_with_grad(self.net) - gather_flat_params(self.last_net)).norm(2)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
@@ -176,7 +178,8 @@ class LocalUpdate(object):
 
     def weight_control_update(self, net, control):
         self.net = net
-        self.control_g = copy.deepcopy(control)
+        if control is not None:
+            self.control_g = copy.deepcopy(control)
 
     def CrossEntropyLoss(self, outputs, labels):
         batch_size = outputs.size()[0]            # batch_size

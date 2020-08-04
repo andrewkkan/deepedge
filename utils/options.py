@@ -53,6 +53,9 @@ def args_parser():
     parser.add_argument('--vr_scale', type=float, default=1.0, help="Used with vr_mode = 1.  For SAG, set at 1/n where n is number of users.  For SAGA, set at default 1.0.")
     parser.add_argument('--max_qndn', type=float, default=1.0, help="Max quasi-newton step norm.")
 
+    parser.add_argument('--fedprox', type=float, default=0.0, help="default = off, to use, set to 1.0")
+
+
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 
 

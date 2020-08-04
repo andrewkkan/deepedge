@@ -101,8 +101,9 @@ if __name__ == '__main__':
     print(net_glob)
     net_glob.train()
 
+    control_glob = None
     if args.vr_mode > 0:
-        control_glob = torch.zeros_like(gather_flat_states(net_glob))
+        control_glob = torch.zeros_like(gather_flat_states(net_glob)).to(args.device)
         if args.vr_mode == 0:
             args.vr_scale = 1.0
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
     local_user = []
     for idx in range(args.num_users):
-        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx], LiSA=True, user_idx=idx))
+        local_user.append(LocalUpdate(args=args, net=copy.deepcopy(net_glob).to(args.device), dataset=dataset_train, idxs=dict_users[idx], user_idx=idx))
     last_update = np.ones(args.num_users) * -1
 
     for epoch_idx in range(args.epochs):
@@ -136,9 +137,9 @@ if __name__ == '__main__':
                 delts_locals.append(copy.deepcopy(delt_s))
                 if args.vr_mode == 1:
                     deltc_locals.append(copy.deepcopy(delt_c))
-                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=copy.deepcopy(control_glob))
+                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=control_glob)
             elif args.async_s2d == 0:  # synchronous mode, updates before training
-                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=copy.deepcopy(control_glob))
+                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=control_glob)
                 last_update[user_idx] = epoch_idx
                 delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
                 delts_locals.append(copy.deepcopy(delt_s))
@@ -180,7 +181,7 @@ if __name__ == '__main__':
         # torch.save(net_glob.state_dict(),"data/models/fedavg_updates/net_glob-async%d-round%d.pt"%(args.async_s2d, epoch_idx))
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
             for user_idx in idxs_users:
-                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=copy.deepcopy(control_glob))
+                local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=control_glob)
                 last_update[user_idx] = epoch_idx
 
         # Calculate accuracy for each round
