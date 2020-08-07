@@ -30,7 +30,7 @@ def gather_flat_other_states(model):
 def gather_flat_states(model):
     flat_states = []
     for s in model.state_dict().values():
-        flat_states.append(s.data.view(-1))
+        flat_states.append(s.data.view(-1).float())
     return torch.cat(flat_states, 0)    
 
 def add_states(model, flat_states):
@@ -93,13 +93,13 @@ class SdLBFGS_FedLiSA(Optimizer):
     SIAM Journal on Optimization 27.2 (2017): 927-956.
     """
 
-    def __init__(self, net, lr=1., lr_decay=False, weight_decay=0, max_iter=1, max_eval=None,
+    def __init__(self, net, lr_server_qn=0.5, lr_server_gd=1.0, lr_decay=False, weight_decay=0, max_iter=1, max_eval=None,
                  tolerance_grad=1e-5, tolerance_change=1e-9, history_size=100,
-                 line_search_fn=None, lr_l=0.1, E_l=1.0, nD=600., Bs=50., 
+                 line_search_fn=None, lr_device=0.1, E_l=1.0, nD=600., Bs=50., 
                  opt_mode=0, vr_mode=0, max_qndn=1.0):
         if max_eval is None:
             max_eval = max_iter * 5 // 4
-        defaults = dict(lr=lr, lr_decay=lr_decay, weight_decay=weight_decay, max_iter=max_iter,
+        defaults = dict(lr_server_qn=lr_server_qn, lr_decay=lr_decay, weight_decay=weight_decay, max_iter=max_iter,
                         max_eval=max_eval,
                         tolerance_grad=tolerance_grad, tolerance_change=tolerance_change,
                         history_size=history_size, line_search_fn=line_search_fn)
@@ -111,8 +111,9 @@ class SdLBFGS_FedLiSA(Optimizer):
 
         self._params = self.param_groups[0]['params']
         self._numel_cache = None
-        self._lr_g = lr
-        self._lr_l = lr_l
+        self._lr_server_qn = lr_server_qn
+        self._lr_server_gd = lr_server_gd
+        self._lr_device = lr_device
         self._net = net
         self._E_l = E_l
         self._nD = nD
@@ -216,13 +217,13 @@ class SdLBFGS_FedLiSA(Optimizer):
         flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
 
         if self._opt_mode != 1:
-            # This steps does global model updating with plain-vanilla device-update averaging 
-            self._add_grad(1.0, flat_deltw)
+            # This step updates the global model with plain-vanilla device-update averaging 
+            self._add_grad(self._lr_server_gd, flat_deltw)
             if self._opt_mode == 0:
                 return
 
         group = self.param_groups[0]
-        lr = group['lr']
+        lr_server_qn = group['lr_server_qn']
         lr_decay = group['lr_decay']
         weight_decay = group['weight_decay']
         max_iter = group['max_iter']
@@ -242,7 +243,7 @@ class SdLBFGS_FedLiSA(Optimizer):
         current_evals = 1
         state['func_evals'] += 1
             
-        flat_grad = -flat_deltw / self._lr_l / self._E_l / (self._nD / self._Bs)
+        flat_grad = -flat_deltw / self._lr_device / self._E_l / (self._nD / self._Bs)
         abs_grad_sum = flat_grad.abs().sum()
 
         if abs_grad_sum <= tolerance_grad:
@@ -269,15 +270,15 @@ class SdLBFGS_FedLiSA(Optimizer):
             # compute gradient descent direction
             ############################################################
             if lr_decay:
-                t = lr / (state['n_iter'] ** 0.5)
+                t = lr_server_qn / (state['n_iter'] ** 0.5)
                 # a0 = 1./16.
                 # a1 = 0.
                 # t = 1/(a0 + state['n_iter']*a1)
             else:
                 if state['n_iter'] == 1:
-                    t = min(1., 1. / abs_grad_sum) * lr
+                    t = min(1., 1. / abs_grad_sum) * lr_server_qn
                 else:
-                    t = self._lr_g
+                    t = lr_server_qn
 
             if state['n_iter'] == 1:
                 d = flat_grad.neg()

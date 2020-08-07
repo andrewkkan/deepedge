@@ -63,7 +63,7 @@ class CNNMnist(nn.Module):
 class CNNCifar(nn.Module):
     def __init__(self, args):
         super(CNNCifar, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv1 = nn.Conv2d(args.num_channels, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.bn0 = nn.BatchNorm1d(16 * 5 * 5)
@@ -88,10 +88,10 @@ class CNNCifar(nn.Module):
 
 class LeNet5(nn.Module):
 
-    def __init__(self):
+    def __init__(self, args):
         super(LeNet5, self).__init__()
 
-        self.conv1 = nn.Conv2d(3, 6, kernel_size=(5, 5))
+        self.conv1 = nn.Conv2d(args.num_channels, 6, kernel_size=(5, 5))
         self.relu1 = nn.ReLU()
         self.maxpool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
         self.conv2 = nn.Conv2d(6, 16, kernel_size=(5, 5))
@@ -101,7 +101,7 @@ class LeNet5(nn.Module):
         self.relu3 = nn.ReLU()
         self.fc1 = nn.Linear(120, 84)
         self.relu4 = nn.ReLU()
-        self.fc2 = nn.Linear(84, 10)
+        self.fc2 = nn.Linear(84, args.num_classes)
 
     def forward(self, img, out_feature=False):
         output = self.conv1(img)

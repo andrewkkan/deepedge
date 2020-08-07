@@ -8,15 +8,24 @@ import matplotlib.pyplot as plt
 import copy
 import numpy as np
 from torchvision import datasets, transforms
-import torch
+from torch.utils.data import DataLoader, Dataset
+import copy
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
+import torch
+import random
+import os
+import sys
+import datetime
 
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
+from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid
 from models.Update import DatasetSplit
-from models.Nets import MLP, CNNMnist, CNNCifar
-from models.test import test_img
+from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
+from models.test import test_img, test_img_ensem
+from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params, gather_flat_states, add_states
+
+from IPython import embed
+
 
 if __name__ == '__main__':
 
@@ -26,49 +35,82 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+    random.seed(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    if not os.path.exists('data/models/%s'%(args.store_models)):
+        os.makedirs('data/models/%s'%(args.store_models))
+
+    if args.screendump_file:
+        sdf = open(args.screendump_file, "a")
+        sdf.write(str(sys.argv) + '\n')
+        sdf.write(str(datetime.datetime.now()) + '\n\n')
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        trans_mnist = transforms.Compose([transforms.Resize((32, 32)),transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
-        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
+        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist)
+        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
         if args.iid:
-            # dict_users = mnist_iid(dataset_train, args.num_users)
-            dict_users = mnist_sample_iid(dataset_train, args.num_users)
+            dict_users = mnist_iid(dataset_train, args.num_users)
+            # dict_users = mnist_sample_iid(dataset_train, args.num_users)
         else:
             dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
-    elif args.dataset == 'cifar':
-        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
-        dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=trans_cifar)
+        args.num_classes = 10
+        args.num_channels = 1
+    elif args.dataset == 'cifar10':
+        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
+        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=trans_cifar)
         if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
+            dict_users = generic_iid(dataset_train, args.num_users)
         else:
-            exit('Error: only consider IID setting in CIFAR10')
-
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 10
+    elif args.dataset == 'cifar100':
+        trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
+        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
+        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar100)
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = cifar100_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 100
+    elif args.dataset == 'bcct200':
+        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.26215256, 0.26215256, 0.26215256], std=[0.0468134, 0.0468134, 0.0468134])])
+        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
+        dataset_test = dataset_train
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 4
     else:
         exit('Error: unrecognized dataset')
-    img_size = dataset_train[0][0].shape
+
+    args.img_size = dataset_train[0][0].shape
 
     # build model
-    if args.model == 'cnn' and args.dataset == 'cifar':
+    if args.model == 'cnn' and args.dataset != 'mnist':
         net_glob = CNNCifar(args=args).to(args.device)
+    elif args.model == 'lenet5' and args.dataset != 'mnist':
+        net_glob = LeNet5(args=args).to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
-        len_in = 1
-        for x in img_size:
-            len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes,
-                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device)
+        net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
+                       dim_out=args.num_classes,
+                       weight_init=args.weight_init, bias_init=args.bias_init)        
     else:
         exit('Error: unrecognized model')
+
+    optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr_device, momentum=args.momentum)
+    net_glob = net_glob.to(args.device)
     print(net_glob)
     net_glob.train()
-
-    # copy weights
-    w_glob = net_glob.state_dict()
 
     # training
     loss_train = []
@@ -82,28 +124,13 @@ if __name__ == '__main__':
     for idx in range(args.num_users):
         local_user.append(dict_users[idx])
 
-    optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr, momentum=args.momentum)
-
     for epoch_idx in range(args.epochs):
 
-        torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
-
+        # torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
         w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
 
-        if args.rand_d2s == 0.0: # default
-            m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-            idxs_users = np.random.choice(range(args.num_users), m, replace=False)
-        else:
-            if args.rand_d2s == []:
-                frac_list = [args.frac]
-            else:
-                frac_list = args.rand_d2s
-            rand_d2s = np.resize(frac_list, args.num_users)
-            idxs_users = np.where(np.random.random(args.num_users) < rand_d2s)[0]
-            m = len(idxs_users)
-            if m == 0:
-                m = 1
-                idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        m = min(max(int(args.frac * args.num_users), 1), args.num_users)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
         data_idxs = []
         for idxs in idxs_users:
@@ -119,15 +146,10 @@ if __name__ == '__main__':
                 net_glob.zero_grad()
                 nn_outputs = net_glob(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
-                # loss = self.loss_func(nn_outputs, labels)
                 loss = F.cross_entropy(nn_outputs, labels)
-                if args.verbose and batch_idx % 10 == 0:
-                    print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                        local_idx, batch_idx * len(images), len(user_data.dataset),
-                               100. * batch_idx / len(user_data), loss.item()))
                 batch_loss.append(loss.item())
                 batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
-                loss.backward(retain_graph=True)
+                loss.backward()
                 optimizer.step()
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))

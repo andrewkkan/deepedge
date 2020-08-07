@@ -39,6 +39,7 @@ class LocalUpdate(object):
             self.control_i = torch.zeros_like(gather_flat_states(self.net)).to(args.device)
             self.control_g = torch.zeros_like(gather_flat_states(self.net)).to(args.device)
         self.user_idx = user_idx
+        self.embed = False
 
     def train(self):
         if not self.net:
@@ -46,11 +47,10 @@ class LocalUpdate(object):
         self.last_net = copy.deepcopy(self.net)
         self.net.train()
         # train and update
-        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr_device, momentum=self.args.momentum)
 
         epoch_loss = []
         epoch_accuracy = []
-        self.stale_net = copy.deepcopy(self.net.state_dict())
         for iter in range(self.args.local_ep):
             batch_loss = []
             batch_accuracy = []
@@ -78,12 +78,12 @@ class LocalUpdate(object):
             exit('Error: Device LocalUpdate self.net was not initialized')
         self.last_net = copy.deepcopy(self.net)
         self.net.train()
+
         # train and update
-        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr*self.args.vr_scale, momentum=self.args.momentum)
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr_device*self.args.vr_scale, momentum=self.args.momentum)
 
         epoch_loss = []
         epoch_accuracy = []
-        self.stale_net = copy.deepcopy(self.net.state_dict())
         for iter in range(self.args.local_ep):
             batch_loss = []
             batch_accuracy = []
@@ -96,6 +96,8 @@ class LocalUpdate(object):
                 loss = self.CrossEntropyLoss(nn_outputs, labels) 
                 if self.args.fedprox > 0.0:
                     loss += self.args.fedprox * (gather_flat_params_with_grad(self.net) - gather_flat_params(self.last_net)).norm(2)
+                if self.args.device_reg_norm2 > 0.0:
+                    loss += self.args.device_reg_norm2 * gather_flat_params_with_grad(self.net).norm(2)
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
@@ -105,7 +107,8 @@ class LocalUpdate(object):
                 loss.backward()
                 optimizer.step()
                 if self.args.vr_mode != 0:
-                    add_states(self.net, -self.args.lr * (self.control_g - self.control_i*self.args.vr_scale))
+                    add_states(self.net, -self.args.lr_device * (self.control_g - self.control_i*self.args.vr_scale))
+
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
@@ -114,9 +117,9 @@ class LocalUpdate(object):
 
         flat_deltc = None
         if self.args.vr_mode != 0:
-            last_control_i = copy.deepcopy(self.control_i)
-            self.control_i = self.control_i - self.control_g * self.args.vr_scale + (flat_last_net_states - flat_net_states) / self.args.lr / self.args.local_ep / float(batch_idx + 1) *  self.args.vr_scale
-            flat_deltc = self.control_i - last_control_i
+            flat_deltc = ((flat_last_net_states - flat_net_states) / self.args.lr_device / self.args.local_ep / float(batch_idx + 1) - self.control_g) / self.args.vr_scale
+            self.control_i += flat_deltc
+
 
         return flat_delts, flat_deltc, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
@@ -153,8 +156,6 @@ class LocalUpdate(object):
             exit('Error: Device LocalUpdate self.net was not initialized')
 
         self.net.train()
-        # train and update
-        # optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
 
         if epoch_idx == 0:
             self.train_data_batches = [(images, labels) for batch_idx, (images, labels) in enumerate(self.ldr_train)]
@@ -168,7 +169,7 @@ class LocalUpdate(object):
         batch_loss.backward(retain_graph=True)
         batch_accuracy = sum(nnout_max==labels).float() / len(labels)
 
-        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
+        optimizer = torch.optim.SGD(self.net.parameters(), lr=self.args.lr_device, momentum=self.args.momentum)
         optimizer.step()
 
         return self.net.state_dict(), batch_loss.item(), batch_accuracy

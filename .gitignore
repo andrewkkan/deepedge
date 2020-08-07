@@ -9,6 +9,9 @@
 .json
 .log
 
+# public data
+data/
+
 # macOS
 .DS_Store
 

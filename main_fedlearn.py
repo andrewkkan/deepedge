@@ -14,13 +14,13 @@ import os
 import sys
 import datetime
 
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
 from utils.options import args_parser
+from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid
 from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
 from models.test import test_img, test_img_ensem
 from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params, gather_flat_states, add_states
-
+from models.adaptive_sgd import Adaptive_SGD
 
 from IPython import embed
 
@@ -48,32 +48,56 @@ if __name__ == '__main__':
     # load dataset and split users
     if args.dataset == 'mnist':
         trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
-        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
+        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist)
+        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
         if args.iid:
             dict_users = mnist_iid(dataset_train, args.num_users)
             # dict_users = mnist_sample_iid(dataset_train, args.num_users)
         else:
             dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
-    elif args.dataset == 'cifar':
-        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=trans_cifar)
-        dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=trans_cifar)
+        args.num_classes = 10
+        args.num_channels = 1
+    elif args.dataset == 'cifar10':
+        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
+        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=trans_cifar)
         if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
+            dict_users = generic_iid(dataset_train, args.num_users)
         else:
-            exit('Error: only consider IID setting in CIFAR10')
-
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 10
+    elif args.dataset == 'cifar100':
+        trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
+        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
+        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar100)
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = cifar100_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 100
+    elif args.dataset == 'bcct200':
+        if args.num_users > 8:
+            args.num_users = 8
+            print("Warning: limiting number of users to 8.")
+        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.26215256, 0.26215256, 0.26215256], std=[0.0468134, 0.0468134, 0.0468134])])
+        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
+        dataset_test = dataset_train
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 4
     else:
         exit('Error: unrecognized dataset')
+
     args.img_size = dataset_train[0][0].shape
 
     # build model
-    if args.model == 'cnn' and args.dataset == 'cifar':
+    if args.model == 'cnn' and args.dataset != 'mnist':
         net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'lenet5' and args.dataset == 'cifar':
-        net_glob = LeNet5().to(args.device)
+    elif args.model == 'lenet5' and args.dataset != 'mnist':
+        net_glob = LeNet5(args=args).to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
@@ -85,18 +109,30 @@ if __name__ == '__main__':
 
     # The below optimizer can handle FedAvg type of methods, as well as BFGS QN.
     # For FedAdam (TBD), add another optimizer in an if-then clause.
-    optimizer_glob = SdLBFGS_FedLiSA(
-        net=net_glob, 
-        lr=args.lr_g, 
-        lr_l=float(args.lr), 
-        history_size=args.lbfgs_hist, 
-        E_l=float(args.local_ep), 
-        nD=float(len(dict_users[0])), 
-        Bs=float(args.local_bs),
-        opt_mode=args.opt_mode,
-        vr_mode=args.vr_mode,
-        max_qndn=args.max_qndn,
-    )
+    if args.opt_mode == 0 or args.opt_mode == 1 or args.opt_mode == 2:
+        optimizer_glob = SdLBFGS_FedLiSA(
+            net=net_glob, 
+            lr_server_qn=args.lr_server_qn, 
+            lr_server_gd=args.lr_server_gd, 
+            lr_device=float(args.lr_device), 
+            history_size=args.lbfgs_hist, 
+            E_l=float(args.local_ep), 
+            nD=float(len(dict_users[0])), 
+            Bs=float(args.local_bs),
+            opt_mode=args.opt_mode,
+            vr_mode=args.vr_mode,
+            max_qndn=args.max_qndn,
+        )
+    elif args.opt_mode == 3:
+        optimizer_glob = Adaptive_SGD(
+            net=net_glob, 
+            lr_server_gd=args.lr_server_gd, 
+            lr_device=float(args.lr_device), 
+            E_l=float(args.local_ep), 
+            nD=float(len(dict_users[0])), 
+            Bs=float(args.local_bs),
+            adaptive_mode=args.adaptive_mode,            
+        )
     net_glob = net_glob.to(args.device)
     print(net_glob)
     net_glob.train()
@@ -127,6 +163,7 @@ if __name__ == '__main__':
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
         for iu_idx, user_idx in enumerate(idxs_users):
+
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
                 delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
                 delts_locals.append(copy.deepcopy(delt_s))
@@ -149,6 +186,7 @@ if __name__ == '__main__':
             loss_locals.append(loss)
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
+            # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
 
             if args.async_s2d == 2:
                 last_update[user_idx] = epoch_idx
@@ -170,13 +208,18 @@ if __name__ == '__main__':
             if osl:
                 deltos_locals.append(torch.cat(osl, 0)) 
 
-        if args.vr_mode == 1:
-            control_glob += torch.stack(deltc_locals).mean(dim=0) * len(delts_locals) / float(args.num_users)
-            if args.screendump_file:
-                # sdf.write("Control norm = " + str(control_glob.norm()) + '\n')
-                sdf.flush()
+        if args.vr_mode > 0:
+            if args.vr_mode == 1:
+                control_glob += torch.stack(deltc_locals).mean(dim=0) * len(delts_locals) / float(args.num_users)
+            elif args.vr_mode == 2:
+                control_glob += (-torch.stack(deltw_locals).sum(dim=0) / args.lr_device / args.local_ep / (float(len(dict_users[0])) / args.local_bs) -control_glob) / float(args.num_users)
+            # if args.screendump_file:
+            #     sdf.write("Control norm = " + str(control_glob.norm()) + '\n')
+            #     sdf.flush()
 
         optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals)
+
+        print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
 
         # torch.save(net_glob.state_dict(),"data/models/fedavg_updates/net_glob-async%d-round%d.pt"%(args.async_s2d, epoch_idx))
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
