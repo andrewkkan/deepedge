@@ -42,7 +42,7 @@ class Adaptive_SGD(Optimizer):
     SIAM Journal on Optimization 27.2 (2017): 927-956.
     """
 
-    def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, nD=600., Bs=50., adaptive_mode=0):
+    def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, nD=600., Bs=50., adaptive_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
 
         super(Adaptive_SGD, self).__init__(net.parameters(), defaults)
 
@@ -59,6 +59,10 @@ class Adaptive_SGD(Optimizer):
         self._nD = nD
         self._Bs = Bs
         self._adaptive_mode = adaptive_mode
+        self._tau = tau
+        self._beta1 = beta1
+        self._beta2 = beta2
+        self._v = 
 
     def _numel(self):
         if self._numel_cache is None:
@@ -120,33 +124,30 @@ class Adaptive_SGD(Optimizer):
             self._add_other_states(flat_deltos)
 
         flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        prev_flat_deltw = state.get('prev_flat_deltw')
+        if prev_flat_deltw:
+            flat_deltw = self._beta1 * prev_flat_deltw + (1.0 - self._beta1) * flat_deltw
 
         if self._adaptive_mode == 0:
             # FedAdaGrad
-            pass
+            descent = 
         elif self._adaptive_mode == 1:
             # FedYogi
-            pass
+            descent = 
         elif self._adaptive_mode == 2:
             # FedAdam
-            pass
+            descent = 
 
         # This step updates the global model with plain-vanilla device-update averaging 
-        self._add_grad(1.0, flat_deltw)
-            
-        flat_grad = -flat_deltw / self._lr_device / self._E_l / (self._nD / self._Bs)
-        abs_grad_sum = flat_grad.abs().sum()
+        self._add_grad(self._lr_server_gd, descent)
 
 
-        prev_flat_grad = state.get('prev_flat_grad')
-
-
-        if prev_flat_grad is None:
-            prev_flat_grad = flat_grad.clone()
+        if prev_flat_deltw is None:
+            prev_flat_deltw = flat_deltw.clone()
         else:
-            prev_flat_grad.copy_(flat_grad)
+            prev_flat_deltw.copy_(flat_deltw)
 
-        state['prev_flat_grad'] = prev_flat_grad
+        state['prev_flat_deltw'] = prev_flat_deltw
         state['n_iter'] += 1
 
         return 

@@ -57,6 +57,9 @@ def args_parser():
     parser.add_argument('--fedprox', type=float, default=0.0, help="default = off, to use, set to 1.0")
     parser.add_argument('--device_reg_norm2', type=float, default=0.0, help="default = off, to use, set to 1.0")
     parser.add_argument('--noniid_dirich_alpha', type=float, default=10.0, help="Default 10.0 is IID.  For nonIID, set to 0.5 to start with.")
+    parser.add_argument('--adaptive_tau', type=float, default=0.1, help="Used with opt_mode = 3 only.")
+    parser.add_argument('--adaptive_b1', type=float, default=0.9, help="Used with opt_mode = 3 only.")
+    parser.add_argument('--adaptive_b2', type=float, default=0.99, help="Used with opt_mode = 3 only.")
 
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")

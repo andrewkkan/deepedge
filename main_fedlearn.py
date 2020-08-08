@@ -131,7 +131,10 @@ if __name__ == '__main__':
             E_l=float(args.local_ep), 
             nD=float(len(dict_users[0])), 
             Bs=float(args.local_bs),
-            adaptive_mode=args.adaptive_mode,            
+            adaptive_mode=args.adaptive_mode, 
+            tau=args.adaptive_tau,        
+            beta1=args.adaptive_b1,        
+            beta2=args.adaptive_b2,        
         )
     net_glob = net_glob.to(args.device)
     print(net_glob)
