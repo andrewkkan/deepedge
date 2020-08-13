@@ -8,6 +8,8 @@
 .pdf
 .json
 .log
+log*/
+runscript*
 
 # public data
 data/

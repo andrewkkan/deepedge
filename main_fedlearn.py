@@ -80,7 +80,7 @@ if __name__ == '__main__':
         if args.num_users > 8:
             args.num_users = 8
             print("Warning: limiting number of users to 8.")
-        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.26215256, 0.26215256, 0.26215256], std=[0.0468134, 0.0468134, 0.0468134])])
+        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.262428402,0.262428402,0.262428402], std=[0.30702864, 0.30702864, 0.30702864])])
         dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
         dataset_test = dataset_train
         if args.iid:
@@ -106,6 +106,8 @@ if __name__ == '__main__':
                        weight_init=args.weight_init, bias_init=args.bias_init)        
     else:
         exit('Error: unrecognized model')
+
+    embed()
 
     # The below optimizer can handle FedAvg type of methods, as well as BFGS QN.
     # For FedAdam (TBD), add another optimizer in an if-then clause.
@@ -238,12 +240,12 @@ if __name__ == '__main__':
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.8f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(epoch_idx, m, loss_avg, acc_glob, acc_loc, acc_lloc)
         )
         if args.screendump_file:
             sdf.write(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
+                'Round {:3d}, Devices participated {:2d}, Average loss {:.8f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
                 format(epoch_idx, m, loss_avg, acc_glob, acc_loc, acc_lloc)
             )
             sdf.flush()

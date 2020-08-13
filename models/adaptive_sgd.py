@@ -1,4 +1,5 @@
 import torch
+from functools import reduce
 from torch.optim import Optimizer
 from models.sdlbfgs_fed import gather_flat_params, gather_flat_states, add_states
 
@@ -53,16 +54,6 @@ class Adaptive_SGD(Optimizer):
 
         self._params = self.param_groups[0]['params']
         self._numel_cache = None
-        self._lr_server_gd = lr_server_gd
-        self._lr_device = lr_device
-        self._net = net
-        self._E_l = E_l
-        self._nD = nD
-        self._Bs = Bs
-        self._adaptive_mode = adaptive_mode
-        self._tau = tau
-        self._beta1 = beta1
-        self._beta2 = beta2
 
     def _numel(self):
         if self._numel_cache is None:
@@ -135,22 +126,32 @@ class Adaptive_SGD(Optimizer):
         if prev_flat_deltw is not None:
             flat_deltw = beta1 * prev_flat_deltw + (1.0 - beta1) * flat_deltw
 
-        prev_flat_v = state.get('prev_flat_v')
-        if prev_flat_v is None:
-            prev_flat_v = torch.zeros_like(flat_deltw).to(flat_deltw.device)
-
         delt2 = flat_deltw.pow(2.0)
+        prev_flat_v = state.get('prev_flat_v')
         if mode == 0:
-            # FedAdaGrad
-            flat_v = prev_flat_v + delt2
+            # FedAvgM (momentum only)
+            descent = flat_deltw
         elif mode == 1:
-            # FedYogi
-            flat_v = prev_flat_v - (1.0 - beta2) * delt2 * torch.sign(prev_flat_v - delt2)
+            # FedAdaGrad
+            if prev_flat_v is None:
+                flat_v = delt2
+            else:
+                flat_v = prev_flat_v + delt2
+            descent = flat_deltw / (torch.sqrt(flat_v) + tau)
         elif mode == 2:
+            # FedYogi
+            if prev_flat_v is None:
+                flat_v = delt2
+            else:
+                flat_v = prev_flat_v - (1.0 - beta2) * delt2 * torch.sign(prev_flat_v - delt2)
+            descent = flat_deltw / (torch.sqrt(flat_v) + tau)
+        elif mode == 3:
             # FedAdam
-            flat_v = beta2 * prev_flat_v + (1.0 - beta2) * delt2
-
-        descent = flat_deltw / (torch.sqrt(flat_v) + tau)
+            if prev_flat_v is None:
+                flat_v = delt2
+            else:
+                flat_v = beta2 * prev_flat_v + (1.0 - beta2) * delt2
+            descent = flat_deltw / (torch.sqrt(flat_v) + tau)
 
         # This step updates the global model with plain-vanilla device-update averaging 
         self._add_grad(lr, descent)
@@ -160,10 +161,11 @@ class Adaptive_SGD(Optimizer):
         else:
             prev_flat_deltw.copy_(flat_deltw)
 
-        if prev_flat_v is None:
-            prev_flat_v = flat_v.clone()
-        else:
-            prev_flat_v.copy_(flat_v)
+        if mode > 0:
+            if prev_flat_v is None:
+                prev_flat_v = flat_v.clone()
+            else:
+                prev_flat_v.copy_(flat_v)
 
         state['prev_flat_deltw'] = prev_flat_deltw
         state['prev_flat_v'] = prev_flat_v
