@@ -1,0 +1,638 @@
+Gameplan June 6
+
+01: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 10
+
+11: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 10
+
+21: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 10
+
+31: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10
+
+41: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 20
+
+51: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 20
+
+61: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 20
+
+71: python main_dfan_ensemble1_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 20
+
+02: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 10
+
+12: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 10
+
+22: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 10
+
+32: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10
+
+42: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 20
+
+52: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 20
+
+62: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 20
+
+72: python main_fedavg_leaders_temp.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 20
+
+03: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --fedavg_update --num_leaders 0
+
+13: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --fedavg_update --num_leaders 0
+
+23: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --fedavg_update --num_leaders 0
+
+33: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --fedavg_update --num_leaders 0
+
+43: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --fedavg_update --num_leaders 10
+
+53: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --fedavg_update --num_leaders 10
+
+63: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --fedavg_update --num_leaders 10
+
+73: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --fedavg_update --num_leaders 10
+
+
+
+
+docker logs akan-deepedge03 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavgl10.log
+docker logs akan-deepedge13 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgl10.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavgl10.log
+docker logs akan-deepedge33 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavgl10.log
+docker logs akan-deepedge43 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavgl20.log
+docker logs akan-deepedge53 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgl20.log
+docker logs akan-deepedge63 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavgl20.log
+docker logs akan-deepedge73 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavgl20.log
+
+
+
+
+June 10
+
+03: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 10
+
+13: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 10
+
+23: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 10
+
+33: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10
+
+43: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 20
+
+53: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 20
+
+63: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 20
+
+73: python main_fedavg_leaders.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 20
+
+
+June 12
+
+03: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 10 --dfan_align_alpha 1.0
+
+13: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 10 --dfan_align_alpha 1.0
+
+23: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --noniid_hard --local_ep 1 --num_leaders 10 --dfan_align_alpha 1.0
+
+33: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --dfan_align_alpha 1.0
+
+63: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --noniid_hard --local_ep 1 --num_leaders 10 
+
+53: python main_dfan_leaders_align.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --lr 0.1 --lr_S 0.1 --lr_G 0.01 --nz 100 --epoch_itrs 200 --nn_refresh 1 --weight_init kaiming --bias_init zeros --async_s2d 1 --local_ep 1 --num_leaders 10 
+
+
+docker logs akan-deepedge63 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavgul10.log
+docker logs akan-deepedge53 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgul10.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavgul10.log
+docker logs akan-deepedge33 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavgul10.log
+
+No I wouldnt suggest we try them all.  I'm just naturally suspicious of the claims from that paper (I'm just naturally suspicious of anything I read these days).  
+
+https://medium.com/@wake_hezekiah/an-introduction-to-the-movielens-dataset-ml-25m-e7ba551604b1
+
+
+
+
+Jun 17:
+
+SOW for KSE
+FL
+Synchronization - Model Aggregation of Distributed Knowledge 
+1. Performance study of FL for aggregation of selected ML networks of homogeneous architecture for recommendation system onboard similar class boats.  (1 month)
+2. Performance study of FL for aggregation of selected ML networks of heterogeneous architectures for recommendation systems across diversed platforms and ashore command stations. (1 month)
+3. Study of effect for mixture of synchronous and asynchronous aggregation. (1 month)
+Comms Efficiency - Study of techniques for further Reduction of Bandwidth Requirement beyond Vanilla FL
+1. Study of top-k parameter sparsification. (1 month)
+2. Effect of parameter quantization. (1 month)
+3. Overall study of mitigation techniques in an intermittent, emission-controlled environment (1 month)
+Deliverable - technical report (1 month)
+
+
+
+
+
+
+
+June 22
+
+Launched:
+02: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0 --noniid_hard --use_stragglers
+12: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0 --use_stragglers
+22: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --noniid_hard --use_stragglers
+52: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers
+01: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0 --noniid_hard
+11: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0
+21: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --noniid_hard
+51: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1
+03: python main_fedavg.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 --noniid_hard 
+13: python main_fedavg.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 
+23: python main_fedavg.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 --noniid_hard 
+53: python main_fedavg.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 
+04: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 --noniid_hard 
+14: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 
+24: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 --noniid_hard 
+54: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 
+
+Done:
+docker logs akan-deepedge02 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux10.log
+docker logs akan-deepedge12 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux10.log
+docker logs akan-deepedge22 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux10.log
+docker logs akan-deepedge52 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10.log
+docker logs akan-deepedge01 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux10_nostragglers.log
+docker logs akan-deepedge11 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux10_nostragglers.log
+docker logs akan-deepedge21 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux10_nostragglers.log
+docker logs akan-deepedge51 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers.log
+docker logs akan-deepedge03 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedavg.log
+docker logs akan-deepedge13 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedavg.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavg.log
+docker logs akan-deepedge53 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavg.log
+docker logs akan-deepedge04 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedavgu.log
+docker logs akan-deepedge14 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedavgu.log
+docker logs akan-deepedge24 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavgu.log
+docker logs akan-deepedge54 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgu.log
+
+Launched:
+22: python main_fedavg_history.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --noniid_hard --use_stragglers
+52: python main_fedavg_history.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers
+04: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 --noniid_hard --fedavg_update
+14: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 0 --fedavg_update
+24: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 --noniid_hard --fedavg_update
+54: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 --fedavg_update
+
+
+
+
+Jun23 Gameplan
+
+Done:
+docker logs akan-deepedge22 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavgh0.log
+docker logs akan-deepedge52 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgh10.log
+docker logs akan-deepedge04 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedavgu.log
+docker logs akan-deepedge14 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedavgu.log
+docker logs akan-deepedge24 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavgu.log
+docker logs akan-deepedge54 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgu.log
+
+
+Jun24 Gameplan
+
+Launched:
+54: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --async_s2d 1 --fedavg_update --seed 2
+52: python main_fedavg_history.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers --seed 2
+53: python main_fedavg_updates.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --async_s2d 1 --fedavg_update --seed 2
+51: python main_fedavg_history.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers --seed 2
+22: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers --seed 2
+21: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers --seed 2
+24: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+23: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+12: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --seed 2
+11: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --seed 2
+14: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 
+13: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init kaiming --bias_init zeros --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1
+
+
+Done:
+docker logs akan-deepedge54 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgu_seed2.log
+docker logs akan-deepedge52 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgh10_seed2.log
+docker logs akan-deepedge53 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgu_seed2.log
+docker logs akan-deepedge51 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgh10_seed2.log
+docker logs akan-deepedge24 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10.log
+docker logs akan-deepedge22 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux_seed2.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedmaux10.log
+docker logs akan-deepedge21 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedmaux10_seed2.log
+docker logs akan-deepedge14 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers.log
+docker logs akan-deepedge12 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers_seed2.log
+docker logs akan-deepedge13 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers.log
+docker logs akan-deepedge11 | grep Central | tail -n 1500 > log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers_seed2.log
+
+
+Launched:
+11: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 6 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+12: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 8 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+13: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 12 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+14: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 14 --server_momentum 0.0 --async_s2d 1 --use_stragglers 
+21: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 1 --noniid_hard --use_stragglers
+22: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0 --noniid_hard --use_stragglers
+23: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --num_leaders 10 --server_momentum 0.0 --async_s2d 0 --use_stragglers
+
+
+
+June 25 Gameplan:
+
+Done:
+docker logs akan-deepedge11 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux6.log
+docker logs akan-deepedge12 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux8.log
+docker logs akan-deepedge13 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux12.log
+docker logs akan-deepedge14 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux14.log
+docker logs akan-deepedge21 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux10.log
+docker logs akan-deepedge22 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux10.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux10.log
+
+
+Launched:
+11: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 1 --fedmaux_greedy
+12: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 1 --noniid_hard --fedmaux_greedy
+13: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 0 --fedmaux_greedy
+14: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 0 --noniid_hard --fedmaux_greedy
+21: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 1 
+22: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 1 --noniid_hard 
+23: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 0 
+24: python main_fedmaux.py --dataset mnist --model mlp --epochs 1500 --gpu 0 --num_channels 1 --local_bs 10 --frac 0.1 --momentum 0.0 --weight_init random --bias_init random --local_ep 1 --server_momentum 0.0 --async_s2d 0 --noniid_hard 
+
+
+Done:
+docker logs akan-deepedge11 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux_greedy.log
+docker logs akan-deepedge12 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux_greedy.log
+docker logs akan-deepedge13 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux_greedy.log
+docker logs akan-deepedge14 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux_greedy.log
+docker logs akan-deepedge21 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux_ngreedy.log
+docker logs akan-deepedge22 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux_ngreedy.log
+docker logs akan-deepedge23 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux_ngreedy.log
+docker logs akan-deepedge24 | grep Central | tail -n 1500 > log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux_ngreedy.log
+
+
+Done:
+1. Modify main_fedmaux.py for new sim results (whether history contains aux gradients or not)
+2. Modify main_fedmaux.py for asynchronous users with L (10) leaders plus S (10) stragglers
+
+
+
+July 23 Gameplan:
+
+
+Sim validation:
+1. Attempt to get acceptable performance failed with direct gradient vectors as input to the optimizer.  Trouble shooting strategy was to use SdLBFGS-Fed sim as performance / value-exact baseline since it produced good performance using direct gradient input.  Things changed in sim (both sims) that brought them to be value-exact with each other include: (a) Assign user_idxs in federated learning to be sequential contiguous, (b) shuffle=False, (c) Zero initialization of model weights and biases, (d) This is what the main difference was: learning rate decay set to False.  
+2. Attempt to get equivalent performance between various sim modes (gradient estimation using deltw vs actual gradient values) came down to a bug in gathering flat batch norm metrics up Update.py.
+
+
+LiBFGS-SAGA (FedLiSA)
+1. Modify SdLBFGS to accommodate QN + SGD updates.  
+2. Need to think about saddle-free and conjugate updates. 
+3. Need to update the global model first with scaffold gradient times n_g.  Then do lbfgs and update global model with second order.  Can do both inside the optimizer step.
+3. 
+
+docker stop akan-deepedge21
+docker stop akan-deepedge51
+docker stop akan-deepedge71
+
+docker run -it -d --rm --name akan-deepedge21 --gpus '"device=2"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge51 --gpus '"device=5"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge71 --gpus '"device=7"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+
+python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt0vr0.log'
+docker exec -d -it akan-deepedge22 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt0vr1.log'
+docker exec -d -it akan-deepedge23 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt1vr0.log'
+docker exec -d -it akan-deepedge24 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt1vr1.log'
+docker exec -d -it akan-deepedge25 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt2vr0.log'
+docker exec -d -it akan-deepedge26 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt2vr1.log'
+docker exec -d -it akan-deepedge27 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge28 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt2vr1_qn1.log'
+
+docker exec -d -it akan-deepedge61 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt0vr0.log'
+docker exec -d -it akan-deepedge62 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3.log'
+docker exec -d -it akan-deepedge63 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt1vr0.log'
+docker exec -d -it akan-deepedge64 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt1vr1.log'
+docker exec -d -it akan-deepedge65 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt2vr0.log'
+docker exec -d -it akan-deepedge66 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3.log'
+docker exec -d -it akan-deepedge67 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge68 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt2vr1_qn1.log'
+
+python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt0vr0.log'
+docker exec -d -it akan-deepedge72 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt0vr1.log'
+docker exec -d -it akan-deepedge73 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt1vr0.log'
+docker exec -d -it akan-deepedge74 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt1vr1.log'
+docker exec -d -it akan-deepedge75 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 0 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt2vr0.log'
+docker exec -d -it akan-deepedge76 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt2vr1.log'
+docker exec -d -it akan-deepedge77 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge78 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt2vr1_qn1.log'
+
+
+
+
+docker exec -d -it akan-deepedge22 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt0vr1.log'
+docker exec -d -it akan-deepedge24 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt1vr1.log'
+docker exec -d -it akan-deepedge26 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt2vr1.log'
+docker exec -d -it akan-deepedge27 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge28 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 1 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep1_opt2vr1_qn1.log'
+
+docker exec -d -it akan-deepedge62 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt0vr1.log'
+docker exec -d -it akan-deepedge64 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt1vr1.log'
+docker exec -d -it akan-deepedge66 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt2vr1.log'
+docker exec -d -it akan-deepedge67 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge68 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 3 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep3_opt2vr1_qn1.log'
+
+docker exec -d -it akan-deepedge72 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt0vr1.log'
+docker exec -d -it akan-deepedge74 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 1 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt1vr1.log'
+docker exec -d -it akan-deepedge76 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt2vr1.log'
+docker exec -d -it akan-deepedge77 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 0 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt0vr1_qn1.log'
+docker exec -d -it akan-deepedge78 python main_fedlisa.py --dataset mnist --model mlp --epochs 1000 --gpu 0 --num_channels 3 --local_bs 50 --frac 0.1 --momentum 0.0 --local_ep 5 --lr 0.1 --lbfgs_hist 50 --lr_g 1.0 --seed 123 --qn_mode 1 --opt_mode 2 --vr_mode 1 --screendump_file 'log/perf1000_fedlisa_mnistnoniid_mlp_bs50ep5_opt2vr1_qn1.log'
+
+
+
+
+To Do:
+Done.  Scaffold buggy (could be the algo).  1. Build LBFGS-SAGA method (see above)
+3. Use Beta distribution for comms model.  Include case where all devices have p = 0.1
+4. Datasets: QMNIST CR / AE (for each class, assign best-effort all samples belonging to a writer ID to the same device j) use Dir_j for P_k_j for each class label k
+Done 5. CIFAR10: use Dir_j for P_k_j for each class label k
+6. Shakespeare
+
+To Do Aug 6:
+1. Use Beta distribution for comms model.  Include case where all devices have p = 0.1
+2. Datasets: QMNIST CR / AE (for each class, assign best-effort all samples belonging to a writer ID to the same device j) use Dir_j for P_k_j for each class label k
+3. Shakespeare
+4. Debug 
+	A. Done fixed.  Had to do with CNN BN long needing to cast to float.   CNN + BCCT200
+	B. Done.  To avoid this, lower --lr to 0.005 and --lr_g to 0.5 to start with.  Was: This gave numerical nan loss values starting at epoch 4 : python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 20 --frac 0.5 --local_ep 1 --lr 0.1 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2
+	C. Done.  But doubt there is value to it.  Was Fix main_central.py
+
+
+Great result till end of sim:
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10
+
+
+Going well to accuracy 74% until epoch 44:
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.1 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3
+
+
+
+
+
+docker stop akan-deepedge21
+docker stop akan-deepedge51
+docker stop akan-deepedge71
+
+docker run -it -d --rm --name akan-deepedge11 --gpus '"device=1"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge21 --gpus '"device=2"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge22 --gpus '"device=2"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge51 --gpus '"device=5"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+docker run -it -d --rm --name akan-deepedge71 --gpus '"device=7"' -v /mnt/datastorage1/akan/deepedge:/workspace akan/deepedge
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep2_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep3_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep4_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep5_opt0vr0_lrgd10lrd002.log'
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep1_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep2_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep3_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep4_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D10_lenet5_bs10ep5_opt0vr0_lrgd10lrd002.log'
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep1_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep2_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep3_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep4_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D100_lenet5_bs10ep5_opt0vr0_lrgd10lrd002.log'
+
+
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.1 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd001lrd010.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd005.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd001lrd005.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.1 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep2_opt3adam_lrgd001lrd010.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep2_opt3adam_lrgd005lrd005.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep2_opt3adam_lrgd001lrd005.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.1 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd001lrd010.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd005lrd005.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.01 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd001lrd005.log'
+
+
+
+
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd002.log'
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep2_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep4_opt2vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep5_opt2vr0_lrqn05lrgd10lrd005.log'
+
+
+
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd002.log'
+
+
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep2_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep4_opt1vr0_lrqn05lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep5_opt1vr0_lrqn05lrgd10lrd005.log'
+
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep2_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep4_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep5_opt0vr0_lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep1_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep2_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep3_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep4_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 1.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D10_lenet5_bs10ep5_opt0vr0_lrgd10lrd005.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep1_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 2 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep2_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep3_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 4 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep4_opt0vr0_lrgd10lrd005.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 5 --lr_device 0.05 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D100_lenet5_bs10ep5_opt0vr0_lrgd10lrd005.log'
+
+
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd10lrd001.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.01 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd10lrd001.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd10lrd001.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.01 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 1.0 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd10lrd001.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt0vr0_lrgd10lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt0vr0_lrgd10lrd002.log'
+
+
+9 - Aug : Test sims launched
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd05lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd05lrd002.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd05lrd002.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt0vr0_lrgd10lrd001.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.01 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt0vr0_lrgd10lrd001.log'
+
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd001.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.01 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt2vr0_lrqn05lrgd05lrd001.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd05lrd001.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.01 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt1vr0_lrqn05lrgd05lrd001.log'
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.1 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt0vr0_lrgd10lrd01.log'
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 3 --lr_device 0.1 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep3_opt0vr0_lrgd10lrd01.log'
+
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.075 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd0075.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd0025.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.075 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd005lrd0075.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.1 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd005lrd0025.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.075 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd0075_tau001.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log'
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.075 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd005lrd0075_tau001.log'
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 3 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D02_lenet5_bs10ep3_opt3adam_lrgd005lrd0025_tau001.log'
+
+
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt0vr0_lrgd05lrd002.log' &
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt1vr0_lrqn05lrgd05lrd002.log' &
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd002.log' &
+
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.01 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd001.log' &
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.05 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf200_fedlimQNGD_bcct200_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd005.log' &
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf500_fedAdaptSGD_cifar10_D02_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log' &
+
+
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D100_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log' &
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf500_fedAdaptSGD_cifar10_D100_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log' &

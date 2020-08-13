@@ -1,0 +1,746 @@
+
+import tkinter
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import copy
+import numpy as np
+from torchvision import datasets, transforms
+import torch
+import random
+import os
+
+from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, mnist_sample_iid
+from utils.options import args_parser
+from models.Update import LocalUpdate
+from models.Nets import MLP, CNNMnist, CNNCifar
+from models.test import test_img, test_img_ensem
+from models.DFAN import DFAN_regavg
+from models.Fed import FedAvg
+from network.gan import GeneratorA, GeneratorB
+    
+
+trans_mnist = transforms.Compose([transforms.Resize((32, 32)),transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True, transform=trans_mnist)
+dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True, transform=trans_mnist)
+
+def test_img_(net_g, datatest, stop_at_batch=-1, shuffle=False):
+    net_g.eval()
+    # testing
+    test_loss = 0
+    correct = 0
+    bs = 256
+    data_loader = torch.utils.data.DataLoader(datatest, batch_size=bs, shuffle=shuffle)
+    if stop_at_batch == -1:
+        dataset_len = len(data_loader) * bs
+    else:
+        dataset_len = stop_at_batch * bs
+    for idx, (data, target) in enumerate(data_loader):
+        if idx == stop_at_batch:
+            break
+        data, target = data.cuda(), target.cuda()
+        log_probs = net_g(data)
+        # sum up batch loss
+        test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
+        # get the index of the max log-probability
+        y_pred = log_probs.data.max(1, keepdim=True)[1]
+        correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+
+    test_loss /= dataset_len
+    accuracy = 100.00 * correct.float() / dataset_len
+    print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
+        test_loss, correct, dataset_len, accuracy))
+    return accuracy, test_loss
+
+
+
+
+class DatasetSplit(Dataset):
+    def __init__(self, dataset, idxs):
+        self.dataset = dataset
+        self.idxs = list(idxs)
+
+    def __len__(self):
+        return len(self.idxs)
+
+    def __getitem__(self, item):
+        image, label = self.dataset[self.idxs[item]]
+        return image, label
+ldr_train = DataLoader(DatasetSplit(dataset_train, dict_users[0]), batch_size=10, shuffle=True)
+for iter in range(1):
+    for batch_idx, (images, labels) in enumerate(ldr_train):
+        images, labels = images.to(device), labels.to(device)
+        s69_trained_iid.zero_grad()
+        nn_outputs = s69_trained_iid(images)
+        nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+        loss = F.cross_entropy(nn_outputs, labels)
+        loss.backward(retain_graph=True)
+        print(loss)
+        optimizer.step()
+s69_sd = s69.state_dict()
+s69t_sd = s69_trained_iid.state_dict()
+delta = []
+for ii in range(10):
+    delt_layers = {}
+    t_sd = teacher[ii].state_dict()
+    for ln in s69_sd.keys():
+        delt_layers[ln] = t_sd[ln] - s69_sd[ln]
+    delta.append(delt_layers)
+delta_iid = {}
+for ln in s69_sd.keys():
+    delta_iid[ln] = s69t_sd[ln] - s69_sd[ln]
+
+delta_norm = []
+for ii in range(10):
+    dp = {}
+    for ln in s69_sd.keys():
+        dp[ln] = torch.norm(delta[ii][ln]) / torch.norm(delta_iid[ln])
+    delta_norm.append(dp)
+theta = []
+for ii in range(10):
+    dp = {}
+    for ln in s69_sd.keys():
+        dp[ln] = 180. * torch.acos(torch.sum(delta[ii][ln] * delta_iid[ln]) / torch.norm(delta[ii][ln]) / torch.norm(delta_iid[ln])) / np.pi
+    theta.append(dp)
+
+
+delta = []
+for ii in range(10):
+    delt_layers = {}
+    t_sd = teacher[ii].state_dict()
+    for ln in s69_sd.keys():
+        delt_layers[ln] = t_sd[ln] - s69_sd[ln]
+    delta.append(delt_layers)
+
+
+delta_dist = []
+for ii in range(10):
+    delta_dist.append([])
+    for jj in range(10):
+        delta_dist[ii].append(0.)
+        for ln in s69_sd.keys():
+            delta_dist[ii][jj] += ((delta[ii][ln] - delta[jj][ln]).abs().pow(2.0).sum()).cpu().numpy()
+
+dist_mat = []
+for ii in range(10):
+    dist_mat.append([])
+    for jj in range(10):
+        dist_mat[ii].append({})
+        for ln in s69_sd.keys():
+            dist_mat[ii][jj][ln] = (teacher[ii].state_dict()[ln] - teacher[jj].state_dict()[ln]).abs().pow(2.0).sum().cpu().numpy()
+
+
+
+for ii in range(10):
+    teacher[ii].load_state_dict( torch.load( '../deepedge/data/models/testrun6/netlocal%d-epoch10-modelmlp-datasetmnist.pt' % (ii)))
+
+norm2 = []
+for ii in range(10):
+    norm2.append(torch.pow(teacher[ii].state_dict()['layer_hidden2.weight'].norm(dim=1), 2.).cpu().numpy())
+print(norm2)
+for ii in range(10):
+    argmax = []
+    for jj in range(10):
+        argmax.append(torch.argmax(teacher[jj](images[ii])).cpu().numpy())
+    print(ii, labels[ii].cpu().numpy(), argmax)
+for ii in range(10):
+    print(torch.pow(teacher[ii].state_dict()['layer_hidden2.weight'].norm(dim=1), 2.).cpu().numpy())
+for ii in range(10):
+    print(teacher[ii].state_dict()['layer_hidden2.weight'].var(dim=1).cpu().numpy())
+for ii in range(10):
+    argmax = []
+    for jj in range(10):
+        argmax.append(torch.argmax(teacher[jj](images[ii])).cpu().numpy())
+    print(ii, labels[ii].cpu().numpy(), argmax)
+
+
+
+perf_comp = []
+sfa = copy.deepcopy(s69)
+for epoch in range(50):
+    t_sd = []
+    for ii in range(10):
+        teacher[ii].load_state_dict(torch.load('../deepedge/data/models/testrun6/netlocal%d-epoch%d-modelmlp-datasetmnist.pt' % (ii, epoch)))
+        t_sd.append(teacher[ii].state_dict())
+    s69.load_state_dict(torch.load('../deepedge/data/models/testrun6/netglob-epoch%d-modelmlp-datasetmnist.pt' % (epoch)))
+    sfa.load_state_dict(FedAvg(t_sd))
+    perf_comp.append({'fedavg': test_img_(sfa, dataset_test, stop_at_batch=-1, shuffle=True),
+                      'dfan': test_img_(s69, dataset_test, stop_at_batch=-1, shuffle=True)})
+
+
+
+
+from torch import nn
+import torch.nn.functional as F
+
+
+class MLPh(nn.Module):
+    def __init__(self, dim_in, dim_hidden, dim_out, teacher):
+        super().__init__()
+        self.layer_input = nn.Linear(dim_in, dim_hidden*10)
+        for ii in range(10):
+            self.layer_input.state_dict()['weight'][ii*dim_hidden:(ii+1)*dim_hidden, :] = teacher[ii].layer_input.state_dict()['weight']
+            self.layer_input.state_dict()['bias'][ii*dim_hidden:(ii+1)*dim_hidden] = teacher[ii].layer_input.state_dict()['bias']
+        self.relu = nn.ReLU()
+        self.ensemble = nn.Linear(dim_hidden*10, dim_hidden)
+        for ii in range(10):
+            self.ensemble.state_dict()['weight'][:, ii*dim_hidden:(ii+1)*dim_hidden] = torch.eye(dim_hidden).cuda()
+        self.ensemble.state_dict()['bias'] = torch.zeros(dim_hidden).cuda()
+        w_h1, w_h2 = [], []
+        for ii in range(10):
+            w_h1.append(teacher[ii].layer_hidden1.state_dict())
+            w_h2.append(teacher[ii].layer_hidden2.state_dict())
+        wavg_h1 = self.FedAvg(w_h1)
+        wavg_h2 = self.FedAvg(w_h2)
+        self.layer_hidden1 = nn.Linear(dim_hidden, dim_hidden)
+        self.layer_hidden1.load_state_dict(wavg_h1)
+        self.layer_hidden2 = nn.Linear(dim_hidden, dim_out)
+        self.layer_hidden2.load_state_dict(wavg_h2)
+
+    def forward(self, x):
+        x = x.view(-1, x.shape[-3]*x.shape[-2]*x.shape[-1])
+        x = self.layer_input(x)
+        x = self.relu(x)
+        x = self.ensemble(x)
+        x = self.layer_hidden1(x)
+        x = self.relu(x)
+        x = self.layer_hidden2(x)
+        return x
+
+    def FedAvg(self, w):
+        w_avg = copy.deepcopy(w[0])
+        for k in w_avg.keys():
+            for i in range(1, len(w)):
+                w_avg[k] += w[i][k]
+            w_avg[k] = torch.div(w_avg[k], len(w))
+        return w_avg
+
+
+
+dim_in, dim_hidden, dim_out = 3, 4, 2
+
+models = []
+models.append(network.mlp.MLP(dim_in, dim_hidden, dim_out))
+models.append(network.mlp.MLP(dim_in, dim_hidden, dim_out))
+
+models[0].layer_input.load_state_dict({'weight': torch.ones(4,3)*1.,
+                                        'bias': torch.ones(4)*2.})
+models[0].layer_hidden1.load_state_dict({'weight': torch.ones(4,4)*3.,
+                                        'bias': torch.ones(4)*4.})
+models[0].layer_hidden2.load_state_dict({'weight': torch.ones(2,4)*5.,
+                                        'bias': torch.ones(2)*6.})
+models[1].layer_input.load_state_dict({'weight': torch.ones(4,3)*101.,
+                                        'bias': torch.ones(4)*102.})
+models[1].layer_hidden1.load_state_dict({'weight': torch.ones(4,4)*103.,
+                                        'bias': torch.ones(4)*104.})
+models[1].layer_hidden2.load_state_dict({'weight': torch.ones(2,4)*105.,
+                                        'bias': torch.ones(2)*106.})
+
+
+for e in range(100):
+    teacher = []
+    for ii in range(10):
+        teacher.append(MLP(1024,200,10).cuda())
+        teacher[ii].load_state_dict( torch.load( 'data/models/testrun_regavg_norm2/netlocal{}-epoch{}-modelmlp-datasetmnist.pt'.format(ii, e)))
+    models = teacher
+    num_models = len(models)
+
+    neurons = {
+        'layer_input': torch.zeros(dim_hidden, num_models, dim_in+1),
+        'layer_hidden1': torch.zeros(dim_hidden, num_models, dim_hidden+1),
+        'layer_hidden2': torch.zeros(dim_out, num_models, dim_hidden+1),
+    }
+    for mi, mnn in enumerate(models):
+        for ln in neurons.keys():
+            neurons[ln][:, mi, :] = torch.cat([mnn.state_dict()[ln+'.weight'], mnn.state_dict()[ln+'.bias'].unsqueeze(dim=1)], dim=1)
+    for eps in [1.0, 0.1, 0.01, 0.001]:
+        cvar = 0
+        for ln, nl in neurons.items():
+            for n_idx in range(nl.shape[0]):
+                db_agg = DBSCAN(eps=eps, min_samples=1).fit(nl[n_idx,:,:])
+                cvar += db_agg.labels_.var()
+        print(e, eps, cvar)
+
+
+
+
+30APR2020
+
+for e in range(20,50):
+
+    for ii in range(10):                                                                                                                                                                                                            
+          
+        teacher[ii].load_state_dict( torch.load( 'data/models/testrun_regavg_norm2_async/netlocal{}-epoch{}-modelmlp-datasetmnist.pt'.format(ii, e)))                                                                                             
+    student.load_state_dict(torch.load('data/models/testrun_regavg_norm2_async/netglob-epoch{}-modelmlp-datasetmnist.pt'.format(e-1)))                                                                                                            
+    layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']                                                                                                                                                                                
+    s_sd = student.state_dict()                                                                                                                                                                                                               
+    delta = {}                                                                                                                                                                                                                                
+    for lni, ln in enumerate(layers):                                                                                                                                                                                                         
+        delta[ln] = torch.zeros(len(teacher), s_sd[ln+'.weight'].shape[0], s_sd[ln+'.weight'].shape[1]+1)                                                                                                                                     
+        for ii, t in enumerate(teacher):                                                                                                                                                                                                      
+            t_sd = t.state_dict()                                                                                                                                                                                                             
+            delta[ln][ii, :, 0:s_sd[ln+'.weight'].shape[1]] = t_sd[ln+'.weight'] - s_sd[ln+'.weight']                                                                                                                                         
+            delta[ln][ii, :, s_sd[ln+'.weight'].shape[1]] = t_sd[ln+'.bias'] - s_sd[ln+'.bias']
+
+    models = teacher
+    ref = student
+
+    eps = 0.5
+    num_models = len(models)
+
+    # neurons = {
+    #     'layer_input': torch.zeros(dim_hidden, num_models, dim_in+1),
+    #     'layer_hidden1': torch.zeros(dim_hidden, num_models, dim_hidden+1),
+    #     'layer_hidden2': torch.zeros(dim_out, num_models, dim_hidden+1),
+    # }
+    # for mi, mnn in enumerate(models):
+    #     for ln in neurons.keys():
+    #         neurons[ln][:, mi, :] = torch.cat([mnn.state_dict()[ln+'.weight'], mnn.state_dict()[ln+'.bias'].unsqueeze(dim=1)], dim=1)
+
+    layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
+    s_sd = ref.state_dict()
+    delta = {}
+    for lni, ln in enumerate(layers):
+        delta[ln] = torch.zeros(len(models), s_sd[ln+'.weight'].shape[0] * (s_sd[ln+'.weight'].shape[1]+1))
+        for ii, t in enumerate(models):
+            t_sd = t.state_dict()
+            delta[ln][ii, 0:(s_sd[ln+'.weight'].shape[0]*s_sd[ln+'.weight'].shape[1])] = (t_sd[ln+'.weight'] - s_sd[ln+'.weight']).flatten()
+            delta[ln][ii, (s_sd[ln+'.weight'].shape[0]*s_sd[ln+'.weight'].shape[1]):s_sd[ln+'.weight'].shape[0] * (s_sd[ln+'.weight'].shape[1]+1)] = t_sd[ln+'.bias'] - s_sd[ln+'.bias']
+
+    cluster_labels = {
+        'layer_input': np.zeros(num_models),
+        'layer_hidden1': np.zeros(num_models),
+        'layer_hidden2': np.zeros(num_models),
+    }
+    for ln, dt in delta.items():
+        db_trimmed = DBSCAN(eps=eps, min_samples=1).fit(dt)            
+        cluster_labels[ln] = db_trimmed.labels_
+
+    print(e, cluster_labels)
+    mlpa = MLP_agg_layer(1024,200,10,models, cluster_labels)
+    mlpt = MLP_trimmed_layer(1024,200,10,models, cluster_labels)
+    test_img_(mlpa.cuda(), dataset_test)
+    test_img_(mlpt.cuda(), dataset_test)
+    test_img_ensemble(models, dataset_test)
+
+
+
+
+4-MAY-2020
+
+dim_in, dim_hidden, dim_out = 1024, 200, 10
+for e in range(3,50):
+    for ii in range(10):
+        teacher[ii].load_state_dict( torch.load( 'data/models/testrun_fedavg_600_100/netlocal{}-epoch{}-modelmlp-datasetmnist.pt'.format(ii, e)))                                                                                             
+    student.load_state_dict(torch.load('data/models/testrun_fedavg_600_100/netglob-epoch{}-modelmlp-datasetmnist.pt'.format(e-1)))                                                                                                            
+    ref = student
+    models = teacher
+
+    num_models = len(models)
+    s_sd = ref.state_dict()
+
+    neurons_delta = {
+        'layer_input': torch.zeros(dim_hidden, num_models, dim_in+1),
+        'layer_hidden1': torch.zeros(dim_hidden, num_models, dim_hidden+1),
+        'layer_hidden2': torch.zeros(dim_out, num_models, dim_hidden+1),
+    }
+    for mi, mnn in enumerate(models):
+        for ln in neurons.keys():
+            neurons_delta[ln][:, mi, :] = torch.cat([
+                (mnn.state_dict()[ln+'.weight'] - s_sd[ln+'.weight']), 
+                (mnn.state_dict()[ln+'.bias'] - s_sd[ln+'.bias']).unsqueeze(dim=1),
+            ], dim=1)
+    cluster_labels = {
+        'layer_input': np.zeros((dim_hidden, num_models)),
+        'layer_hidden1': np.zeros((dim_hidden, num_models)),
+        'layer_hidden2': np.zeros((dim_out, num_models)),
+    }
+    acc_e, _ = test_img_ensemble(models, dataset_test)
+    for eps in [5.0, 0.5, 0.05, 0.005, 0.0005, 0.00005]:
+        for ln, nd in neurons_delta.items():
+            for n_idx in range(nl.shape[0]):
+                db = DBSCAN(eps=eps, min_samples=1).fit(nd[n_idx,:,:])
+                cluster_labels[ln][n_idx,:] = db.labels_
+        mlpa = MLP_agg_neuron(1024,200,10,models, cluster_labels)
+        mlpt = MLP_trimmed_neuron(1024,200,10,models, cluster_labels)
+        acc_a, _ = test_img_(mlpa.cuda(), dataset_test)
+        acc_t, _ = test_img_(mlpt.cuda(), dataset_test)
+        print(e, eps, acc_a.cpu().numpy(), acc_t.cpu().numpy(), acc_e.cpu().numpy(), mlpt.alpha['layer_input.weight'].mean().cpu().numpy(), mlpt.alpha['layer_hidden1.weight'].mean().cpu().numpy(), mlpt.alpha['layer_hidden2.weight'].mean().cpu().numpy())
+
+
+
+
+5-MAY-2020
+
+dim_in, dim_hidden, dim_out = 1024, 200, 10
+for e in range(3,50):
+    for ii in range(10):
+        teacher[ii].load_state_dict( torch.load( 'data/models/testrun_fedavg_600_100/netlocal{}-epoch{}-modelmlp-datasetmnist.pt'.format(ii, e)))                                                                                             
+    student.load_state_dict(torch.load('data/models/testrun_fedavg_600_100/netglob-epoch{}-modelmlp-datasetmnist.pt'.format(e-1)))                                                                                                            
+    ref = student
+    models = teacher
+
+    num_models = len(models)
+    s_sd = ref.state_dict()
+
+    layers = ['layer_input', 'layer_hidden1', 'layer_hidden2']
+    delta = {}
+    for lni, ln in enumerate(layers):
+        delta[ln] = torch.zeros(len(models), s_sd[ln+'.weight'].shape[0] * (s_sd[ln+'.weight'].shape[1]+1))
+        for ii, t in enumerate(models):
+            t_sd = t.state_dict()
+            delta[ln][ii, 0:(s_sd[ln+'.weight'].shape[0]*s_sd[ln+'.weight'].shape[1])] = (t_sd[ln+'.weight'] - s_sd[ln+'.weight']).flatten()
+            delta[ln][ii, (s_sd[ln+'.weight'].shape[0]*s_sd[ln+'.weight'].shape[1]):s_sd[ln+'.weight'].shape[0] * (s_sd[ln+'.weight'].shape[1]+1)] = t_sd[ln+'.bias'] - s_sd[ln+'.bias']
+
+    cluster_labels = {
+        'layer_input': np.zeros(num_models),
+        'layer_hidden1': np.zeros(num_models),
+        'layer_hidden2': np.zeros(num_models),
+    }
+
+    acc_e, _ = test_img_ensemble(models, dataset_test)
+    for eps in [5.0, 0.5, 0.05, 0.005, 0.0005, 0.00005]:
+        for ln, dt in delta.items():
+            db_agg = DBSCAN(eps=eps, min_samples=1).fit(dt)
+            cluster_labels[ln] = db_agg.labels_
+        mlpa = MLP_agg_layer(1024,200,10,models, cluster_labels)
+        mlpt = MLP_trimmed_layer(1024,200,10,models, cluster_labels)
+        acc_a, _ = test_img_(mlpa.cuda(), dataset_test)
+        acc_t, _ = test_img_(mlpt.cuda(), dataset_test)
+        print(e, eps, acc_a.cpu().numpy(), acc_t.cpu().numpy(), acc_e.cpu().numpy(), mlpt.alpha['layer_input.weight'], mlpt.alpha['layer_hidden1.weight'], mlpt.alpha['layer_hidden2.weight'])
+
+
+
+
+
+14-May-2020
+
+        local_last_update = np.array([last_update[user_idx] for user_idx in idxs_users])
+        cluster_last_update = list(set(local_last_update))
+        cluster_w_fedavg, cluster_net_locals, cluster_w_agg = [], [], []
+        largest_cluster, largest_cluster_index = 0, 0
+        for clui, clu in enumerate(cluster_last_update):
+            cluster_local = np.argwhere(local_last_update == clu)
+            if cluster_local.size > largest_cluster:
+                largest_cluster = cluster_local.size
+                largest_cluster_index = clui
+            if cluster_local.size == 1:
+                cluster_w_fedavg.append(copy.deepcopy(net_locals[int(cluster_local[0])].state_dict()))
+                cluster_net_locals.append([copy.deepcopy(net_locals[int(cluster_local[0])])])
+                cluster_w_agg.append(copy.deepcopy(net_locals[int(cluster_local[0])].state_dict()))
+            else:
+                w_locals = []
+                n_locals = []
+                for cli, cl in enumerate(cluster_local):
+                    w_locals.append(copy.deepcopy(net_locals[int(cl)].state_dict()))
+                    n_locals.append(copy.deepcopy(net_locals[int(cl)]))
+                cluster_w_fedavg.append(FedAvg(w_locals))
+                cluster_net_locals.append(n_locals)
+                net_agg = MLP(1024, 200, 10).to(args.device)
+                net_agg.load_state_dict(cluster_w_fedavg[clui])
+                optimizer_agg = torch.optim.SGD(net_agg.parameters(), lr=args.lr_S,
+                                 weight_decay=args.weight_decay, momentum=0.9)
+                DFAN_ensemble(args, cluster_net_locals[clui], net_agg, generator, (optimizer_agg, optimizer_gen), epoch_idx)
+                w_ensemble = []
+                w_ensemble.append(cluster_w_fedavg[clui])
+                w_ensemble.append(net_agg.state_dict())
+                cluster_w_agg.append(FedAvg(w_ensemble))
+        if len(cluster_last_update) == 1:
+            net_glob.load_state_dict(cluster_w_agg[largest_cluster_index])
+        else:
+            cluster_net_agg = []
+            for clui, clu in enumerate(cluster_last_update):
+                cluster_net_agg.append(MLP(1024, 200, 10).to(args.device))
+                cluster_net_agg[clui].load_state_dict(cluster_w_agg[clui])
+            net_glob.load_state_dict(cluster_w_agg[largest_cluster_index])
+            DFAN_ensemble(args, cluster_net_agg, net_glob, generator, (optimizer_glob, optimizer_gen), epoch_idx)
+
+
+
+
+
+
+
+
+
+        local_user[22].net.train()
+        # train and update
+        optimizer = torch.optim.SGD(local_user[22].net.parameters(), lr=args.lr, momentum=args.momentum)
+
+        epoch_loss = []
+        epoch_accuracy = []
+        for iter in range(args.local_ep):
+            batch_loss = []
+            batch_accuracy = []
+            for batch_idx, (images, labels) in enumerate(local_user[22].ldr_train):
+                images, labels = images.to(args.device), labels.to(args.device)
+                local_user[22].net.zero_grad()
+                nn_outputs = local_user[22].net(images)
+                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+                # loss = self.loss_func(nn_outputs, labels)
+                loss = local_user[22].CrossEntropyLoss(nn_outputs, labels)
+                print(loss)
+                loss.backward(retain_graph=True)
+                optimizer.step()
+
+
+
+
+
+    def _calc_beta(self, s, y, eta, theta):
+        # Compute products
+        u = s.dot(s)
+        v = s.dot(y)
+        w = y.dot(y)
+        betas = torch.FloatTensor([0,0])
+        # Compute lower bound
+        if eta > v.div(u):
+            betas[0] = (eta*u-v)/(u-v)
+        vv = betas[0]*s + (1-betas[0])*y
+        if betas[0] > 0 and vv.dot(vv) > theta*s.dot(vv):
+            betas[0] = 1.
+        # Compute upper bound
+        if w / v > theta:
+            a = (u-2*v+w)
+            b = (2*v-2*w-theta*u+theta*v)
+            c = (w-theta*v)
+            sqroot = (b.square() - 4*a*c)
+            if sqroot >= 0.:
+                betas[1] = (-b -sqroot.pow(0.5)) / 2. / a
+            else:
+                betas[1] = -b / 2. / a
+        if betas[0] >= betas[1]:
+            return betas[0]
+        else:
+            return betas[1]
+
+
+
+import tkinter
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import copy
+import numpy as np
+from torchvision import datasets, transforms
+import torch
+import random
+import os, re
+
+perf_files = []
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_ensem1.log',
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_ensem1_ep5.log',
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavg_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_ensem1.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_ensem1_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavg_ep5.log',
+])
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_ensem1.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_ensem1_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavg_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_ensem1.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavg.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_ensem1_ep5.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavg_ep5.log',
+])
+perf_files = []
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_ensem1cfa.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_ensem1cfa_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavg_ep5.log',
+])
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_ensem1cfa.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavg.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_ensem1cfa_ep5.log',
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavg_ep5.log',
+])
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_ensem1cfa.log',
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_ensem1cfa_ep5.log',
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavg_ep5.log',  
+])
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_ensem1cfa.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavg.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_ensem1cfa_ep5.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavg_ep5.log',  
+])
+
+
+perf_files = []
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavgl10.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_sync_easy_fedavgu.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgl10.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgh10.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgu.log',  
+])
+perf_files.append([
+'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_fedavgl10.log',
+#'log/perf1500_he0_mom0_lr01/perf1500_sync_hard_ensem1l10.log',
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavgl10.log',  
+'log/perf1500_he0_mom0_lr01/perf1500_async_hard_fedavgh10.log',  
+#'log/perf1500_he0_mom0_lr01/perf1500_async_hard_ensem1l10.log',  
+])
+#perf_files.append([
+#'log/perf1500_he0_mom0_lr01/perf1500_sync2async800_easy_fedavgl10.log',
+#'log/perf1500_he0_mom0_lr01/perf1500_sync2async800_easy_fedavgu.log',
+#])
+
+
+
+
+perf_files = []
+perf_files.append([
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavg.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgu.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux_greedy.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux_ngreedy.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedavgh10.log',
+#'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgh10.log',  
+#'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedavgu.log',  
+#'log/perf1500_he0_mom0_lr01/perf1500_async_easy_fedmaux10.log',  
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10_nostragglers.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedavg.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedavgu.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux10.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux_greedy.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_easy_fedmaux_ngreedy.log',
+])
+
+perf_files.append([
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavg.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavgu.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux10.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux_greedy.log',
+'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux_ngreedy.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedavgh10.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_hard_fedmaux10_nostragglers.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedavg.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedavgu.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux10.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux_greedy.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_sync_hard_fedmaux_ngreedy.log',
+])
+
+#perf_files.append([
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux6.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux8.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux10.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux12.log',
+#'log/perf1500_rndrnd_mom0_lr01/perf1500_async_easy_fedmaux14.log',
+#])
+
+
+
+
+
+Still waitigg for BCCT D002 Hybrid, and CIFAR D002 FedAdam
+
+
+perf_files = []
+perf_files.append([
+'log/FY1End_Oral/FedAvg_CIFAR10_Dirich002_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAvg_CIFAR10_Dirich002_LeNet5_BS10EP3.log',
+'log/FY1End_Oral/Hybrid_CIFAR10_Dirich002_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAdam_CIFAR10_Dirich002_LeNet5_BS10EP1.log',
+])
+
+perf_files = []
+perf_files.append([
+'log/FY1End_Oral/FedAvg_CIFAR10_Dirich100_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAvg_CIFAR10_Dirich100_LeNet5_BS10EP2.log',
+'log/FY1End_Oral/Hybrid_CIFAR10_Dirich100_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAdam_CIFAR10_Dirich100_LeNet5_BS10EP1.log',
+])
+
+
+
+res = 1
+offset = 0
+for fig_idx, plot_data in enumerate(perf_files):
+    perf_acc = {}
+    for f in plot_data:
+        perf_acc[f] = []
+        fp = open(f, 'r')
+        for line in fp:
+            round = re.findall("Round\s+([0-9]+)\,", line)
+            acc = re.findall("Central accuracy on global test data ([0-9]+\.[0-9]+)", line)
+            if acc and round and ((int(round[0])+offset) % res == 0):
+                perf_acc[f].append(float(acc[0]))
+    plt.close(fig_idx)
+    plt.figure(fig_idx)
+    handles = {}
+    for f in plot_data:
+        handles[f], = plt.plot(list(range(offset,500,res)), perf_acc[f])
+    plt.ylim(20, 70)
+    plt.xlim(0, 250)
+    plt.grid(b=True, which='major', color='#666666', linestyle='-') 
+    plt.minorticks_on() 
+    plt.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.2) 
+    plt.legend(handles.values(), plot_data)
+
+plt.show()
+
+
+
+perf_files = []
+perf_files.append([
+'log/FY1End_Oral/FedAvg_BCCT200_Dirich100_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/Hybrid_BCCT200_Dirich100_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAdam_BCCT200_Dirich100_LenNet5_BS10EP1.log',
+])
+
+
+perf_files = []
+perf_files.append([
+'log/FY1End_Oral/Hybrid_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+'log/FY1End_Oral/FedAvg_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+'log/FY1End_Oral/FedAdam_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+])
+
+perf_files = []
+perf_files.append([
+'log/FY1End_Oral/Hybrid_BCCT200_Dirich002_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAvg_BCCT200_Dirich002_LeNet5_BS10EP1.log',
+'log/FY1End_Oral/FedAdam_BCCT200_Dirich002_LeNet5_BS10EP1.log',
+])
+
+
+res = 1
+offset = 0
+for fig_idx, plot_data in enumerate(perf_files):
+    perf_acc = {}
+    for f in plot_data:
+        perf_acc[f] = []
+        fp = open(f, 'r')
+        for line in fp:
+            round = re.findall("Round\s+([0-9]+)\,", line)
+            acc = re.findall("Central accuracy on global test data ([0-9]+\.[0-9]+)", line)
+            if acc and round and ((int(round[0])+offset) % res == 0):
+                perf_acc[f].append(float(acc[0]))
+    plt.close(fig_idx)
+    plt.figure(fig_idx)
+    handles = {}
+    for f in plot_data:
+        handles[f], = plt.plot(list(range(offset,200,res)), perf_acc[f])
+    plt.ylim(40, 105)
+    plt.xlim(0, 200)
+    plt.grid(b=True, which='major', color='#666666', linestyle='-') 
+    plt.minorticks_on() 
+    plt.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.2) 
+    plt.legend(handles.values(), plot_data)
+
+plt.show()
+
+
+
