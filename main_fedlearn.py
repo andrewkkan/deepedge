@@ -107,8 +107,6 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized model')
 
-    embed()
-
     # The below optimizer can handle FedAvg type of methods, as well as BFGS QN.
     # For FedAdam (TBD), add another optimizer in an if-then clause.
     if args.opt_mode == 0 or args.opt_mode == 1 or args.opt_mode == 2:
@@ -187,7 +185,7 @@ if __name__ == '__main__':
                 delts_locals.append(copy.deepcopy(delt_s))
                 if args.vr_mode == 1:
                     deltc_locals.append(copy.deepcopy(delt_c))
-            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True)
+            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
             loss_locals.append(loss)
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
@@ -233,7 +231,7 @@ if __name__ == '__main__':
                 last_update[user_idx] = epoch_idx
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
         acc_loc = sum(acc_locals) / len(acc_locals)
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
@@ -262,7 +260,7 @@ if __name__ == '__main__':
     net_glob.eval()
     # acc_train, loss_train = test_img(net_glob, dataset_train, args)
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
     #print("Training accuracy: {:.2f}".format(acc_train))
     print("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
     if args.screendump_file:

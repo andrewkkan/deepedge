@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 
 from IPython import embed
 
-def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False):
+def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torch.device('cpu')):
     net_g.eval()
     # testing
     test_loss = 0
@@ -25,7 +25,7 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False):
         if idx == stop_at_batch:
             break
         if args.device != torch.device('cpu'):
-            data, target = data.cuda(), target.cuda()
+            data, target = data.to(device), target.to(device)
         log_probs = net_g(data)
         # sum up batch loss
         test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
