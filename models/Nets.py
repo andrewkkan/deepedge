@@ -120,3 +120,6 @@ class LeNet5(nn.Module):
             return output
         else:
             return output,feature
+
+
+

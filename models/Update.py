@@ -40,8 +40,13 @@ class LocalUpdate(object):
             self.control_g = torch.zeros_like(gather_flat_states(self.net)).to(args.device)
         self.user_idx = user_idx
         self.embed = False
+        self.loss_func = self.CrossEntropyLoss
+        if args.task == 'ObjRec':
+            self.loss_func = self.CrossEntropyLoss
+        elif args.task == 'LinReg':
+            self.loss_func = self.MSELoss
 
-    def train(self):
+    def train_simple(self):
         if not self.net:
             exit('Error: Device LocalUpdate self.net was not initialized')
         self.last_net = copy.deepcopy(self.net)
@@ -73,7 +78,7 @@ class LocalUpdate(object):
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
         return self.net.state_dict(), sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
-    def train_lisa(self):
+    def train(self):
         if not self.net:
             exit('Error: Device LocalUpdate self.net was not initialized')
         self.last_net = copy.deepcopy(self.net)
@@ -93,7 +98,7 @@ class LocalUpdate(object):
                 nn_outputs = self.net(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
                 # loss = self.loss_func(nn_outputs, labels)
-                loss = self.CrossEntropyLoss(nn_outputs, labels) 
+                loss = self.loss_func(nn_outputs, labels) 
                 if self.args.fedprox > 0.0:
                     loss += self.args.fedprox * (gather_flat_params_with_grad(self.net) - gather_flat_params(self.last_net)).norm(2)
                 if self.args.device_reg_norm2 > 0.0:
@@ -187,3 +192,7 @@ class LocalUpdate(object):
         outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
         outputs = outputs[range(batch_size), labels] # pick the values corresponding to the labels
         return -torch.sum(outputs)/float(batch_size) 
+
+    def MSELoss(self, yhat, y):
+        out = torch.mean((yhat - y)**2)
+        return out

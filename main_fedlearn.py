@@ -21,6 +21,7 @@ from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
 from models.test import test_img, test_img_ensem
 from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params, gather_flat_states, add_states
 from models.adaptive_sgd import Adaptive_SGD
+from models.linRegress import DataLinRegress, lin_reg
 
 from IPython import embed
 
@@ -58,6 +59,7 @@ if __name__ == '__main__':
             dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
         args.num_classes = 10
         args.num_channels = 1
+        args.task = 'ObjRec'
     elif args.dataset == 'cifar10':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
         dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
@@ -67,6 +69,7 @@ if __name__ == '__main__':
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 10
+        args.task = 'ObjRec'
     elif args.dataset == 'cifar100':
         trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
         dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
@@ -76,6 +79,7 @@ if __name__ == '__main__':
         else:
             dict_users = cifar100_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 100
+        args.task = 'ObjRec'
     elif args.dataset == 'bcct200':
         if args.num_users > 8:
             args.num_users = 8
@@ -88,6 +92,18 @@ if __name__ == '__main__':
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 4
+        args.task = 'ObjRec'
+    elif args.dataset == 'linregress':
+        linregress_numinputs = 10
+        dataset_train = DataLinRegress(linregress_numinputs)
+        dataset_test = dataset_train
+        args.model = 'linregress'
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.num_classes = 1
+        args.task = 'LinReg'
     else:
         exit('Error: unrecognized dataset')
 
@@ -103,7 +119,9 @@ if __name__ == '__main__':
     elif args.model == 'mlp':
         net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
                        dim_out=args.num_classes,
-                       weight_init=args.weight_init, bias_init=args.bias_init)        
+                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device)
+    elif args.model == 'linregress':    
+        net_glob = lin_reg(linregress_numinputs, args.num_classes).to(args.device)
     else:
         exit('Error: unrecognized model')
 
@@ -168,12 +186,12 @@ if __name__ == '__main__':
         for iu_idx, user_idx in enumerate(idxs_users):
 
             if args.async_s2d == 1:  # async mode 1 updates after FedAvg (see lines below FedAvg)
-                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train()
                 delts_locals.append(copy.deepcopy(delt_s))
                 if args.vr_mode == 1:
                     deltc_locals.append(copy.deepcopy(delt_c))
             elif args.async_s2d == 2:  # async mode 2 updates before FedAvg
-                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train()
                 delts_locals.append(copy.deepcopy(delt_s))
                 if args.vr_mode == 1:
                     deltc_locals.append(copy.deepcopy(delt_c))
@@ -181,7 +199,7 @@ if __name__ == '__main__':
             elif args.async_s2d == 0:  # synchronous mode, updates before training
                 local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=control_glob)
                 last_update[user_idx] = epoch_idx
-                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train_lisa()
+                delt_s, delt_c, loss, acc_ll = local_user[user_idx].train()
                 delts_locals.append(copy.deepcopy(delt_s))
                 if args.vr_mode == 1:
                     deltc_locals.append(copy.deepcopy(delt_c))

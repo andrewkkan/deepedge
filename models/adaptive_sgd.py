@@ -7,40 +7,7 @@ from IPython import embed
 
 
 class Adaptive_SGD(Optimizer):
-    """PyTorch Implementation of SdLBFGS algorithm [1].
-
-    Code is adopted from LBFGS in PyTorch and modified by
-    Huidong Liu (h.d.liew@gmail.com) and Yingkai Li (yingkaili2023@u.northwestern.edu)
-
-    .. warning::
-        This optimizer doesn't support per-parameter options and parameter
-        groups (there can be only one).
-
-    .. warning::
-        Right now all parameters have to be on a single device. This will be
-        improved in the future.
-
-    .. note::
-        This is a very memory intensive optimizer (it requires additional
-        ``param_bytes * (history_size + 1)`` bytes). If it doesn't fit in memory
-        try reducing the history size, or use a different algorithm.
-
-    Arguments:
-        lr (float): learning rate (default: 1).
-        lr_decay (bool): whether to perform learning rate decay (default: True).
-        weight_decay (float): weight decay (default: 0).
-        max_iter (int): maximal number of iterations per optimization step
-            (default: 1).
-        max_eval (int): maximal number of function evaluations per optimization
-            step (default: max_iter * 1.25).
-        tolerance_grad (float): termination tolerance on first order optimality
-            (default: 1e-5).
-        tolerance_change (float): termination tolerance on function
-            value/parameter changes (default: 1e-9).
-        history_size (int): update history size (default: 100).
-
-    [1] Wang, Xiao, et al. "Stochastic quasi-Newton methods for nonconvex stochastic optimization."
-    SIAM Journal on Optimization 27.2 (2017): 927-956.
+    """Code adapted from sdlbfgs_fed.py
     """
 
     def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, nD=600., Bs=50., adaptive_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
