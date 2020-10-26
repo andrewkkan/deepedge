@@ -108,7 +108,10 @@ class LocalUpdate(object):
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.item()))
                 batch_loss.append(loss.item())
-                batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+                if not self.args.task in 'LinReg':
+                    batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+                else:
+                    batch_accuracy.append(0)
                 loss.backward()
                 optimizer.step()
                 if self.args.vr_mode != 0:
@@ -190,9 +193,9 @@ class LocalUpdate(object):
     def CrossEntropyLoss(self, outputs, labels):
         batch_size = outputs.size()[0]            # batch_size
         outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
-        outputs = outputs[range(batch_size), labels] # pick the values corresponding to the labels
+        outputs = outputs[range(batch_size), labels] # labels is 1-hot so the rest softmax outputs go to zero
         return -torch.sum(outputs)/float(batch_size) 
 
     def MSELoss(self, yhat, y):
-        out = torch.mean((yhat - y)**2)
-        return out
+        batch_size = yhat.size()[0]
+        return torch.sum((yhat - y).pow(2))/float(batch_size)

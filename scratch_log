@@ -636,3 +636,10 @@ python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_
 
 python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 0 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf200_fedAdaptSGD_bcct200_D100_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log' &
 python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 0 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.025 --seed 123 --opt_mode 3 --async_s2d 0 --noniid_dirich_alpha 10.0 --lr_server_gd 0.05 --adaptive_b1 0.9 --adaptive_b2 0.99 --adaptive_tau 0.01 --adaptive_mode 3 --screendump_file 'log/perf500_fedAdaptSGD_cifar10_D100_lenet5_bs10ep1_opt3adam_lrgd005lrd0025_tau001.log' &
+
+
+
+
+
+python main_fedlearn.py --dataset linregress --num_users 8 --epochs 200 --local_bs 10 --frac 0.5 --local_ep 1 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --lr_device 0.1 
+

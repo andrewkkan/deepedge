@@ -15,6 +15,11 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
     test_loss = 0
     correct = 0
     data_loader = DataLoader(datatest, batch_size=args.bs, shuffle=shuffle)
+    loss_func = F.cross_entropy
+    if args.task == 'ObjRec':
+        loss_func = F.cross_entropy
+    elif args.task == 'LinReg':
+        loss_func = F.mse_loss
     if stop_at_batch == -1:
         # dataset_len = len(data_loader) * args.bs
         stop_at_batch = len(data_loader) - 1
@@ -28,7 +33,7 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
             data, target = data.to(device), target.to(device)
         log_probs = net_g(data)
         # sum up batch loss
-        test_loss += F.cross_entropy(log_probs, target, reduction='sum').item()
+        test_loss += loss_func(log_probs, target, reduction='mean').item()
         # get the index of the max log-probability
         y_pred = log_probs.data.max(1, keepdim=True)[1]
         correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()

@@ -14,7 +14,7 @@ from IPython import embed
 class DataLinRegress(Dataset):
     
     # Constructor
-    def __init__(self, num_inputs, noise_sigma=0.1, num_data=1000, num_targets=10):
+    def __init__(self, num_inputs, noise_sigma=0.1, num_data=10000, num_targets=10):
         """
         For a linear regressio dataset, the inputs are the x's and the outputs are the y's.  Simlar to object recognition, the x's are the images,
         and the y's are the targets or labels.
@@ -24,11 +24,11 @@ class DataLinRegress(Dataset):
         However, the concept of labels is used for creating non-IID datasets.  See function generic_noniid in utils/sampling.py for implementation.
         Same concept with self.classes
         """
-        bound = 256.0
+        bound = 1.0
         self.x = torch.rand(num_data,num_inputs) * 2.0 * bound - bound
         
         self.w = torch.ones(num_inputs, 1)
-        self.b = 1
+        self.b = 0.5
         self.f = torch.mm(self.x, self.w) + self.b
 
         self.y = self.f + noise_sigma*torch.randn((self.x.shape[0],1))

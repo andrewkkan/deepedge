@@ -94,7 +94,7 @@ if __name__ == '__main__':
         args.num_classes = 4
         args.task = 'ObjRec'
     elif args.dataset == 'linregress':
-        linregress_numinputs = 10
+        linregress_numinputs = 50
         dataset_train = DataLinRegress(linregress_numinputs)
         dataset_test = dataset_train
         args.model = 'linregress'
@@ -266,7 +266,6 @@ if __name__ == '__main__':
             )
             sdf.flush()
         loss_train.append(loss_avg)
-
 
     # plot loss curve
     # plt.figure()
