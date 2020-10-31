@@ -54,40 +54,27 @@ if __name__ == '__main__':
         dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist)
         dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
         # sample users
-        if args.iid:
-            dict_users = mnist_iid(dataset_train, args.num_users)
-            # dict_users = mnist_sample_iid(dataset_train, args.num_users)
-        else:
-            dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
         args.num_classes = 10
         args.num_channels = 1
+        args.task = 'ObjRec'
     elif args.dataset == 'cifar10':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
         dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
         dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=trans_cifar)
-        if args.iid:
-            dict_users = generic_iid(dataset_train, args.num_users)
-        else:
-            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 10
+        args.task = 'ObjRec'
     elif args.dataset == 'cifar100':
         trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
         dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
         dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar100)
-        if args.iid:
-            dict_users = generic_iid(dataset_train, args.num_users)
-        else:
-            dict_users = cifar100_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 100
+        args.task = 'ObjRec'
     elif args.dataset == 'bcct200':
         trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.26215256, 0.26215256, 0.26215256], std=[0.0468134, 0.0468134, 0.0468134])])
         dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
         dataset_test = dataset_train
-        if args.iid:
-            dict_users = generic_iid(dataset_train, args.num_users)
-        else:
-            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 4
+        args.task = 'ObjRec'
     else:
         exit('Error: unrecognized dataset')
 
@@ -107,61 +94,40 @@ if __name__ == '__main__':
     else:
         exit('Error: unrecognized model')
 
-    optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr_device, momentum=args.momentum)
     net_glob = net_glob.to(args.device)
+    optimizer = torch.optim.Adam(net_glob.parameters(), lr=args.lr_device, betas=(0.9,0.999))
     print(net_glob)
     net_glob.train()
 
     # training
     loss_train = []
-    cv_loss, cv_acc = [], []
-    val_loss_pre, counter = 0, 0
-    net_best = None
-    best_loss = None
-    val_acc_list, net_list = [], []
-
-    local_user = []
-    for idx in range(args.num_users):
-        local_user.append(dict_users[idx])
+    epoch_loss, epoch_accuracy = [], []
 
     for epoch_idx in range(args.epochs):
-
-        # torch.save(net_glob.state_dict(),"data/models/%s/netglob-epoch%s-model%s-dataset%s.pt"%(args.store_models,str(epoch_idx),args.model,args.dataset))
-        w_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], []
-
-        m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
-
-        data_idxs = []
-        for idxs in idxs_users:
-            data_idxs.extend(local_user[idxs])
-        user_data = DataLoader(DatasetSplit(dataset_train, data_idxs), batch_size=args.local_bs, shuffle=True)
-        epoch_loss = []
-        epoch_accuracy = []
-        for local_idx in range(args.local_ep):
-            batch_loss = []
-            batch_accuracy = []
-            for batch_idx, (images, labels) in enumerate(user_data):
-                images, labels = images.to(args.device), labels.to(args.device)
-                net_glob.zero_grad()
-                nn_outputs = net_glob(images)
-                nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
-                loss = F.cross_entropy(nn_outputs, labels)
-                batch_loss.append(loss.item())
-                batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
-                loss.backward()
-                optimizer.step()
-            epoch_loss.append(sum(batch_loss)/len(batch_loss))
-            epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
+        train_data = DataLoader(dataset_train, batch_size=args.local_bs, shuffle=True)
+        batch_loss = []
+        batch_accuracy = []
+        for batch_idx, (images, labels) in enumerate(train_data):
+            images, labels = images.to(args.device), labels.to(args.device)
+            net_glob.zero_grad()
+            nn_outputs = net_glob(images)
+            nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
+            loss = F.cross_entropy(nn_outputs, labels)
+            batch_loss.append(loss.item())
+            batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+            loss.backward()
+            optimizer.step()
+        epoch_loss.append(sum(batch_loss)/len(batch_loss))
+        epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True)
+        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
 
         # print status
         loss_avg = sum(epoch_loss) / len(epoch_loss)
         print(
-                'Round {:3d}, Devices participated {:2d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}'.\
-                format(epoch_idx, m, loss_avg, acc_glob)
+                'Round {:3d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}'.\
+                format(epoch_idx, loss_avg, acc_glob)
         )
         loss_train.append(loss_avg)
 
