@@ -641,5 +641,20 @@ python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_
 
 
 
-python main_fedlearn.py --dataset linregress --num_users 8 --epochs 200 --local_bs 10 --frac 0.5 --local_ep 1 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --lr_device 0.1 
+python main_fedlearn.py --dataset linregress --num_users 8 --epochs 10 --gpu 2 --local_bs 10 --frac 0.5 --local_ep 1 --seed 123 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --lr_device 0.1 
+python main_fedlearn.py --dataset linregress --num_users 8 --epochs 10 --gpu 3 --local_bs 10 --frac 0.5 --local_ep 1 --seed 123 --opt_mode 1 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --lr_device 0.1 
+python main_fedlearn.py --dataset linregress --num_users 8 --epochs 10 --gpu 4 --local_bs 10 --frac 0.5 --local_ep 1 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --lr_device 0.1 
 
+python main_fedlearn.py --dataset bcct200 --model lenet5 --num_channels 3 --num_users 8 --epochs 200 --gpu 2 --local_bs 10 --frac 0.5 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10
+
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 500 --gpu 2 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 
+
+python main_fedlearn.py --dataset cifar10 --model lenet5 --num_channels 3 --num_users 100 --epochs 100 --local_bs 10 --frac 0.1 --local_ep 1 --lr_device 0.02 --seed 123 --opt_mode 2 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --gpu 2 
+
+
+GPU2: OPT 0 DevLR 0.1
+GPU3: OPT 0 DevLR 0.01 t *= rrcossim
+GPU4: OPT 0 DevLR 0.1
+GPU5: OPT 0 DevLR 0.02 EP 3
+GPU6: OPT 0 DevLR 0.02 t *= (rrcossim + 1.0) / 2.0

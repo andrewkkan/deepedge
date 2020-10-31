@@ -519,6 +519,7 @@ for e in range(3,50):
 import tkinter
 import matplotlib
 matplotlib.use('TkAgg')
+# matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import copy
 import numpy as np
@@ -713,6 +714,18 @@ perf_files.append([
 'log/FY1End_Oral/Hybrid_BCCT200_Dirich002_LeNet5_BS10EP1.log',
 'log/FY1End_Oral/FedAvg_BCCT200_Dirich002_LeNet5_BS10EP1.log',
 'log/FY1End_Oral/FedAdam_BCCT200_Dirich002_LeNet5_BS10EP1.log',
+])
+
+
+
+perf_files = []
+perf_files.append([
+'log_preOct2020/FY1End_Oral/Hybrid_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+'log_preOct2020/FY1End_Oral/FedAvg_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+'log_preOct2020/FY1End_Oral/FedAdam_BCCT200_Dirich002_LeNet5_BS10EP3.log',
+'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd002_seed123.log',
+'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd002_seed124.log',
+'log/perf500_fedLimQNGD_cifar10_D02_lenet5_bs10ep1_opt2vr0_lrqn05lrgd05lrd002_seed125.log',
 ])
 
 

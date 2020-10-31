@@ -121,6 +121,7 @@ class SdLBFGS_FedLiSA(Optimizer):
         self._opt_mode = opt_mode
         self._vr_mode = vr_mode
         self._max_qndn = max_qndn
+        self._debuginfo = tuple()
 
     def _numel(self):
         if self._numel_cache is None:
@@ -196,6 +197,9 @@ class SdLBFGS_FedLiSA(Optimizer):
         else:
             return betas[1]
 
+    def get_debuginfo(self):
+        return self._debuginfo
+
     def step(
             self, 
             # closure
@@ -216,11 +220,10 @@ class SdLBFGS_FedLiSA(Optimizer):
 
         flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
 
-        if self._opt_mode != 1:
+        if self._opt_mode == 0:
             # This step updates the global model with plain-vanilla device-update averaging 
             self._add_grad(self._lr_server_gd, flat_deltw)
-            if self._opt_mode == 0:
-                return
+            return
 
         group = self.param_groups[0]
         lr_server_qn = group['lr_server_qn']
@@ -242,6 +245,7 @@ class SdLBFGS_FedLiSA(Optimizer):
         # loss = orig_loss.item()
         current_evals = 1
         state['func_evals'] += 1
+        gdcossim = torch.tensor(1.0).to(flat_deltw.device)
             
         flat_grad = -flat_deltw / self._lr_device / self._E_l / (self._nD / self._Bs)
         abs_grad_sum = flat_grad.abs().sum()
@@ -358,21 +362,25 @@ class SdLBFGS_FedLiSA(Optimizer):
             if weight_decay > 0:
                 d = self._add_weight_decay(weight_decay, d)
 
-            dnorm = d.norm()
-            if dnorm > self._max_qndn/t:
-                d = d / d.norm() / t * self._max_qndn 
+            # dnorm = d.norm()
+            # if dnorm > self._max_qndn/t:
+            #     d = d / d.norm() / t * self._max_qndn 
 
             # directional derivative
             gtd = flat_grad.dot(d)  # g * d
-
             # optional line search: user function
             ls_func_evals = 0
             if line_search_fn is not None:
                 # perform line search, using user function
                 raise RuntimeError("line search function is not supported yet")
             else:
-                if self._opt_mode == 1 or self._opt_mode == 2:
+                if self._opt_mode == 1:
                     # no line search, simply move with fixed-step 
+                    self._add_grad(t, d)
+                elif self._opt_mode == 2:
+                    gdcossim = torch.clamp(gtd.neg() / flat_grad.norm() / d.norm(), -1, 1)
+                    t *= gdcossim
+                    self._add_grad(self._lr_server_gd, flat_deltw)
                     self._add_grad(t, d)
 
                 if n_iter != max_iter:
@@ -421,5 +429,7 @@ class SdLBFGS_FedLiSA(Optimizer):
         state['H_diag'] = H_diag
         state['prev_flat_grad'] = prev_flat_grad
         # state['prev_loss'] = prev_loss
+
+        self._debuginfo = flat_grad.norm().item(), d.norm().item(), gdcossim.item()
 
         return t*d

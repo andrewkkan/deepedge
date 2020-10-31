@@ -264,9 +264,15 @@ if __name__ == '__main__':
                 'Round {:3d}, Devices participated {:2d}, Average loss {:.8f}, Central accuracy on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
                 format(epoch_idx, m, loss_avg, acc_glob, acc_loc, acc_lloc)
             )
+            if args.opt_mode == 0 or args.opt_mode == 1 or args.opt_mode == 2:
+                g_norm, d_norm, gdcossim = optimizer_glob.get_debuginfo()
+                sdf.write(
+                    'G_Norm = {:.5f}, D_Norm = {:.5f}, GDCOSSIM = {:.5f}'.format(g_norm, d_norm, gdcossim)
+                )
             sdf.flush()
         loss_train.append(loss_avg)
 
+        embed()
     # plot loss curve
     # plt.figure()
     # plt.plot(range(len(loss_train)), loss_train)
