@@ -95,15 +95,26 @@ if __name__ == '__main__':
         args.task = 'ObjRec'
     elif args.dataset == 'linregress':
         linregress_numinputs = 50
-        dataset_train = DataLinRegress(linregress_numinputs)
+        args.num_classes = 1
+        dataset_train = DataLinRegress(linregress_numinputs, num_outputs=args.num_classes)
         dataset_test = dataset_train
         args.model = 'linregress'
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
-        args.num_classes = 1
         args.task = 'LinReg'
+    elif args.dataset == 'linsaddle':
+        linregress_numinputs = 2
+        args.num_classes = 2
+        dataset_train = DataLinRegress(linregress_numinputs, noise_sigma=0.0, num_outputs=args.num_classes)
+        dataset_test = dataset_train
+        args.model = 'linregress'
+        if args.iid:
+            dict_users = generic_iid(dataset_train, args.num_users)
+        else:
+            dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
+        args.task = 'LinSaddle'    
     else:
         exit('Error: unrecognized dataset')
 
@@ -272,7 +283,7 @@ if __name__ == '__main__':
             sdf.flush()
         loss_train.append(loss_avg)
 
-        embed()
+        print(net_glob.state_dict())
     # plot loss curve
     # plt.figure()
     # plt.plot(range(len(loss_train)), loss_train)

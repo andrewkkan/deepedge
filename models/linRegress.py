@@ -14,7 +14,7 @@ from IPython import embed
 class DataLinRegress(Dataset):
     
     # Constructor
-    def __init__(self, num_inputs, noise_sigma=0.1, num_data=10000, num_targets=10):
+    def __init__(self, num_inputs, noise_sigma=0.1, num_data=10000, num_targets=10, num_outputs=1):
         """
         For a linear regressio dataset, the inputs are the x's and the outputs are the y's.  Simlar to object recognition, the x's are the images,
         and the y's are the targets or labels.
@@ -27,11 +27,11 @@ class DataLinRegress(Dataset):
         bound = 1.0
         self.x = torch.rand(num_data,num_inputs) * 2.0 * bound - bound
         
-        self.w = torch.ones(num_inputs, 1)
+        self.w = torch.ones(num_inputs, num_outputs)
         self.b = 0.5
         self.f = torch.mm(self.x, self.w) + self.b
 
-        self.y = self.f + noise_sigma*torch.randn((self.x.shape[0],1))
+        self.y = self.f + noise_sigma*torch.randn((self.x.shape[0],num_outputs))
         self.len = self.x.shape[0]
 
         self.targets = KMeans(n_clusters=num_targets).fit_predict(self.x)
@@ -81,7 +81,9 @@ class lin_reg(nn.Module):
     def __init__(self, in_feat, out_feat):
         super(lin_reg, self).__init__()
         self.linear = nn.Linear(in_feat, out_feat)
-        
+        torch.nn.init.normal_(self.linear.weight, mean=1.0, std=1.0)
+        torch.nn.init.normal_(self.linear.bias, mean=0.5, std=1.0)
+
     def forward(self,x):
         yhat = self.linear(x)
         return yhat

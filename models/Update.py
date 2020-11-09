@@ -45,6 +45,8 @@ class LocalUpdate(object):
             self.loss_func = self.CrossEntropyLoss
         elif args.task == 'LinReg':
             self.loss_func = self.MSELoss
+        elif args.task == 'LinSaddle':
+            self.loss_func = self.MSESaddleLoss
 
     def train_simple(self):
         if not self.net:
@@ -108,7 +110,7 @@ class LocalUpdate(object):
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.item()))
                 batch_loss.append(loss.item())
-                if not self.args.task in 'LinReg':
+                if not (self.args.task in 'LinReg' or self.args.task in 'LinSaddle'):
                     batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
                 else:
                     batch_accuracy.append(0)
@@ -199,3 +201,7 @@ class LocalUpdate(object):
     def MSELoss(self, yhat, y):
         batch_size = yhat.size()[0]
         return torch.sum((yhat - y).pow(2))/float(batch_size)
+
+    def MSESaddleLoss(self, yhat, y):
+        batch_size = yhat.size()[0]
+        return torch.sum((yhat[:,0] - y[:,0]).pow(2))/float(batch_size) - torch.sum((yhat[:,1] - y[:,1]).pow(2))/float(batch_size)

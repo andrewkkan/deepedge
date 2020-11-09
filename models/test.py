@@ -16,10 +16,15 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
     correct = 0
     data_loader = DataLoader(datatest, batch_size=args.bs, shuffle=shuffle)
     loss_func = F.cross_entropy
+    need_accuracy = True
     if args.task == 'ObjRec':
         loss_func = F.cross_entropy
     elif args.task == 'LinReg':
         loss_func = F.mse_loss
+        need_accuracy = False
+    elif args.task == 'LinSaddle':
+        loss_func = F.mse_loss
+        need_accuracy = False
     if stop_at_batch == -1:
         # dataset_len = len(data_loader) * args.bs
         stop_at_batch = len(data_loader) - 1
@@ -35,8 +40,11 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
         # sum up batch loss
         test_loss += loss_func(log_probs, target, reduction='mean').item()
         # get the index of the max log-probability
-        y_pred = log_probs.data.max(1, keepdim=True)[1]
-        correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+        if need_accuracy:
+            y_pred = log_probs.data.max(1, keepdim=True)[1]
+            correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+        else:
+            correct = torch.tensor(0.0)
 
     test_loss /= dataset_len
     accuracy = 100.00 * correct.float() / dataset_len
