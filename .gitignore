@@ -63,3 +63,6 @@ ENV/
 *.gz
 *.pt
 *ubyte
+
+# Object files
+*.obj

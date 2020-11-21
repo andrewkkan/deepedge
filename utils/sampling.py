@@ -9,18 +9,7 @@ from torchvision import datasets, transforms
 from IPython import embed
 
 def mnist_iid(dataset, num_users):
-    """
-    Partitions I.I.D. client data from MNIST dataset
-    :param dataset:
-    :param num_users:
-    :return: dict of image index
-    """
-    num_items = int(len(dataset)/num_users)
-    dict_users, all_idxs = {}, [i for i in range(len(dataset))]
-    for i in range(num_users):
-        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False))
-        all_idxs = list(set(all_idxs) - dict_users[i])
-    return dict_users
+    return generic_iid(dataset, num_users)
 
 def mnist_noniid(dataset, num_users, noniid_hard=False):
     """
@@ -52,7 +41,6 @@ def mnist_noniid(dataset, num_users, noniid_hard=False):
             dict_users[i] = np.concatenate((dict_users[i], idxs[rand*num_imgs:(rand+1)*num_imgs]), axis=0)
     return dict_users
 
-
 def generic_iid(dataset, num_users):
     """
     Sample I.I.D. client data from CIFAR10 dataset
@@ -81,7 +69,7 @@ def generic_noniid(dataset, num_users, alpha):
     idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()]
     idxs = idxs_labels[0,:]
     num_labels = len(dataset.classes)
-    num_items = int(len(dataset)/num_users)
+    num_items = len(dataset)//num_users
     for i in range(num_users):
         sel_dist = np.random.dirichlet(tuple(np.repeat(alpha, num_labels)))
         sel_cum = np.vstack((np.cumsum(sel_dist), np.arange(num_labels)))
@@ -154,7 +142,7 @@ def cifar100_noniid(dataset, num_users, alpha):
     idxs_labels = idxs_labels[:,idxs_labels[1,:].argsort()]
     idxs = idxs_labels[0,:]
     num_labels = len(coarse_to_fine_label_mapping.keys())
-    num_items = int(len(dataset)/num_users)
+    num_items = len(dataset)//num_users
     for i in range(num_users):
         sel_dist = np.random.dirichlet(tuple(np.repeat(alpha, num_labels)))
         sel_cum = np.vstack((np.cumsum(sel_dist), np.arange(num_labels)))

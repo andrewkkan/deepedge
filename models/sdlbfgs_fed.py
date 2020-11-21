@@ -56,7 +56,7 @@ def gather_flat_grad(model):
         views.append(view)
     return torch.cat(views, 0)
 
-class SdLBFGS_FedLiSA(Optimizer):
+class SdLBFGS_FedBLA(Optimizer):
     """PyTorch Implementation of SdLBFGS algorithm [1].
 
     Code is adopted from LBFGS in PyTorch and modified by
@@ -95,7 +95,8 @@ class SdLBFGS_FedLiSA(Optimizer):
 
     def __init__(self, net, lr_server_qn=0.5, lr_server_gd=1.0, lr_decay=False, weight_decay=0, max_iter=1, max_eval=None,
                  tolerance_grad=1e-5, tolerance_change=1e-9, history_size=100,
-                 line_search_fn=None, lr_device=0.1, E_l=1.0, nD=600., Bs=50., 
+                 line_search_fn=None, lr_device=0.1, E_l=1.0, 
+                 Bs=50., 
                  opt_mode=0, vr_mode=0, max_qndn=1.0):
         if max_eval is None:
             max_eval = max_iter * 5 // 4
@@ -103,7 +104,7 @@ class SdLBFGS_FedLiSA(Optimizer):
                         max_eval=max_eval,
                         tolerance_grad=tolerance_grad, tolerance_change=tolerance_change,
                         history_size=history_size, line_search_fn=line_search_fn)
-        super(SdLBFGS_FedLiSA, self).__init__(net.parameters(), defaults)
+        super(SdLBFGS_FedBLA, self).__init__(net.parameters(), defaults)
 
         if len(self.param_groups) != 1:
             raise ValueError("SdLBFGS doesn't support per-parameter options "
@@ -116,7 +117,7 @@ class SdLBFGS_FedLiSA(Optimizer):
         self._lr_device = lr_device
         self._net = net
         self._E_l = E_l
-        self._nD = nD
+        # self._nD = nD
         self._Bs = Bs
         self._opt_mode = opt_mode
         self._vr_mode = vr_mode
@@ -205,6 +206,7 @@ class SdLBFGS_FedLiSA(Optimizer):
             # closure
             flat_deltw_list,
             flat_deltos_list,
+            nD_list,
         ):
         """Performs a single optimization step.
 
@@ -214,15 +216,19 @@ class SdLBFGS_FedLiSA(Optimizer):
         """
         assert len(self.param_groups) == 1
 
+        flat_deltos = None
         if flat_deltos_list:
             flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
             self._add_other_states(flat_deltos)
 
-        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        # flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
+        flat_deltw = torch.stack(flat_deltw_list).to(flat_deltw_list[0].device)
+        flat_deltw_avg = flat_deltw.mean(dim=0)
 
         if self._opt_mode == 0:
             # This step updates the global model with plain-vanilla device-update averaging 
-            self._add_grad(self._lr_server_gd, flat_deltw)
+            self._add_grad(self._lr_server_gd, flat_deltw_avg)
             return
 
         group = self.param_groups[0]
@@ -245,10 +251,11 @@ class SdLBFGS_FedLiSA(Optimizer):
         # loss = orig_loss.item()
         current_evals = 1
         state['func_evals'] += 1
-        gdcossim = torch.tensor(1.0).to(flat_deltw.device)
             
-        flat_grad = -flat_deltw / self._lr_device / self._E_l / (self._nD / self._Bs)
+        flat_grad = -flat_deltw / self._lr_device / self._E_l / (nD_scaling / self._Bs)
+        flat_grad = flat_grad.mean(dim=0)
         abs_grad_sum = flat_grad.abs().sum()
+        gdcossim = torch.tensor(1.0).to(flat_grad.device)
 
         if abs_grad_sum <= tolerance_grad:
             print("SdBFGS optim exited prematurely!")
@@ -304,6 +311,7 @@ class SdLBFGS_FedLiSA(Optimizer):
                     theta = 0.75 * sT_H_inv_s / (sT_H_inv_s - ys)
                 else:
                     theta = 1
+
                 y_bar = theta * y + (1 - theta) * gamma * s
 
                 # eta = 0.25
@@ -378,9 +386,9 @@ class SdLBFGS_FedLiSA(Optimizer):
                     # no line search, simply move with fixed-step 
                     self._add_grad(t, d)
                 elif self._opt_mode == 2:
-                    gdcossim = torch.clamp(gtd.neg() / flat_grad.norm() / d.norm(), -1, 1)
-                    t *= gdcossim
-                    self._add_grad(self._lr_server_gd, flat_deltw)
+                    # gdcossim = torch.clamp(gtd.neg() / flat_grad.norm() / d.norm(), -1, 1)
+                    # t *= gdcossim
+                    self._add_grad(self._lr_server_gd, flat_deltw_avg)
                     self._add_grad(t, d)
 
                 if n_iter != max_iter:
@@ -431,5 +439,11 @@ class SdLBFGS_FedLiSA(Optimizer):
         # state['prev_loss'] = prev_loss
 
         self._debuginfo = flat_grad.norm().item(), d.norm().item(), gdcossim.item()
+
+        del flat_deltw
+        if flat_deltos:
+            del flat_deltos
+        del flat_grad
+        del nD_scaling
 
         return t*d

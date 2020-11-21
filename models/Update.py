@@ -47,6 +47,8 @@ class LocalUpdate(object):
             self.loss_func = self.MSELoss
         elif args.task == 'LinSaddle':
             self.loss_func = self.MSESaddleLoss
+        elif args.task == 'AutoEnc':
+            self.loss_func = self.MSELoss
 
     def train_simple(self):
         if not self.net:
@@ -83,7 +85,7 @@ class LocalUpdate(object):
     def train(self):
         if not self.net:
             exit('Error: Device LocalUpdate self.net was not initialized')
-        self.last_net = copy.deepcopy(self.net)
+        last_net = copy.deepcopy(self.net)
         self.net.train()
 
         # train and update
@@ -100,9 +102,12 @@ class LocalUpdate(object):
                 nn_outputs = self.net(images)
                 nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
                 # loss = self.loss_func(nn_outputs, labels)
-                loss = self.loss_func(nn_outputs, labels) 
+                if self.args.task == 'AutoEnc':
+                    loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                else:
+                    loss = self.loss_func(nn_outputs, labels) 
                 if self.args.fedprox > 0.0:
-                    loss += self.args.fedprox * (gather_flat_params_with_grad(self.net) - gather_flat_params(self.last_net)).norm(2)
+                    loss += self.args.fedprox * (gather_flat_params_with_grad(self.net) - gather_flat_params(last_net)).norm(2)
                 if self.args.device_reg_norm2 > 0.0:
                     loss += self.args.device_reg_norm2 * gather_flat_params_with_grad(self.net).norm(2)
                 if self.args.verbose and batch_idx % 10 == 0:
@@ -110,7 +115,7 @@ class LocalUpdate(object):
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
                                100. * batch_idx / len(self.ldr_train), loss.item()))
                 batch_loss.append(loss.item())
-                if not (self.args.task in 'LinReg' or self.args.task in 'LinSaddle'):
+                if not (self.args.task in 'LinReg' or self.args.task in 'LinSaddle' or self.args.task in 'AutoEnc'):
                     batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
                 else:
                     batch_accuracy.append(0)
@@ -122,7 +127,7 @@ class LocalUpdate(object):
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
-        flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(self.last_net)
+        flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
         flat_delts = flat_net_states - flat_last_net_states
 
         flat_deltc = None
@@ -130,6 +135,10 @@ class LocalUpdate(object):
             flat_deltc = ((flat_last_net_states - flat_net_states) / self.args.lr_device / self.args.local_ep / float(batch_idx + 1) - self.control_g) / self.args.vr_scale
             self.control_i += flat_deltc
 
+        del flat_net_states
+        del flat_last_net_states
+        del optimizer
+        del last_net
 
         return flat_delts, flat_deltc, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 

@@ -19,7 +19,7 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
     need_accuracy = True
     if args.task == 'ObjRec':
         loss_func = F.cross_entropy
-    elif args.task == 'LinReg':
+    elif args.task == 'LinReg' or args.task == 'AutoEnc':
         loss_func = F.mse_loss
         need_accuracy = False
     elif args.task == 'LinSaddle':
@@ -27,10 +27,10 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
         need_accuracy = False
     if stop_at_batch == -1:
         # dataset_len = len(data_loader) * args.bs
-        stop_at_batch = len(data_loader) - 1
-        dataset_len = stop_at_batch * args.bs
+        stop_at_batch = len(data_loader)
+        dataset_len = len(data_loader) * args.bs
     else:
-        dataset_len = stop_at_batch * args.bs
+        dataset_len = stop_at_batch  * args.bs
     for idx, (data, target) in enumerate(data_loader):
         if idx == stop_at_batch:
             break
@@ -38,7 +38,10 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
             data, target = data.to(device), target.to(device)
         log_probs = net_g(data)
         # sum up batch loss
-        test_loss += loss_func(log_probs, target, reduction='mean').item()
+        if args.task == 'AutoEnc':
+            test_loss += loss_func(log_probs, data, reduction='mean').item()
+        else:
+            test_loss += loss_func(log_probs, target, reduction='mean').item()
         # get the index of the max log-probability
         if need_accuracy:
             y_pred = log_probs.data.max(1, keepdim=True)[1]
@@ -46,7 +49,7 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
         else:
             correct = torch.tensor(0.0)
 
-    test_loss /= dataset_len
+    test_loss /= stop_at_batch
     accuracy = 100.00 * correct.float() / dataset_len
     if args.verbose:
         print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(

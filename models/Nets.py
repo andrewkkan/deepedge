@@ -121,5 +121,56 @@ class LeNet5(nn.Module):
         else:
             return output,feature
 
+class MNIST_AE(nn.Module):
+
+    def __init__(self, dim_in):
+        super(MNIST_AE, self).__init__()
+        self.layer_input = nn.Linear(dim_in, 1000)
+        self.layer_hidden1 = nn.Linear(1000, 500)
+        self.layer_hidden2 = nn.Linear(500, 250)
+        self.layer_hidden3 = nn.Linear(250, 30)
+        self.layer_hidden4 = nn.Linear(30, 250)
+        self.layer_hidden5 = nn.Linear(250, 500)
+        self.layer_hidden6 = nn.Linear(500, 1000)
+        self.layer_output = nn.Linear(1000, dim_in)
+        self.activation = nn.Sigmoid()
 
 
+    def forward(self, x):
+        input_shape = x.shape
+        x = x.view(-1, x.shape[-3]*x.shape[-2]*x.shape[-1])
+        x = self.layer_input(x)
+        x = self.activation(x)
+        x = self.layer_hidden1(x)
+        x = self.activation(x)
+        x = self.layer_hidden2(x)
+        x = self.activation(x)
+        x = self.layer_hidden3(x)
+        x = self.layer_hidden4(x)
+        x = self.activation(x)
+        x = self.layer_hidden5(x)
+        x = self.activation(x)
+        x = self.layer_hidden6(x)
+        x = self.activation(x)
+        x = self.layer_output(x)
+        x = self.activation(x)
+        return x.view(input_shape)
+
+class LSTM_reddit(nn.Module):
+
+    def __init__(self, vocab_size=10004, embedding_size=96, hiddenLSTM_dim=670, hiddenLin1_dim=96, hiddenLin2_dim=10004):
+        super(LSTM_reddit, self).__init__()
+        self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hiddenLSTM_dim)
+        self.linear1 = nn.Linear(hiddenLSTM_dim, hiddenLin1_dim)
+        self.linear1 = nn.Linear(hiddenLin1_dim, hiddenLin2_dim)
+        self.tanh = nn.Tanh()
+
+    def forward(self, sentence):
+        embeds = self.word_embeddings(sentence)
+        lstm_out, _ = self.lstm(embeds.view(len(sentence), 1, -1))
+        lin1_out = self.linear1(lstm_out.view(len(sentence), -1))
+        # lin1_out = self.tanh(lin1_out)
+        lin2_out = self.linear2(lin1_out)
+        tag_scores = F.log_softmax(lin2_out, dim=1)
+        return tag_scores

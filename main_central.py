@@ -18,11 +18,11 @@ import sys
 import datetime
 
 from utils.options import args_parser
-from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid
+from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid, emnist_iid, emnist_noniid
+from utils.emnist_dataset import EMNISTDataset_by_write
 from models.Update import DatasetSplit
-from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5
+from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5, MNIST_AE
 from models.test import test_img, test_img_ensem
-from models.sdlbfgs_fed import SdLBFGS_FedLiSA, gather_flat_params, gather_flat_states, add_states
 
 from IPython import embed
 
@@ -57,6 +57,15 @@ if __name__ == '__main__':
         args.num_classes = 10
         args.num_channels = 1
         args.task = 'ObjRec'
+    elif args.dataset == 'emnist':
+        # trans_emnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.9635,), (0.1586,))])
+        trans_emnist = transforms.Compose([transforms.ToTensor()])
+        dataset_train = EMNISTDataset_by_write(train=True, transform=trans_emnist)
+        dataset_test = EMNISTDataset_by_write(train=False, transform=trans_emnist)
+        args.num_classes = 62
+        args.num_channels = 1
+        args.task = 'AutoEnc'
+        args.model = 'autoenc'
     elif args.dataset == 'cifar10':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
         dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
@@ -90,7 +99,9 @@ if __name__ == '__main__':
     elif args.model == 'mlp':
         net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
                        dim_out=args.num_classes,
-                       weight_init=args.weight_init, bias_init=args.bias_init)        
+                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device) 
+    elif args.model == 'autoenc':
+        net_glob = MNIST_AE(dim_in = args.img_size[0]*args.img_size[1]*args.img_size[2]).to(args.device)
     else:
         exit('Error: unrecognized model')
 
@@ -112,23 +123,33 @@ if __name__ == '__main__':
             net_glob.zero_grad()
             nn_outputs = net_glob(images)
             nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)
-            loss = F.cross_entropy(nn_outputs, labels)
+            if args.task == 'AutoEnc':
+                loss = F.mse_loss(nn_outputs, images, reduction='mean')
+                batch_accuracy.append(0.0)
+            else:
+                loss = F.cross_entropy(nn_outputs, labels)
+                batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
             batch_loss.append(loss.item())
-            batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
             loss.backward()
             optimizer.step()
         epoch_loss.append(sum(batch_loss)/len(batch_loss))
         epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
         # Calculate accuracy for each round
-        acc_glob, _ = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
+        acc_glob, loss_glob = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
 
         # print status
-        loss_avg = sum(epoch_loss) / len(epoch_loss)
+        loss_avg = epoch_loss[-1]
         print(
-                'Round {:3d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}'.\
-                format(epoch_idx, loss_avg, acc_glob)
+                'Round {:3d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}'.\
+                format(epoch_idx, loss_avg, acc_glob, loss_glob)
         )
+        if args.screendump_file:
+            sdf.write(
+                'Round {:3d}, Average loss {:.3f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}\n'.\
+                format(epoch_idx, loss_avg, acc_glob, loss_glob)
+            )
+            sdf.flush()
         loss_train.append(loss_avg)
 
     # plot loss curve
@@ -141,6 +162,11 @@ if __name__ == '__main__':
     net_glob.eval()
     # acc_train, loss_train = test_img(net_glob, dataset_train, args)
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True)
+    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
     #print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}".format(acc_test, loss_test))
+    if args.screendump_file:
+        sdf.write(
+            "Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test)
+        )
+        sdf.flush()
