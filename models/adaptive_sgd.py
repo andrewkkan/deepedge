@@ -10,9 +10,9 @@ class Adaptive_SGD(Optimizer):
     """Code adapted from sdlbfgs_fed.py
     """
 
-    def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, nD=600., Bs=50., adaptive_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
+    def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, Bs=50., adaptive_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
 
-        defaults = dict(lr_server_gd=lr_server_gd, lr_device=lr_device, E_l=E_l, nD=nD, Bs=Bs, adaptive_mode=adaptive_mode, tau=tau, beta1=beta1, beta2=beta2)
+        defaults = dict(lr_server_gd=lr_server_gd, lr_device=lr_device, E_l=E_l, Bs=Bs, adaptive_mode=adaptive_mode, tau=tau, beta1=beta1, beta2=beta2)
         super(Adaptive_SGD, self).__init__(net.parameters(), defaults)
 
         if len(self.param_groups) != 1:
@@ -66,6 +66,7 @@ class Adaptive_SGD(Optimizer):
             # closure
             flat_deltw_list,
             flat_deltos_list,
+            nD_list,
         ):
         """Performs a single optimization step.
 
@@ -88,9 +89,14 @@ class Adaptive_SGD(Optimizer):
             flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
             self._add_other_states(flat_deltos)
 
-        flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
+        nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
+        flat_deltw = torch.stack(flat_deltw_list).to(flat_deltw_list[0].device)
+        flat_deltw *= nD_scaling / nD_scaling.sum().double()
+        flat_deltw = flat_deltw.sum(dim=0)
         prev_flat_deltw = state.get('prev_flat_deltw')
-        if prev_flat_deltw is not None:
+        if prev_flat_deltw is None:
+            flat_deltw = (1.0 - beta1) * flat_deltw
+        else:
             flat_deltw = beta1 * prev_flat_deltw + (1.0 - beta1) * flat_deltw
 
         delt2 = flat_deltw.pow(2.0)
@@ -101,23 +107,20 @@ class Adaptive_SGD(Optimizer):
         elif mode == 1:
             # FedAdaGrad
             if prev_flat_v is None:
-                flat_v = delt2
-            else:
-                flat_v = prev_flat_v + delt2
+                prev_flat_v = torch.ones_like(delt2) * (tau*tau)
+            flat_v = prev_flat_v + delt2
             descent = flat_deltw / (torch.sqrt(flat_v) + tau)
         elif mode == 2:
             # FedYogi
             if prev_flat_v is None:
-                flat_v = delt2
-            else:
-                flat_v = prev_flat_v - (1.0 - beta2) * delt2 * torch.sign(prev_flat_v - delt2)
+                prev_flat_v = torch.ones_like(delt2) * (tau*tau)
+            flat_v = prev_flat_v - (1.0 - beta2) * delt2 * torch.sign(prev_flat_v - delt2)
             descent = flat_deltw / (torch.sqrt(flat_v) + tau)
         elif mode == 3:
             # FedAdam
             if prev_flat_v is None:
-                flat_v = delt2
-            else:
-                flat_v = beta2 * prev_flat_v + (1.0 - beta2) * delt2
+                prev_flat_v = torch.ones_like(delt2) * (tau*tau)
+            flat_v = beta2 * prev_flat_v + (1.0 - beta2) * delt2
             descent = flat_deltw / (torch.sqrt(flat_v) + tau)
 
         # This step updates the global model with plain-vanilla device-update averaging 

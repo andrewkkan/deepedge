@@ -775,3 +775,66 @@ python main_fedlearn.py --dataset emnist --model autoenc --num_users 100 --epoch
 python main_fedlearn.py --dataset emnist --model autoenc --num_users 100 --epochs 500 --gpu 1 --local_bs 20 --frac 0.1 --local_ep 1 --lr_device 0.5 --seed 1234 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 0.5 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_opt0vr0_lrgd05lrd05.log' &
 python main_fedlearn.py --dataset emnist --model autoenc --num_users 100 --epochs 500 --gpu 2 --local_bs 20 --frac 0.1 --local_ep 1 --lr_device 0.25 --seed 1234 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_opt0vr0_lrgd10lrd025.log' &
 python main_fedlearn.py --dataset emnist --model autoenc --num_users 100 --epochs 500 --gpu 3 --local_bs 20 --frac 0.1 --local_ep 1 --lr_device 0.5 --seed 1234 --opt_mode 0 --vr_mode 0 --async_s2d 0 --noniid_dirich_alpha 0.2 --lr_server_gd 1.0 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_opt0vr0_lrgd10lrd05.log' &
+
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 20 --local_ep 1 --lr_device 5.0 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd50_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 3 --local_bs 20 --local_ep 1 --lr_device 4.0 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd40_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 4 --local_bs 20 --local_ep 1 --lr_device 3.0 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd30_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 5 --local_bs 20 --local_ep 1 --lr_device 2.0 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd20_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 20 --local_ep 1 --lr_device 1.0 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd10_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 3 --local_bs 20 --local_ep 1 --lr_device 0.75 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd075_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 4 --local_bs 20 --local_ep 1 --lr_device 0.5 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd05_decay.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 5 --local_bs 20 --local_ep 1 --lr_device 0.25 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 2.0 --lr_server_gd 2.0 --lbfgs_hist 100 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs20ep1_lrqn20lrgd20lrd025_decay.log' &
+ 
+
+python main_central.py --dataset emnist --epochs 100 --local_bs 128 --lr_device 0.00025 --gpu 2 --opt_mode 0 --momentum 0.0
+
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 10 --local_ep 8 --lr_device 0.01 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn05lrgd05lrd001.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 3 --local_bs 10 --local_ep 8 --lr_device 0.025 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn05lrgd05lrd0025.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 4 --local_bs 10 --local_ep 8 --lr_device 0.05 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn05lrgd05lrd005.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 5 --local_bs 10 --local_ep 8 --lr_device 0.1 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.5 --lr_server_gd 0.5 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn05lrgd05lrd01.log' &
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 10 --local_ep 8 --lr_device 0.01 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.25 --lr_server_gd 0.25 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn025lrgd025lrd001.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 3 --local_bs 10 --local_ep 8 --lr_device 0.025 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.25 --lr_server_gd 0.25 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn025lrgd025lrd0025.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 4 --local_bs 10 --local_ep 8 --lr_device 0.05 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.25 --lr_server_gd 0.25 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn025lrgd025lrd005.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 5 --local_bs 10 --local_ep 8 --lr_device 0.1 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.25 --lr_server_gd 0.25 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn025lrgd025lrd01.log' &
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 10 --local_ep 8 --lr_device 0.01 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.1 --lr_server_gd 0.1 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn01lrgd01lrd001.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 3 --local_bs 10 --local_ep 8 --lr_device 0.025 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.1 --lr_server_gd 0.1 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn01lrgd01lrd0025.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 4 --local_bs 10 --local_ep 8 --lr_device 0.05 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.1 --lr_server_gd 0.1 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn01lrgd01lrd005.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 5 --local_bs 10 --local_ep 8 --lr_device 0.1 --seed 1234 --opt_mode 2 --vr_mode 0 --async_s2d 0 --lr_server_qn 0.1 --lr_server_gd 0.1 --lbfgs_hist 10 --screendump_file 'log/perf500_fedLimQNGD_emnist_D02_mnistAE_bs10ep8_opt2vr0_lrqn01lrgd01lrd01.log' &
+
+
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 2 --local_bs 20 --local_ep 1 --lr_device 5.0 --seed 1234 --opt_mode 3 --vr_mode 0 --async_s2d 0 --lr_server_gd 0.1 --adaptive_tau 0.00001
+
+
+
+
+self.net.load_state_dict(last_net.state_dict())
+optimizer = torch.optim.LBFGS(self.net.parameters(), lr = 0.001)
+epoch_loss = []
+epoch_accuracy = []
+for iter in range(100):
+    batch_loss = []
+    batch_accuracy = []
+    for batch_idx, (images, labels) in enumerate(self.ldr_train):
+        images, labels = images.to(self.args.device), labels.to(self.args.device)
+        def closure(optim, s, im):
+            def c():
+              optim.zero_grad()
+              nn_outputs = s.net(im)
+              loss = s.loss_func(nn_outputs, im) / 786.
+              loss.backward()
+              return loss
+            return c
+        optimizer.step(closure(optimizer, self, images))
+        batch_loss.append(loss.item())
+    sum(batch_loss)/len(batch_loss)
+
+
+
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 0 --local_bs 20 --local_ep 1 --lr_device 5.0 --seed 123 --opt_mode 3 --vr_mode 0 --adaptive_mode 3 --adaptive_tau 0.1 --async_s2d 0 --lr_server_gd 0.1 --screendump_file 'log/perf500_fedAdapt_emnist_mnistAE_bs20ep1_opt3adapt3_seed123.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 1 --local_bs 20 --local_ep 1 --lr_device 5.0 --seed 123 --opt_mode 3 --vr_mode 0 --adaptive_mode 2 --adaptive_tau 0.1 --async_s2d 0 --lr_server_gd 0.1 --screendump_file 'log/perf500_fedAdapt_emnist_mnistAE_bs20ep1_opt3adapt2_seed123.log' &
+python main_fedlearn.py --dataset emnist --model autoenc --epochs 200 --gpu 1 --local_bs 20 --local_ep 1 --lr_device 10.0 --seed 123 --opt_mode 3 --vr_mode 0 --adaptive_mode 1 --adaptive_tau 0.1 --async_s2d 0 --lr_server_gd 0.1 --screendump_file 'log/perf500_fedAdapt_emnist_mnistAE_bs20ep1_opt3adapt1_seed123.log' &

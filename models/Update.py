@@ -27,7 +27,11 @@ class LocalUpdate(object):
     def __init__(self, args, net, dataset=None, idxs=None, user_idx=0):
         self.args = args
         # self.loss_func = nn.CrossEntropyLoss()
-        self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
+        if self.args.local_bs < 1:
+            batch_size = len(idxs)
+        else:
+            batch_size = self.args.local_bs
+        self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=batch_size, shuffle=True)
         self.net = net
         self.last_net = copy.deepcopy(self.net)
         self.net_glob = None

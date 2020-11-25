@@ -281,7 +281,6 @@ if __name__ == '__main__':
         optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
         print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
 
-        # torch.save(net_glob.state_dict(),"data/models/fedavg_updates/net_glob-async%d-round%d.pt"%(args.async_s2d, epoch_idx))
         if args.async_s2d == 1:  # async mode 1 updates after FedAvg
             for user_idx in idxs_users:
                 local_user[user_idx].weight_control_update(net=copy.deepcopy(net_glob).to(args.device), control=control_glob)

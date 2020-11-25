@@ -18,7 +18,6 @@ import sys
 import datetime
 
 from utils.options import args_parser
-from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid, emnist_iid, emnist_noniid
 from utils.emnist_dataset import EMNISTDataset_by_write
 from models.Update import DatasetSplit
 from models.Nets import MLP, CNNMnist, CNNCifar, LeNet5, MNIST_AE
@@ -106,14 +105,22 @@ if __name__ == '__main__':
         exit('Error: unrecognized model')
 
     net_glob = net_glob.to(args.device)
-    optimizer = torch.optim.Adam(net_glob.parameters(), lr=args.lr_device, betas=(0.9,0.999))
+    if args.opt_mode == 3:
+        optimizer = torch.optim.Adam(net_glob.parameters(), lr=args.lr_device, betas=(0.9,0.999))
+    elif args.opt_mode == 0:
+        optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr_device, momentum=args.momentum)
+    elif args.opt_mode == 1:
+        optimizer = torch.optim.LBFGS(net_glob.parameters(), lr=args.lr_device, history_size=args.lbfgs_hist)
     print(net_glob)
     net_glob.train()
+
+    # torch.save(net_glob.state_dict(), './data/models/main_central_emnist_AE_' + str(args.seed) + '_init.pt')
 
     # training
     loss_train = []
     epoch_loss, epoch_accuracy = [], []
 
+    round = 0
     for epoch_idx in range(args.epochs):
         train_data = DataLoader(dataset_train, batch_size=args.local_bs, shuffle=True)
         batch_loss = []
@@ -132,6 +139,10 @@ if __name__ == '__main__':
             batch_loss.append(loss.item())
             loss.backward()
             optimizer.step()
+
+            #torch.save(net_glob.state_dict(), './data/models/temp/main_central_emnist_round' + str(round) + '.pt')
+            round += 1
+
         epoch_loss.append(sum(batch_loss)/len(batch_loss))
         epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
 
@@ -170,3 +181,5 @@ if __name__ == '__main__':
             "Testing accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test)
         )
         sdf.flush()
+
+    # torch.save(net_glob.state_dict(), './data/models/main_central_emnist_AE_' + str(args.seed) + '.pt')

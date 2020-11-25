@@ -224,7 +224,8 @@ class SdLBFGS_FedBLA(Optimizer):
         # flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
         nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
         flat_deltw = torch.stack(flat_deltw_list).to(flat_deltw_list[0].device)
-        flat_deltw_avg = flat_deltw.mean(dim=0)
+        flat_deltw_avg = flat_deltw * nD_scaling / nD_scaling.sum().double()
+        flat_deltw_avg = flat_deltw_avg.sum(dim=0)
 
         if self._opt_mode == 0:
             # This step updates the global model with plain-vanilla device-update averaging 
@@ -253,7 +254,8 @@ class SdLBFGS_FedBLA(Optimizer):
         state['func_evals'] += 1
             
         flat_grad = -flat_deltw / self._lr_device / self._E_l / (nD_scaling / self._Bs)
-        flat_grad = flat_grad.mean(dim=0)
+        flat_grad *= nD_scaling / nD_scaling.sum().double()
+        flat_grad = flat_grad.sum(dim=0)
         abs_grad_sum = flat_grad.abs().sum()
         gdcossim = torch.tensor(1.0).to(flat_grad.device)
 
