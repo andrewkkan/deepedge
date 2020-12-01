@@ -10,9 +10,9 @@ class Adaptive_SGD(Optimizer):
     """Code adapted from sdlbfgs_fed.py
     """
 
-    def __init__(self, net, lr_server_gd=0.5, lr_device=0.1, E_l=1.0, Bs=50., adaptive_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
+    def __init__(self, net, lr_server_gd=0.5, server_opt_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
 
-        defaults = dict(lr_server_gd=lr_server_gd, lr_device=lr_device, E_l=E_l, Bs=Bs, adaptive_mode=adaptive_mode, tau=tau, beta1=beta1, beta2=beta2)
+        defaults = dict(lr_server_gd=lr_server_gd, server_opt_mode=server_opt_mode, tau=tau, beta1=beta1, beta2=beta2)
         super(Adaptive_SGD, self).__init__(net.parameters(), defaults)
 
         if len(self.param_groups) != 1:
@@ -61,12 +61,17 @@ class Adaptive_SGD(Optimizer):
                     sd[sdk] += flat_deltos[offset:offset + numel].view_as(sd[sdk])
                 offset += numel
 
+    def updateMomVals(self, mom1, mom2):
+        state = self.state['global_state']
+        state['prev_flat_deltw'] = mom1.detach().clone()
+        state['prev_flat_v'] = mom2.detach().clone()
+
     def step(
             self, 
             # closure
             flat_deltw_list,
-            flat_deltos_list,
-            nD_list,
+            flat_deltos_list=None,
+            nD_list=None,
         ):
         """Performs a single optimization step.
 
@@ -80,7 +85,7 @@ class Adaptive_SGD(Optimizer):
         beta2 = group['beta2']
         tau = group['tau']
         lr = group['lr_server_gd']
-        mode = group['adaptive_mode']
+        mode = group['server_opt_mode']
 
         state = self.state['global_state']
         state.setdefault('n_iter', 0)
@@ -88,9 +93,14 @@ class Adaptive_SGD(Optimizer):
         if flat_deltos_list:
             flat_deltos = torch.stack(flat_deltos_list).mean(dim=0)
             self._add_other_states(flat_deltos)
+        else:
+            flat_deltos = None
 
-        nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
         flat_deltw = torch.stack(flat_deltw_list).to(flat_deltw_list[0].device)
+        if nD_list:
+            nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
+        else:
+            nD_scaling = torch.ones(flat_deltw.shape[0], 1).to(flat_deltw_list[0].device)
         flat_deltw *= nD_scaling / nD_scaling.sum().double()
         flat_deltw = flat_deltw.sum(dim=0)
         prev_flat_deltw = state.get('prev_flat_deltw')
@@ -104,6 +114,7 @@ class Adaptive_SGD(Optimizer):
         if mode == 0:
             # FedAvgM (momentum only)
             descent = flat_deltw
+            flat_v = None
         elif mode == 1:
             # FedAdaGrad
             if prev_flat_v is None:
@@ -124,7 +135,7 @@ class Adaptive_SGD(Optimizer):
             descent = flat_deltw / (torch.sqrt(flat_v) + tau)
 
         # This step updates the global model with plain-vanilla device-update averaging 
-        self._add_grad(lr, descent)
+        self._add_grad(lr, -descent)
 
         if prev_flat_deltw is None:
             prev_flat_deltw = flat_deltw.clone()
@@ -140,5 +151,14 @@ class Adaptive_SGD(Optimizer):
         state['prev_flat_deltw'] = prev_flat_deltw
         state['prev_flat_v'] = prev_flat_v
         state['n_iter'] += 1
+
+        del flat_deltw
+        if flat_deltos:
+            del flat_deltos
+        del nD_scaling
+        del delt2
+        if flat_v is not None:
+            del flat_v
+        del descent
 
         return 

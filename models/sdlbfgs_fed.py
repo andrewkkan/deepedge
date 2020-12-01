@@ -56,6 +56,25 @@ def gather_flat_grad(model):
         views.append(view)
     return torch.cat(views, 0)
 
+def net_params_halper(net, states):
+    sdk = net.state_dict().keys()
+    npk = dict(net.named_parameters()).keys()    
+    wl, osl = [], []
+    deltw, deltos = None, None
+    offset = 0
+    for k in sdk:
+        numel = net.state_dict()[k].numel()
+        if k in npk:
+            wl.append(delts[offset:offset+numel])
+        else:
+            osl.append(delts[offset:offset+numel])
+        offset += numel
+    deltw = torch.cat(wl, 0)
+    if osl:
+        deltos = torch.cat(osl, 0)
+    return deltw, deltos
+
+
 class SdLBFGS_FedBLA(Optimizer):
     """PyTorch Implementation of SdLBFGS algorithm [1].
 
@@ -97,7 +116,7 @@ class SdLBFGS_FedBLA(Optimizer):
                  tolerance_grad=1e-5, tolerance_change=1e-9, history_size=100,
                  line_search_fn=None, lr_device=0.1, E_l=1.0, 
                  Bs=50., 
-                 opt_mode=0, vr_mode=0, max_qndn=1.0):
+                 max_qndn=1.0):
         if max_eval is None:
             max_eval = max_iter * 5 // 4
         defaults = dict(lr_server_qn=lr_server_qn, lr_decay=lr_decay, weight_decay=weight_decay, max_iter=max_iter,
@@ -119,8 +138,6 @@ class SdLBFGS_FedBLA(Optimizer):
         self._E_l = E_l
         # self._nD = nD
         self._Bs = Bs
-        self._opt_mode = opt_mode
-        self._vr_mode = vr_mode
         self._max_qndn = max_qndn
         self._debuginfo = tuple()
 
@@ -205,8 +222,8 @@ class SdLBFGS_FedBLA(Optimizer):
             self, 
             # closure
             flat_deltw_list,
-            flat_deltos_list,
-            nD_list,
+            flat_deltos_list=None,
+            nD_list=None,
         ):
         """Performs a single optimization step.
 
@@ -222,12 +239,15 @@ class SdLBFGS_FedBLA(Optimizer):
             self._add_other_states(flat_deltos)
 
         # flat_deltw = torch.stack(flat_deltw_list).mean(dim=0)
-        nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
         flat_deltw = torch.stack(flat_deltw_list).to(flat_deltw_list[0].device)
+        if nD_list:
+            nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
+        else:
+            nD_scaling = torch.ones_like(flat_deltw).to(flat_deltw_list[0].device)
         flat_deltw_avg = flat_deltw * nD_scaling / nD_scaling.sum().double()
         flat_deltw_avg = flat_deltw_avg.sum(dim=0)
 
-        if self._opt_mode == 0:
+        if self._lr_server_qn == 0.0:
             # This step updates the global model with plain-vanilla device-update averaging 
             self._add_grad(self._lr_server_gd, flat_deltw_avg)
             return
@@ -384,14 +404,10 @@ class SdLBFGS_FedBLA(Optimizer):
                 # perform line search, using user function
                 raise RuntimeError("line search function is not supported yet")
             else:
-                if self._opt_mode == 1:
-                    # no line search, simply move with fixed-step 
-                    self._add_grad(t, d)
-                elif self._opt_mode == 2:
-                    # gdcossim = torch.clamp(gtd.neg() / flat_grad.norm() / d.norm(), -1, 1)
-                    # t *= gdcossim
-                    self._add_grad(self._lr_server_gd, flat_deltw_avg)
-                    self._add_grad(t, d)
+                # gdcossim = torch.clamp(gtd.neg() / flat_grad.norm() / d.norm(), -1, 1)
+                # t *= gdcossim
+                self._add_grad(self._lr_server_gd, flat_deltw_avg)
+                self._add_grad(t, d)
 
                 if n_iter != max_iter:
                     # re-evaluate function only if not in last iteration

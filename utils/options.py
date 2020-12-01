@@ -14,9 +14,8 @@ def args_parser():
     parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
     parser.add_argument('--bs', type=int, default=256, help="test batch size")
     parser.add_argument('--lr_device', type=float, default=0.1, help="Device local learning rate")
-    parser.add_argument('--momentum', type=float, default=0.0, help="SGD momentum (default: 0.5)")
+    parser.add_argument('--lr_server', type=float, default=0.1, help="Server global learning rate")
     parser.add_argument('--split', type=str, default='user', help="train-test split type, user or sample")
-    parser.add_argument('--async_s2d', type=int, default=0, help='async server-to-device update across all devices or not (default 0: synchronous)')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')
@@ -44,23 +43,15 @@ def args_parser():
                         help='how many batches to wait before logging training status')
     parser.add_argument('--store_models', type=str, default="testrun", help='Directory for model storage under deepedge/data')
     parser.add_argument('--noniid_hard', action='store_true')
+    parser.add_argument('--linregress_numinputs', type=int, default=50)
 
-    parser.add_argument('--lbfgs_hist', type=int, default=10, metavar='LH', help='memory size of LBFGS (default: 100)')
-    parser.add_argument('--lr_server_qn', type=float, default=0.5, help="global learning rate for Quasi Newton")
-    parser.add_argument('--lr_server_gd', type=float, default=1.0, help="global learning rate for gradient descent")
-    parser.add_argument('--vr_mode', type=int, default=0, help="Variance reduction mode.  0: None, 1: SAGA-Scaffold, 2: Modified SAGA-Scaffold to halve uplink-bandwidth.")
-    parser.add_argument('--opt_mode', type=int, default=0, help="Server-side optimization mode.  0: Plain vanilla model averaging only (FedAvg, Scaffold, etc), no qn.  1. qn only, no model averaging.  2: qn + model averaging.  3: Adaptive first order.")
-    parser.add_argument('--vr_scale', type=float, default=1.0, help="Used with vr_mode = 1.  For SAG, set at 1/n where n is number of users.  For SAGA, set at default 1.0.")
-    parser.add_argument('--max_qndn', type=float, default=1.0, help="Max quasi-newton step norm.")
-    parser.add_argument('--adaptive_mode', type=int, default=0, help="Used with opt_mode = 3 only:  1. FedAdaGrad, 2. FedYogi, 3. FedAdam")
-
-    parser.add_argument('--fedprox', type=float, default=0.0, help="default = off, to use, set to 1.0")
-    parser.add_argument('--device_reg_norm2', type=float, default=0.0, help="default = off, to use, set to 1.0")
     parser.add_argument('--noniid_dirich_alpha', type=float, default=10.0, help="Default 10.0 is IID.  For nonIID, set to 0.5 to start with.")
-    parser.add_argument('--adaptive_tau', type=float, default=0.1, help="Used with opt_mode = 3 only.")
-    parser.add_argument('--adaptive_b1', type=float, default=0.9, help="Used with opt_mode = 3 only.")
-    parser.add_argument('--adaptive_b2', type=float, default=0.99, help="Used with opt_mode = 3 only.")
+    parser.add_argument('--adaptive_tau', type=float, default=0.1, help="Used with opt modes 1 through 3")
+    parser.add_argument('--adaptive_b1', type=float, default=0.9, help="Used with opt modes 0 through 3")
+    parser.add_argument('--adaptive_b2', type=float, default=0.99, help="Used with opt modes 1 through 3")
 
+    parser.add_argument('--client_opt_mode', type=int, default=0, help="")
+    parser.add_argument('--client_momentum_mode', type=int, default=0, help="")
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 
