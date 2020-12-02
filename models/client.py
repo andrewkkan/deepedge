@@ -210,7 +210,8 @@ class LocalClientK1BFGS(object):
             server_opt_mode=self.args.client_opt_mode, 
             tau=self.args.adaptive_tau,        
             beta1=self.args.adaptive_b1,        
-            beta2=self.args.adaptive_b2
+            beta2=self.args.adaptive_b2,
+            bias_correction=self.args.adaptive_bc,
         )
         optimizer.updateMomVals(self.mom1, self.mom2)
 

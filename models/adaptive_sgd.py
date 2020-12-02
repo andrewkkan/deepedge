@@ -11,7 +11,7 @@ class Adaptive_SGD(Optimizer):
     """Code adapted from sdlbfgs_fed.py
     """
 
-    def __init__(self, net, lr_server_gd=0.5, server_opt_mode=0, tau=0.0, beta1=0.9, beta2=0.99):
+    def __init__(self, net, lr_server_gd=0.5, server_opt_mode=0, tau=0.0, beta1=0.9, beta2=0.99, bias_correction=False):
 
         defaults = dict(lr_server_gd=lr_server_gd, server_opt_mode=server_opt_mode, tau=tau, beta1=beta1, beta2=beta2)
         super(Adaptive_SGD, self).__init__(net.parameters(), defaults)
@@ -23,6 +23,7 @@ class Adaptive_SGD(Optimizer):
         self._params = self.param_groups[0]['params']
         self._numel_cache = None
         self.embed = False
+        self._bias_correction = bias_correction
 
     def _numel(self):
         if self._numel_cache is None:
@@ -120,8 +121,12 @@ class Adaptive_SGD(Optimizer):
         else:
             flat_m = beta1 * prev_flat_m + (1.0 - beta1) * flat_deltw
 
-        bias_correction1 = 1. - beta1 ** state['step']
-        bias_correction2 = 1. - beta2 ** state['step']
+        if self._bias_correction:
+            bias_correction1 = 1. - beta1 ** state['step']
+            bias_correction2 = 1. - beta2 ** state['step']
+        else:
+            bias_correction1 = 1.
+            bias_correction2 = 1.
 
         delt2 = flat_deltw * flat_deltw
         prev_flat_v = state.get('prev_flat_v')

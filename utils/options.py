@@ -49,6 +49,7 @@ def args_parser():
     parser.add_argument('--adaptive_tau', type=float, default=1e-08, help="Used with opt modes 1 through 3")
     parser.add_argument('--adaptive_b1', type=float, default=0.9, help="Used with opt modes 0 through 3")
     parser.add_argument('--adaptive_b2', type=float, default=0.999, help="Used with opt modes 1 through 3")
+    parser.add_argument('--adaptive_bc', action='store_true', help="Bias correction for adaptive optim from Pytorch implementation")
 
     parser.add_argument('--client_opt_mode', type=int, default=0, help="")
     parser.add_argument('--client_momentum_mode', type=int, default=0, help="")

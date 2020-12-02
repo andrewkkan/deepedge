@@ -41,7 +41,7 @@ def get_datasets(args):
         else:
             args.iid = False
             args.num_users = 3500
-            args.frac = 0.00286
+            # args.frac = 0.00286 # for 10 active users each round
             dict_users = dataset_train.dict_users
     elif args.dataset == 'reddit':
         args.frac = 0.0123
