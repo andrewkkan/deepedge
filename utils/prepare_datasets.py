@@ -6,7 +6,7 @@ import copy
 from utils.sampling import mnist_iid, mnist_noniid, generic_iid, generic_noniid, cifar100_noniid
 from utils.emnist_dataset import EMNISTDataset_by_write
 from models.linRegress import DataLinRegress, lin_reg
-
+from IPython import embed
 
 def get_datasets(args):
     if args.dataset == 'mnist':
@@ -37,7 +37,7 @@ def get_datasets(args):
             args.iid = True
             args.num_users = 1
             args.frac = 1.0
-            dict_users = [].append(range(len(dataset_train)))
+            dict_users = [list(range(len(dataset_train)))]
         else:
             args.iid = False
             args.num_users = 3500

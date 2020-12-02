@@ -64,49 +64,83 @@ class LocalClientMIME(object):
         )
         optimizer.updateMomVals(self.mom1, self.mom2)
 
+        # optimizer = torch.optim.Adam(self.net.parameters(), lr=float(self.args.lr_device),betas=(self.args.adaptive_b1,self.args.adaptive_b2), eps=self.args.adaptive_tau)
+
         epoch_loss = []
         epoch_accuracy = []
-        grad_ep = []
+        grad_sum = torch.zeros_like(gather_flat_grad(self.net))
+
         for iter in range(self.args.local_ep):
             batch_loss = []
             batch_accuracy = []
-            grad_batch = []
+
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
+
                 self.net.zero_grad()
                 nn_outputs = self.net(images)
                 if self.args.task == 'AutoEnc':
                     loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                    nnout_max = None
                 else:
                     nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
                     loss = self.loss_func(nn_outputs, labels) 
                 batch_loss.append(loss.item())
-                if not (self.args.task in 'LinReg' or self.args.task in 'LinSaddle' or self.args.task in 'AutoEnc'):
+                if nnout_max is not None:
                     batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+                    del nnout_max
                 else:
                     batch_accuracy.append(0)
                 loss.backward()
                 deltw = gather_flat_grad(self.net)
+
                 last_net.zero_grad()
-                _ = last_net(images)
+                nn_outputs_ref = last_net(images)
+                if self.args.task == 'AutoEnc':
+                    loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                    nnout_max = None
+                else:
+                    nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                    loss_ref = self.loss_func(nn_outputs_ref, labels) 
+                loss_ref.backward()
                 deltw_ref = gather_flat_grad(last_net)
+
                 if self.args.client_momentum_mode == 0:
                     optimizer.updateMomVals(self.mom1, self.mom2)
-                optimizer.step(flat_deltw_list=[deltw-deltw_ref+self.control])
-                grad_batch.append(deltw_ref)
+                if self.args.client_mime_lite:
+                    descent = deltw
+                else:
+                    descent = deltw-deltw_ref+self.control
+
+                optimizer.step(flat_deltw_list=[descent])
+                # optimizer.step()
+                if iter == (self.args.local_ep - 1):
+                    grad_sum += deltw_ref
+
+                del descent
+                del deltw
+                del deltw_ref
+                del nn_outputs
+                del loss
+                del nn_outputs_ref
+                del loss_ref
+
+            flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
+            flat_delts = flat_net_states - flat_last_net_states
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
-            grad_ep.append(torch.stack(grad_batch).sum(dim=0))
-            del grad_batch[:]
+
+            del batch_loss[:]
+            del batch_accuracy[:]
 
         flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
         flat_delts = flat_net_states - flat_last_net_states
-        flat_grad = torch.stack(grad_ep).sum(dim=0)
+        flat_grad = grad_sum / float(batch_idx + 1) 
         
         del flat_net_states
         del flat_last_net_states
         del last_net
-        del grad_ep[:]
+        del grad_sum
 
         return {'delt_w': flat_delts , 'grad': flat_grad}, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
@@ -180,49 +214,83 @@ class LocalClientK1BFGS(object):
         )
         optimizer.updateMomVals(self.mom1, self.mom2)
 
+        # optimizer = torch.optim.Adam(self.net.parameters(), lr=float(self.args.lr_device),betas=(self.args.adaptive_b1,self.args.adaptive_b2), eps=self.args.adaptive_tau)
+
         epoch_loss = []
         epoch_accuracy = []
-        grad_ep = []
+        grad_sum = torch.zeros_like(gather_flat_grad(self.net))
+
         for iter in range(self.args.local_ep):
             batch_loss = []
             batch_accuracy = []
-            grad_batch = []
+
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
+
                 self.net.zero_grad()
                 nn_outputs = self.net(images)
                 if self.args.task == 'AutoEnc':
                     loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                    nnout_max = None
                 else:
                     nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
                     loss = self.loss_func(nn_outputs, labels) 
                 batch_loss.append(loss.item())
-                if not (self.args.task in 'LinReg' or self.args.task in 'LinSaddle' or self.args.task in 'AutoEnc'):
+                if nnout_max is not None:
                     batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
+                    del nnout_max
                 else:
                     batch_accuracy.append(0)
                 loss.backward()
                 deltw = gather_flat_grad(self.net)
+
                 last_net.zero_grad()
-                _ = last_net(images)
+                nn_outputs_ref = last_net(images)
+                if self.args.task == 'AutoEnc':
+                    loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                    nnout_max = None
+                else:
+                    nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                    loss_ref = self.loss_func(nn_outputs_ref, labels) 
+                loss_ref.backward()
                 deltw_ref = gather_flat_grad(last_net)
+
                 if self.args.client_momentum_mode == 0:
                     optimizer.updateMomVals(self.mom1, self.mom2)
-                optimizer.step(flat_deltw_list=[deltw-deltw_ref+self.control])
-                grad_batch.append(deltw_ref)
+                if self.args.client_mime_lite:
+                    descent = deltw
+                else:
+                    descent = deltw-deltw_ref+self.control
+
+                optimizer.step(flat_deltw_list=[descent])
+                # optimizer.step()
+                if iter == (self.args.local_ep - 1):
+                    grad_sum += deltw_ref
+
+                del descent
+                del deltw
+                del deltw_ref
+                del nn_outputs
+                del loss
+                del nn_outputs_ref
+                del loss_ref
+
+            flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
+            flat_delts = flat_net_states - flat_last_net_states
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
-            grad_ep.append(torch.stack(grad_batch).sum(dim=0))
-            del grad_batch[:]
+
+            del batch_loss[:]
+            del batch_accuracy[:]
 
         flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
         flat_delts = flat_net_states - flat_last_net_states
-        flat_grad = torch.stack(grad_ep).sum(dim=0)
+        flat_grad = grad_sum / float(batch_idx + 1) 
         
         del flat_net_states
         del flat_last_net_states
         del last_net
-        del grad_ep[:]
+        del grad_sum
 
         return {'delt_w': flat_delts , 'grad': flat_grad}, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 

@@ -98,14 +98,6 @@ if __name__ == '__main__':
             # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
             local_user[user_idx].del_stats()
 
-        # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
-        print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
-
-        # Calculate accuracy for each round
-        acc_glob, loss_glob = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
-        acc_loc = sum(acc_locals) / len(acc_locals)
-        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
-
         grad_scaled_avg = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         mom1 = args.adaptive_b1 * stats_glob['mom1'] + (1.0 - args.adaptive_b1) * grad_scaled_avg
@@ -119,6 +111,13 @@ if __name__ == '__main__':
         add_states(net_glob, args.lr_server * stats_glob['delt_w'])
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
+        # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
+        print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
+        # Calculate accuracy for each round
+        acc_glob, loss_glob = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
+        acc_loc = sum(acc_locals) / len(acc_locals)
+        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
+
         print(
                 'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)

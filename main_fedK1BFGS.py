@@ -104,12 +104,10 @@ if __name__ == '__main__':
 
         grad_scaled_avg = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
-        mom1 = args.adaptive_b1 * stats_glob['mom1'] + (1.0 - args.adaptive_b1) * grad_scaled_avg
-        mom2 = args.adaptive_b2 * stats_glob['mom2'] + (1.0 - args.adaptive_b2) * grad_scaled_avg * grad_scaled_avg
+        H_mat = None
         stats_glob = {
             'delt_w':   delt_w,
-            'mom1':     mom1,
-            'mom2':     mom2,
+            'H_mat':     H_mat,
         }
         add_states(net_glob, args.lr_server * stats_glob['delt_w'])
         # print status
@@ -128,6 +126,7 @@ if __name__ == '__main__':
 
         del deltw_locals[:]
         del grad_locals[:]
+        del delt_w
         del grad_scaled_avg
         with torch.cuda.device(args.device):
             torch.cuda.empty_cache()

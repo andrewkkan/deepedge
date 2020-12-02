@@ -244,7 +244,7 @@ class SdLBFGS_FedBLA(Optimizer):
             nD_scaling = torch.tensor(nD_list).view(-1,1).to(flat_deltw_list[0].device)
         else:
             nD_scaling = torch.ones_like(flat_deltw).to(flat_deltw_list[0].device)
-        flat_deltw_avg = flat_deltw * nD_scaling / nD_scaling.sum().double()
+        flat_deltw_avg = nD_scaling.mul(flat_deltw) / nD_scaling.sum().double()
         flat_deltw_avg = flat_deltw_avg.sum(dim=0)
 
         if self._lr_server_qn == 0.0:
@@ -274,7 +274,7 @@ class SdLBFGS_FedBLA(Optimizer):
         state['func_evals'] += 1
             
         flat_grad = -flat_deltw / self._lr_device / self._E_l / (nD_scaling / self._Bs)
-        flat_grad *= nD_scaling / nD_scaling.sum().double()
+        flat_grad = nD_scaling.mul(flat_grad) / nD_scaling.sum().double()
         flat_grad = flat_grad.sum(dim=0)
         abs_grad_sum = flat_grad.abs().sum()
         gdcossim = torch.tensor(1.0).to(flat_grad.device)
