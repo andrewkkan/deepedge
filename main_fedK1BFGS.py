@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
 import copy
 import numpy as np
 import torch
@@ -16,12 +16,9 @@ import datetime
 from utils.options import args_parser
 from models.client import LocalClientK1BFGS
 from models.test import test_img, test_img_ensem
-from models.sdlbfgs_fed import SdLBFGS_FedBLA, gather_flat_params, gather_flat_states, add_states, net_params_halper
-from models.adaptive_sgd import Adaptive_SGD
-from models.linRegress import DataLinRegress, lin_reg
-from utils.prepare_datasets import get_datasets
-from utils.prepare_model import get_model
-
+from utils.util_datasets import get_datasets
+from utils.util_kronecker import get_model, initialize_Hmat, initialize_dLdS, initialize_aaT, initialize_abar, update_grads, update_metrics, update_Hmat
+from models.sdlbfgs_fed import gather_flat_params, add_states
 
 from IPython import embed
 
@@ -70,48 +67,92 @@ if __name__ == '__main__':
 
     m = min(max(int(args.frac * args.num_users), 1), args.num_users)
     stats_glob = {
-        'delt_w': torch.zeros_like(gather_flat_params(net_glob)),
-        'H_mat':  torch.diag(torch.ones_like(gather_flat_params(net_glob))),
+        'delt_w':       torch.zeros_like(gather_flat_params(net_glob)),
+        'H_mat':        initialize_Hmat(net_glob.state_dict()),
+        'grad_mom':     torch.zeros_like(gather_flat_params(net_glob)),
+        'grad':         torch.zeros_like(gather_flat_params(net_glob)),
+        'dLdS':         initialize_dLdS(net_glob.state_dict()),
+        'S':            initialize_dLdS(net_glob.state_dict()), # same dimensions as dLdS
     }
     for epoch_idx in range(args.epochs):
-        deltw_locals, grad_locals, nD_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], [], []
+        loss_locals, acc_locals, acc_locals_on_local = [], [], []
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        nD_total = 0
+        for user_idx in idxs_users:
+            nD_total += nD_by_user_idx[user_idx]
+
+        stats_round = { # These are metrics that need to be averaged across users per round
+            'dLdS':     initialize_dLdS(net_glob.state_dict()),
+            'S':        initialize_dLdS(net_glob.state_dict()), # same dimensions as dLdS
+            'aaT':      initialize_aaT(net_glob.state_dict()),
+            'abar':     initialize_abar(net_glob.state_dict()),
+            'delt_w':   torch.zeros_like(gather_flat_params(net_glob)),
+            'grad':     torch.zeros_like(gather_flat_params(net_glob)),
+        }
+
         for iu_idx, user_idx in enumerate(idxs_users):
             local_user[user_idx].stats_update(
-                net=copy.deepcopy(net_glob).to(args.device), 
-                H_mat=stats_glob['H_mat'].clone().to(args.device), 
+                net = copy.deepcopy(net_glob).to(args.device), 
+                H_mat = stats_glob['H_mat'],  
+                mom = stats_glob['grad_mom'].clone().to(args.device), 
             )
             last_update[user_idx] = epoch_idx
-            stats_dict, loss, acc_ll = local_user[user_idx].train()
-            deltw_locals.append(copy.deepcopy(stats_dict['delt_w']))
-            grad_locals.append(copy.deepcopy(stats_dict['grad']))
-            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
+            stats_local, loss, acc_ll = local_user[user_idx].train(round_idx = epoch_idx)
+            update_grads(stats_round['delt_w'], stats_local['delt_w'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            update_grads(stats_round['grad'], stats_local['grad'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            update_metrics(stats_round['dLdS'], stats_local['dLdS'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            update_metrics(stats_round['S'], stats_local['S'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            update_metrics(stats_round['aaT'], stats_local['aaT'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            update_metrics(stats_round['abar'], stats_local['abar'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
+            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch = 16, shuffle = True, device = args.device)
             loss_locals.append(loss)
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
-            nD_locals.append(nD_by_user_idx[user_idx])
             # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
             local_user[user_idx].del_stats()
 
-        # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
-        print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
-
-        # Calculate accuracy for each round
-        acc_glob, loss_glob = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
-        acc_loc = sum(acc_locals) / len(acc_locals)
-        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
-
-        grad_scaled_avg = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
-        delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
-        H_mat = None
+        if args.momentum_bc_off == True:
+            bias_correction_curr = bias_correction_last = 1.0
+        else:
+            bias_correction_curr = 1. - args.momentum_beta ** (epoch_idx + 1)
+            bias_correction_last = 1. - args.momentum_beta ** epoch_idx
+        grad_mom = stats_glob['grad_mom'] * bias_correction_last # undo last bias correction before adding momentum
+        grad_mom = args.momentum_beta * grad_mom + (1.0 - args.momentum_beta) * stats_round['grad']
+        grad_mom = grad_mom / bias_correction_curr # apply bias correction for current round
+        # Update H_mat
+        H_mat = update_Hmat(
+            stats_glob['H_mat'],
+            args,
+            epoch_idx,
+            dLdS_curr   = stats_round['dLdS'],
+            dLdS_last   = stats_glob['dLdS'],
+            S_curr      = stats_round['S'],
+            S_last      = stats_glob['S'],
+            aaT         = stats_round['aaT'],
+            abar        = stats_round['abar'],
+        )
         stats_glob = {
-            'delt_w':   delt_w,
-            'H_mat':     H_mat,
+            'delt_w':       stats_round['delt_w'],
+            'H_mat':        H_mat,
+            'grad_mom':     grad_mom,
+            # 'grad':         stats_round['grad'],
+            'dLdS':         stats_round['dLdS'],
+            'S':            stats_round['S'],
         }
         add_states(net_glob, args.lr_server * stats_glob['delt_w'])
-        # print status
+
+        print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
+        # Calculate accuracy for each round
+        if args.dataset == "mnist":
+            acc_glob, loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = 16, shuffle = True, device = args.device)
+        else:
+            acc_glob, loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = -1, shuffle = True, device = args.device)
+        acc_loc = sum(acc_locals) / len(acc_locals)
+        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
         loss_avg = sum(loss_locals) / len(loss_locals)
+        
+        # print status
         print(
                 'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
                 format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
@@ -124,10 +165,6 @@ if __name__ == '__main__':
             sdf.flush()
         loss_train.append(loss_avg)
 
-        del deltw_locals[:]
-        del grad_locals[:]
-        del delt_w
-        del grad_scaled_avg
         with torch.cuda.device(args.device):
             torch.cuda.empty_cache()
 

@@ -2,9 +2,9 @@ import numpy as np
 import torch
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
-torch.manual_seed(1)
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# torch.manual_seed(1)
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 
 from IPython import embed
@@ -48,31 +48,31 @@ class DataLinRegress(Dataset):
 
 
 # Defining a function for plotting the plane
-def plane2D(model,dataset,n=0):
+# def plane2D(model,dataset,n=0):
       
-    w1 = model.state_dict()['linear.weight'].numpy()[0][0]
-    w2 = model.state_dict()['linear.weight'].numpy()[0][1]
-    b = model.state_dict()['linear.bias'].numpy()
+#     w1 = model.state_dict()['linear.weight'].numpy()[0][0]
+#     w2 = model.state_dict()['linear.weight'].numpy()[0][1]
+#     b = model.state_dict()['linear.bias'].numpy()
     
-    x1 = dataset.x[:,0].view(-1,1).numpy()
-    x2 = dataset.x[:,1].view(-1,1).numpy()
-    y = dataset.y.numpy()
-    X,Y = np.meshgrid(np.arange(x1.min(),x1.max(),0.05),np.arange(x2.min(), x2.max(), 0.05))
+#     x1 = dataset.x[:,0].view(-1,1).numpy()
+#     x2 = dataset.x[:,1].view(-1,1).numpy()
+#     y = dataset.y.numpy()
+#     X,Y = np.meshgrid(np.arange(x1.min(),x1.max(),0.05),np.arange(x2.min(), x2.max(), 0.05))
     
-    yhat = w1*X + w2*Y + b
+#     yhat = w1*X + w2*Y + b
     
-    # plotting
-    fig = plt.figure()
-    ax = fig.gca(projection = '3d')
+#     # plotting
+#     fig = plt.figure()
+#     ax = fig.gca(projection = '3d')
     
-    ax.plot(x1[:,0], x2[:,0], y[:,0], 'ro', label = 'y')
-    ax.plot_surface(X,Y,yhat)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-    ax.legend()
-    plt.title('Estimated plane iteration: '+ str(n))
-    plt.show()
+#     ax.plot(x1[:,0], x2[:,0], y[:,0], 'ro', label = 'y')
+#     ax.plot_surface(X,Y,yhat)
+#     ax.set_xlabel('x')
+#     ax.set_ylabel('y')
+#     ax.set_zlabel('z')
+#     ax.legend()
+#     plt.title('Estimated plane iteration: '+ str(n))
+#     plt.show()
 
 
 # Creating a linear regression model

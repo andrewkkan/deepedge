@@ -19,8 +19,8 @@ from models.test import test_img, test_img_ensem
 from models.sdlbfgs_fed import SdLBFGS_FedBLA, gather_flat_params, gather_flat_states, add_states, net_params_halper
 from models.adaptive_sgd import Adaptive_SGD
 from models.linRegress import DataLinRegress, lin_reg
-from utils.prepare_datasets import get_datasets
-from utils.prepare_model import get_model
+from utils.util_datasets import get_datasets
+from utils.util_model import get_model
 
 
 from IPython import embed

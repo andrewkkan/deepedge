@@ -37,6 +37,8 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
         if args.device != torch.device('cpu'):
             data, target = data.to(device), target.to(device)
         log_probs = net_g(data)
+        if len(log_probs) > 1:
+            log_probs = log_probs[0]
         # sum up batch loss
         if args.task == 'AutoEnc':
             test_loss += loss_func(log_probs, data, reduction='mean').item()

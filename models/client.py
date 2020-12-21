@@ -8,6 +8,8 @@ import copy
 import torch.nn.functional as F
 from models.sdlbfgs_fed import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states, net_params_halper
 from models.adaptive_sgd import Adaptive_SGD
+from utils.util_kronecker import multiply_HgDeltHa, get_s_sgrad, get_aaT_abar, calc_mean_dLdS_S_aaT_abar
+
 from IPython import embed
 
 class DatasetSplit(Dataset):
@@ -94,17 +96,6 @@ class LocalClientMIME(object):
                 loss.backward()
                 deltw = gather_flat_grad(self.net)
 
-                last_net.zero_grad()
-                nn_outputs_ref = last_net(images)
-                if self.args.task == 'AutoEnc':
-                    loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
-                    nnout_max = None
-                else:
-                    nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
-                    loss_ref = self.loss_func(nn_outputs_ref, labels) 
-                loss_ref.backward()
-                deltw_ref = gather_flat_grad(last_net)
-
                 if self.args.client_momentum_mode == 0:
                     optimizer.updateMomVals(self.mom1, self.mom2)
                 if self.args.client_mime_lite:
@@ -115,15 +106,25 @@ class LocalClientMIME(object):
                 optimizer.step(flat_deltw_list=[descent])
                 # optimizer.step()
                 if iter == (self.args.local_ep - 1):
+                    last_net.zero_grad()
+                    nn_outputs_ref = last_net(images)
+                    if self.args.task == 'AutoEnc':
+                        loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                        nnout_max = None
+                    else:
+                        nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                        loss_ref = self.loss_func(nn_outputs_ref, labels) 
+                    loss_ref.backward()
+                    deltw_ref = gather_flat_grad(last_net)
                     grad_sum += deltw_ref
+                    del deltw_ref
+                    del nn_outputs_ref
+                    del loss_ref
 
                 del descent
                 del deltw
-                del deltw_ref
                 del nn_outputs
                 del loss
-                del nn_outputs_ref
-                del loss_ref
 
             flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
             flat_delts = flat_net_states - flat_last_net_states
@@ -197,29 +198,20 @@ class LocalClientK1BFGS(object):
         elif args.task == 'AutoEnc':
             self.loss_func = self.MSELoss
 
-    def train(self):
+    def train(self, round_idx):
         if not self.net:
             exit('Error: Device LocalUpdate self.net was not initialized')
         last_net = copy.deepcopy(self.net)
         self.net.train()
         last_net.train()
 
-        optimizer = Adaptive_SGD(
-            net = self.net, 
-            lr_server_gd=float(self.args.lr_device), 
-            server_opt_mode=self.args.client_opt_mode, 
-            tau=self.args.adaptive_tau,        
-            beta1=self.args.adaptive_b1,        
-            beta2=self.args.adaptive_b2,
-            bias_correction=self.args.adaptive_bc,
-        )
-        optimizer.updateMomVals(self.mom1, self.mom2)
-
-        # optimizer = torch.optim.Adam(self.net.parameters(), lr=float(self.args.lr_device),betas=(self.args.adaptive_b1,self.args.adaptive_b2), eps=self.args.adaptive_tau)
-
         epoch_loss = []
         epoch_accuracy = []
         grad_sum = torch.zeros_like(gather_flat_grad(self.net))
+        dLdS_batchlist = []
+        aaT_batchlist = []
+        abar_batchlist = []
+        S_batchlist = []
 
         for iter in range(self.args.local_ep):
             batch_loss = []
@@ -229,7 +221,7 @@ class LocalClientK1BFGS(object):
                 images, labels = images.to(self.args.device), labels.to(self.args.device)
 
                 self.net.zero_grad()
-                nn_outputs = self.net(images)
+                nn_outputs, _, _ = self.net(images)
                 if self.args.task == 'AutoEnc':
                     loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
                     nnout_max = None
@@ -245,36 +237,49 @@ class LocalClientK1BFGS(object):
                 loss.backward()
                 deltw = gather_flat_grad(self.net)
 
-                last_net.zero_grad()
-                nn_outputs_ref = last_net(images)
-                if self.args.task == 'AutoEnc':
-                    loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
-                    nnout_max = None
+                # Add momentum to deltw.  Default is MIME style, i.e. server statistics based
+                deltw_mom = self.mom * self.args.momentum_beta + deltw * (1.0 - self.args.momentum_beta)
+                if self.args.momentum_bc_off == True:
+                    bias_correction = 1.0
                 else:
-                    nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
-                    loss_ref = self.loss_func(nn_outputs_ref, labels) 
-                loss_ref.backward()
-                deltw_ref = gather_flat_grad(last_net)
+                    bias_correction = 1. - self.args.momentum_beta ** (round_idx + 1)
+                deltw_mom = deltw_mom / bias_correction
+                # descent = Hg deltw Ha for each layer
+                descent = multiply_HgDeltHa(deltw_mom, self.H_mat, self.net.state_dict(), device=self.args.device)
+                # descent = deltw_mom
 
-                if self.args.client_momentum_mode == 0:
-                    optimizer.updateMomVals(self.mom1, self.mom2)
-                if self.args.client_mime_lite:
-                    descent = deltw
-                else:
-                    descent = deltw-deltw_ref+self.control
+                # Add lr * descent to local net
+                add_states(self.net, -self.args.lr_device * descent)
 
-                optimizer.step(flat_deltw_list=[descent])
-                # optimizer.step()
                 if iter == (self.args.local_ep - 1):
+                    last_net.zero_grad()
+                    nn_outputs_ref, s, a = last_net(images)
+                    if self.args.task == 'AutoEnc':
+                        loss_ref = self.loss_func(nn_outputs_ref, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                        nnout_max = None
+                    else:
+                        nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                        loss_ref = self.loss_func(nn_outputs_ref, labels) 
+                    loss_ref.backward()
+                    deltw_ref = gather_flat_grad(last_net)
                     grad_sum += deltw_ref
+                    # sum and average the following: 1. s.grad = g, and 2. a aT
+                    s_l, sgrad_l = get_s_sgrad(s)
+                    dLdS_batchlist.append(sgrad_l)
+                    S_batchlist.append(s_l)
+                    aaT, abar = get_aaT_abar(a)
+                    aaT_batchlist.append(aaT)
+                    abar_batchlist.append(abar)
+                    del aaT
+                    del abar
+                    del deltw_ref
+                    del nn_outputs_ref
+                    del loss_ref
 
                 del descent
                 del deltw
-                del deltw_ref
                 del nn_outputs
                 del loss
-                del nn_outputs_ref
-                del loss_ref
 
             flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
             flat_delts = flat_net_states - flat_last_net_states
@@ -286,18 +291,33 @@ class LocalClientK1BFGS(object):
 
         flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
         flat_delts = flat_net_states - flat_last_net_states
-        flat_grad = grad_sum / float(batch_idx + 1) 
+        flat_grad = grad_sum / float(batch_idx + 1)  # This grad has been averaged for the batch size (from loss calculation) as well as the number of batches (here)
+        dLdS_mean, S_mean, aaT_mean, abar_mean = calc_mean_dLdS_S_aaT_abar(dLdS_batchlist, S_batchlist, aaT_batchlist, abar_batchlist) # inputs are lists of batches, outputs are lists of per-layer metrics
         
         del flat_net_states
         del flat_last_net_states
         del last_net
         del grad_sum
+        del dLdS_batchlist[:]
+        del aaT_batchlist[:]
+        del abar_batchlist[:]
 
-        return {'delt_w': flat_delts , 'grad': flat_grad}, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
+        # flat_delts is simply the change in parameters before and after training.  
+        # flat_grad is actually the gradient of the entire dataset from the local client against the model parameters before training (from net_glob)
+        upload_stats = {
+            'delt_w':   flat_delts , # flat vectorized grad
+            'grad':     flat_grad, # flat vectorized grad
+            'dLdS':     dLdS_mean, # per-layer list
+            'S':        S_mean, # per-layer list
+            'aaT':      aaT_mean, # per-layer list
+            'abar':     abar_mean, # per-layer list
+        }
+        return upload_stats, sum(epoch_loss) / len(epoch_loss) , sum(epoch_accuracy)/len(epoch_accuracy)
 
-    def stats_update(self, net, H_mat):
+    def stats_update(self, net, H_mat, mom):
         self.net = net
-        self.H_mat = H_mat
+        self.H_mat = H_mat # Do not modify 
+        self.mom = mom
 
     def del_stats(self):
         del self.net 
