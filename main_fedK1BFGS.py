@@ -68,11 +68,11 @@ if __name__ == '__main__':
     m = min(max(int(args.frac * args.num_users), 1), args.num_users)
     stats_glob = {
         'delt_w':       torch.zeros_like(gather_flat_params(net_glob)),
-        'H_mat':        initialize_Hmat(net_glob.state_dict()),
+        'H_mat':        initialize_Hmat(net_glob),
         'grad_mom':     torch.zeros_like(gather_flat_params(net_glob)),
         'grad':         torch.zeros_like(gather_flat_params(net_glob)),
-        'dLdS':         initialize_dLdS(net_glob.state_dict()),
-        'S':            initialize_dLdS(net_glob.state_dict()), # same dimensions as dLdS
+        'dLdS':         initialize_dLdS(net_glob),
+        'S':            initialize_dLdS(net_glob), # same dimensions as dLdS
     }
     for epoch_idx in range(args.epochs):
         loss_locals, acc_locals, acc_locals_on_local = [], [], []
@@ -83,10 +83,10 @@ if __name__ == '__main__':
             nD_total += nD_by_user_idx[user_idx]
 
         stats_round = { # These are metrics that need to be averaged across users per round
-            'dLdS':     initialize_dLdS(net_glob.state_dict()),
-            'S':        initialize_dLdS(net_glob.state_dict()), # same dimensions as dLdS
-            'aaT':      initialize_aaT(net_glob.state_dict()),
-            'abar':     initialize_abar(net_glob.state_dict()),
+            'dLdS':     initialize_dLdS(net_glob),
+            'S':        initialize_dLdS(net_glob), # same dimensions as dLdS
+            'aaT':      initialize_aaT(net_glob),
+            'abar':     initialize_abar(net_glob),
             'delt_w':   torch.zeros_like(gather_flat_params(net_glob)),
             'grad':     torch.zeros_like(gather_flat_params(net_glob)),
         }

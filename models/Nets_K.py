@@ -152,19 +152,29 @@ class LeNet5(nn.Module):
     def __init__(self, args):
         super(LeNet5, self).__init__()
 
+        self.input_size = dict()
+        self.output_size = dict()
+        self.unfold_func = dict()
+
         self.conv1_kwargs = dict(kernel_size=(5, 5))
         self.conv1 = nn.Conv2d(args.num_channels, 6, **self.conv1_kwargs)
-        self.unfold_conv1 = nn.Unfold(**self.conv1_kwargs)
+        self.unfold_func['conv1'] = nn.Unfold(**self.conv1_kwargs)
+        self.input_size['conv1'] = (32, 32)
+        self.output_size['conv1'] = (28, 28, 75) # 75 = kernel_size[0]*kernel_size[1]*num_channels
         self.relu1 = nn.ReLU()
         self.maxpool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
         self.conv2_kwargs = dict(kernel_size=(5, 5))
         self.conv2 = nn.Conv2d(6, 16, **self.conv2_kwargs)
-        self.unfold_conv2 = nn.Unfold(**self.conv2_kwargs)
+        self.unfold_func['conv2'] = nn.Unfold(**self.conv2_kwargs)
+        self.input_size['conv2'] = (14, 14)
+        self.output_size['conv2'] = (10, 10, 150) # 150 = kernel_size[0]*kernel_size[1]*6
         self.relu2 = nn.ReLU()
         self.maxpool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
         self.conv3_kwargs = dict(kernel_size=(5, 5))
         self.conv3 = nn.Conv2d(16, 120, **self.conv3_kwargs)
-        self.unfold_conv3 = nn.Unfold(**self.conv3_kwargs)
+        self.unfold_func['conv3'] = nn.Unfold(**self.conv3_kwargs)
+        self.input_size['conv3'] = (5, 5)
+        self.output_size['conv3'] = (1, 1, 400) # 400 = kernel_size[0]*kernel_size[1]*16
         self.relu3 = nn.ReLU()
         self.fc1 = nn.Linear(120, 84)
         self.relu4 = nn.ReLU()
@@ -176,24 +186,27 @@ class LeNet5(nn.Module):
         # List s would start from layer index 1 and ends at L.
         a, s = [],[]
 
-        a_unfolded = self.unfold_conv1(img).transpose(1,2)
+        a_unfolded = self.unfold_func['conv1'](img).transpose(1,2)
         a.append(a_unfolded)
+        # a.append(img)
         output = self.conv1(img)
         output.retain_grad()
         s.append(output)
         output = self.relu1(output)
         output = self.maxpool1(output)
 
-        a_unfolded = self.unfold_conv2(output).transpose(1,2)
+        a_unfolded = self.unfold_func['conv2'](output).transpose(1,2)
         a.append(a_unfolded)
+        # a.append(output)
         output = self.conv2(output)
         output.retain_grad()
         s.append(output)
         output = self.relu2(output)
         output = self.maxpool2(output)
 
-        a_unfolded = self.unfold_conv2(output).transpose(1,2)
+        a_unfolded = self.unfold_func['conv3'](output).transpose(1,2)
         a.append(a_unfolded)
+        # a.append(output)
         output = self.conv3(output)
         output.retain_grad()
         s.append(output)
