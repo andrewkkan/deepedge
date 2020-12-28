@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import copy
 import torch.nn.functional as F
-from models.sdlbfgs_fed import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states, net_params_halper
+from utils.util_model import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states, net_params_halper
 from models.adaptive_sgd import Adaptive_SGD
 from utils.util_kronecker import multiply_HgDeltHa, get_s_sgrad, get_aaT_abar, calc_mean_dLdS_S_aaT_abar
 
@@ -267,7 +267,7 @@ class LocalClientK1BFGS(object):
                     s_l, sgrad_l = get_s_sgrad(s)
                     dLdS_batchlist.append(sgrad_l)
                     S_batchlist.append(s_l)
-                    aaT, abar = get_aaT_abar(a)
+                    aaT, abar = get_aaT_abar(a, self.args)
                     aaT_batchlist.append(aaT)
                     abar_batchlist.append(abar)
                     del aaT

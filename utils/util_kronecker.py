@@ -1,28 +1,6 @@
 import torch
 import copy
 
-from models.Nets_K import MLP, CNNMnist, CNNCifar, LeNet5, MNIST_AE
-#from models.linRegress import lin_reg
-
-def get_model(args):
-    if args.model == 'cnn' and args.dataset != 'mnist':
-        net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'lenet5' and args.dataset != 'mnist':
-        net_glob = LeNet5(args=args).to(args.device)
-    elif args.model == 'cnn' and args.dataset == 'mnist':
-        net_glob = CNNMnist(args=args).to(args.device)
-    elif args.model == 'mlp':
-        net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                       dim_out=args.num_classes,
-                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device)
-    # elif args.model == 'linregress':    
-    #     net_glob = lin_reg(args.linregress_numinputs, args.num_classes).to(args.device)
-    elif args.model == 'autoenc':
-        net_glob = MNIST_AE(dim_in = args.img_size[0]*args.img_size[1]*args.img_size[2])
-    else:
-        exit('Error: unrecognized model')
-
-    return net_glob
 
 def multiply_HgDeltHa(delt_w, H_mat, net_sd, device):
     # This function does matrix multiplication layer-by-layer: Hg x delt x Ha
@@ -51,13 +29,17 @@ def multiply_HgDeltHa(delt_w, H_mat, net_sd, device):
             del descent_b
             del descent
         elif len(layerval.shape) == 4: # conv layers
-            num_params = torch.tensor(layerval.shape).prod() + layerval.shape[0]
-            descent = delt_w[delt_idx:delt_idx+num_params].view(-1)
-            delt_idx += num_params
-            Hmat_idx += 1
-            descent_list.append(descent)
-            del num_params
-            del descent
+            delt_layer_w = delt_w[delt_idx:delt_idx+(layerval.shape[0] * layerval.shape[1] * layerval.shape[2] * layerval.shape[3])].view(
+                layerval.shape[0],
+                layerval.shape[1] * layerval.shape[2] * layerval.shape[3],
+            )
+            delt_idx += layerval.shape[0] * layerval.shape[1] * layerval.shape[2] * layerval.shape[3]
+            delt_layer_b = delt_w[delt_idx:delt_idx+layerval.shape[0]].view(layerval.shape[0], 1)
+            delt_idx += layerval.shape[0]            
+            delt_layer = torch.cat([delt_layer_w, delt_layer_b], dim=1) # m x (n+1) matrix
+            descent = torch.mm(H_mat[Hmat_idx]['Hg'], delt_layer).data # Hg is m x m
+
+
     descent_vec = torch.cat(descent_list)
     del descent_list[:]
     return descent_vec
@@ -85,14 +67,14 @@ def get_s_sgrad(s):
             sgrad_list.append(s_l.grad.sum(dim=0))
     return s_list, sgrad_list
 
-def get_aaT_abar(a):
+def get_aaT_abar(a, args):
     # Input a is a per-layer list
     # Each a is (bs, n_l) tensor vector as the layer input, 
     # where bs is batch size.
     # The extra torch.ones added at the end here is for the bias term
     # After matrix multiplication, result gets divided by batch size for mean.
     aaT_list, abar_list = [], []
-    A_rank = 5
+    A_rank = args.kronecker_svd_rank
     for a_l in a:
         if a_l is None:
             aaT_list.append(None)
@@ -186,13 +168,20 @@ def initialize_Hmat(net):
                 'A' :   torch.zeros((layerval.shape[1]+1, layerval.shape[1]+1), device=layerval.device, requires_grad=False),
             })
         elif len(layerval.shape) == 4: # conv layers
+            unfold_layer_key = layerkey.split('.')[0]
+            unfolded_dimsize = net.output_size[unfold_layer_key]
+            Hg_dim = layerval.shape[0] * unfolded_dimsize[0] * unfolded_dimsize[1]
+            KKT_dim = unfolded_dimsize[0] * unfolded_dimsize[1]
+            PPT_dim = unfolded_dimsize[2] + 1
             Hmat.append({
                 'name': layerkey.split('.')[0],
-                'Hg':   None,
-                'Ha':   None,
-                'sg':   None,
-                'yg':   None,
-                'A' :   None,
+                'Hg':   torch.eye(Hg_dim, device=layerval.device, requires_grad=False),
+                'sg':   torch.zeros(Hg_dim, device=layerval.device, requires_grad=False),
+                'yg':   torch.zeros(Hg_dim, device=layerval.device, requires_grad=False),
+                'KKT':  torch.eye(KKT_dim, device=layerval.device, requires_grad=False),
+                'PPT':  torch.eye(PPT_dim, device=layerval.device, requires_grad=False),
+                'Hk':   torch.eye(KKT_dim, device=layerval.device, requires_grad=False),
+                'Hp':   torch.eye(PPT_dim, device=layerval.device, requires_grad=False),
             })
     return Hmat
 
@@ -282,7 +271,25 @@ def update_Hmat(Hmat, args, epoch_idx, dLdS_curr, dLdS_last, S_curr, S_last, aaT
         if Hmat[li] == None: # conv layers
             continue
         if 'conv' in Hmat[li]['name']:
-            pass
+            S_diff = (S_curr[li] - S_last[li]).view(-1)
+            Hmat[li]['sg'] *= bias_correction_last
+            Hmat[li]['sg'] = args.kronecker_beta * Hmat[li]['sg'] + (1. - args.kronecker_beta) * S_diff
+            Hmat[li]['sg'] /= bias_correction_curr   
+            dLdS_diff = (dLdS_curr[li] - dLdS_last[li]).view(-1)
+            Hmat[li]['yg'] *= bias_correction_last
+            Hmat[li]['yg'] = args.kronecker_beta * Hmat[li]['yg'] + (1. - args.kronecker_beta) * dLdS_diff
+            Hmat[li]['yg'] /= bias_correction_curr        
+            sg_tilde, yg_tilde = double_damp_per_layer(mu1, mu2, Hmat[li]['sg'], Hmat[li]['yg'], Hmat[li]['Hg'])
+            Hmat[li]['Hg'] = BFGS(Hmat[li]['Hg'], sg_tilde.view(-1), yg_tilde.view(-1))
+
+            Hmat[li]['KKT'] *= bias_correction_last
+            Hmat[li]['KKT'] = args.kronecker_beta * Hmat[li]['KKT'] + (1. - args.kronecker_beta) * aaT[li]['KKT']
+            Hmat[li]['KKT'] /= bias_correction_curr  
+            Hmat[li]['PPT'] *= bias_correction_last
+            Hmat[li]['PPT'] = args.kronecker_beta * Hmat[li]['PPT'] + (1. - args.kronecker_beta) * aaT[li]['PPT']
+            Hmat[li]['PPT'] /= bias_correction_curr
+            Hmat[li]['Hk'] = torch.inverse(Hmat[li]['KKT']) #
+            Hmat[li]['Hp'] = torch.inverse(Hmat[li]['PPT']) #
         elif 'fc' in Hmat[li]['name']:
             S_diff = S_curr[li] - S_last[li]
             Hmat[li]['sg'] *= bias_correction_last

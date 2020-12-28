@@ -1,7 +1,7 @@
 import torch
 from functools import reduce
 from torch.optim import Optimizer
-from models.sdlbfgs_fed import gather_flat_params, gather_flat_states, add_states
+from utils.util_model import gather_flat_params, gather_flat_states, add_states
 import numpy as np
 
 from IPython import embed

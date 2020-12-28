@@ -17,8 +17,8 @@ from utils.options import args_parser
 from models.client import LocalClientK1BFGS
 from models.test import test_img, test_img_ensem
 from utils.util_datasets import get_datasets
-from utils.util_kronecker import get_model, initialize_Hmat, initialize_dLdS, initialize_aaT, initialize_abar, update_grads, update_metrics, update_Hmat
-from models.sdlbfgs_fed import gather_flat_params, add_states
+from utils.util_kronecker import initialize_Hmat, initialize_dLdS, initialize_aaT, initialize_abar, update_grads, update_metrics, update_Hmat
+from utils.util_model import get_model_k, gather_flat_params, add_states
 
 from IPython import embed
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # load dataset and split users
     dataset_train, dataset_test, dict_users, args, = get_datasets(args)
     # build model
-    net_glob = get_model(args)
+    net_glob = get_model_k(args)
     net_glob = net_glob.to(args.device)
     print(net_glob)
     net_glob.train()
