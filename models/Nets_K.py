@@ -186,7 +186,7 @@ class LeNet5(nn.Module):
         # List s would start from layer index 1 and ends at L.
         a, s = [],[]
 
-        a_unfolded = self.unfold_func['conv1'](img).transpose(1,2)
+        a_unfolded = self.unfold_func['conv1'](img)
         a.append(a_unfolded)
         # a.append(img)
         output = self.conv1(img)
@@ -195,7 +195,7 @@ class LeNet5(nn.Module):
         output = self.relu1(output)
         output = self.maxpool1(output)
 
-        a_unfolded = self.unfold_func['conv2'](output).transpose(1,2)
+        a_unfolded = self.unfold_func['conv2'](output)
         a.append(a_unfolded)
         # a.append(output)
         output = self.conv2(output)
@@ -204,7 +204,7 @@ class LeNet5(nn.Module):
         output = self.relu2(output)
         output = self.maxpool2(output)
 
-        a_unfolded = self.unfold_func['conv3'](output).transpose(1,2)
+        a_unfolded = self.unfold_func['conv3'](output)
         a.append(a_unfolded)
         # a.append(output)
         output = self.conv3(output)
