@@ -267,7 +267,7 @@ class LocalClientK1BFGS(object):
                     s_l, sgrad_l = get_s_sgrad(s)
                     dLdS_batchlist.append(sgrad_l)
                     S_batchlist.append(s_l)
-                    aaT, abar = get_aaT_abar(a, self.args)
+                    aaT, abar = get_aaT_abar(a)
                     aaT_batchlist.append(aaT)
                     abar_batchlist.append(abar)
                     del aaT

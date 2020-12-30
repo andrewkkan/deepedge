@@ -60,7 +60,6 @@ def args_parser():
     parser.add_argument('--kronecker_mu1', type=float, default=0.2)
     parser.add_argument('--kronecker_beta', type=float, default=0.9)
     parser.add_argument('--kronecker_bc_off', action='store_true', help="Turn off bias correction for kronecker metrics momentum")
-    parser.add_argument('--kronecker_svd_rank', type=int, default=5)
     parser.add_argument('--momentum_beta', type=float, default=0.9)
     parser.add_argument('--momentum_bc_off', action='store_true', help="Turn off bias correction for global and client gradient momentum")
 

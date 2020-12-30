@@ -80,14 +80,13 @@ def get_s_sgrad(s):
             sgrad_list.append(s_l.grad.sum(dim=0))
     return s_list, sgrad_list
 
-def get_aaT_abar(a, args):
+def get_aaT_abar(a):
     # Input a is a per-layer list
     # Each a is (bs, n_l) tensor vector as the layer input, 
     # where bs is batch size.
     # The extra torch.ones added at the end here is for the bias term
     # After matrix multiplication, result gets divided by batch size for mean.
     aaT_list, abar_list = [], []
-    A_rank = args.kronecker_svd_rank
     for a_l in a:
         if a_l is None:
             aaT_list.append(None)
