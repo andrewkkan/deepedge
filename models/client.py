@@ -205,6 +205,8 @@ class LocalClientK1BFGS(object):
         self.net.train()
         last_net.train()
 
+        clipping_metric = gather_flat_params(last_net).abs().mean()
+
         epoch_loss = []
         epoch_accuracy = []
         grad_sum = torch.zeros_like(gather_flat_grad(self.net))
@@ -238,16 +240,20 @@ class LocalClientK1BFGS(object):
                 deltw = gather_flat_grad(self.net)
 
                 # Add momentum to deltw.  Default is MIME style, i.e. server statistics based
-                deltw_mom = self.mom * self.args.momentum_beta + deltw * (1.0 - self.args.momentum_beta)
                 if self.args.momentum_bc_off == True:
-                    bias_correction = 1.0
+                    bias_correction_curr = bias_correction_last = 1.0
                 else:
-                    bias_correction = 1. - self.args.momentum_beta ** (round_idx + 1)
-                deltw_mom = deltw_mom / bias_correction
+                    bias_correction_curr = 1. - self.args.momentum_beta ** (round_idx + 1)
+                    bias_correction_last = 1. - self.args.momentum_beta ** round_idx   
+                deltw_mom = self.mom * bias_correction_last 
+                deltw_mom = deltw_mom * self.args.momentum_beta + deltw * (1.0 - self.args.momentum_beta)
+                deltw_mom /= bias_correction_curr
                 # descent = Hg deltw Ha for each layer
                 descent = multiply_HgDeltHa(deltw_mom, self.H_mat, self.net.state_dict(), device=self.args.device)
                 # descent = deltw_mom
-
+                descent_metric = descent.abs().mean()
+                if descent_metric > clipping_metric:
+                    descent *= clipping_metric / descent_metric
                 # Add lr * descent to local net
                 add_states(self.net, -self.args.lr_device * descent)
 
@@ -285,7 +291,6 @@ class LocalClientK1BFGS(object):
             flat_delts = flat_net_states - flat_last_net_states
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
-
             del batch_loss[:]
             del batch_accuracy[:]
 

@@ -73,8 +73,9 @@ def get_s_sgrad(s):
         # Sgrad needs to sum along the batchsize dimension (not the mean because the loss value has been averaged with batchsize).
         # Therefore, these resulting grad values represent the mean grad per sample
         if len(s_l.shape) > 2:
-            s_list.append(s_l.mean(dim=0).sum(dim=1).sum(dim=1))
-            sgrad_list.append(s_l.grad.sum(dim=0).sum(dim=1).sum(dim=1))
+            # Taking mean across the output feature map pixels dim=1,2
+            s_list.append(s_l.mean(dim=0).mean(dim=1).mean(dim=1))
+            sgrad_list.append(s_l.grad.sum(dim=0).mean(dim=1).mean(dim=1))
         else:
             s_list.append(s_l.mean(dim=0))
             sgrad_list.append(s_l.grad.sum(dim=0))
@@ -94,7 +95,7 @@ def get_aaT_abar(a):
             continue
         if len(a_l.shape) > 2: # Unfolded tensor has len of 3, original tensor has len of 4.  Check latest implementation in Nets_K.py
             # Conv2d layer
-            a_l = a_l.sum(dim=2) 
+            a_l = a_l.mean(dim=2) # Taking mean across the output feature map pixels
         elif len(a_l.shape) == 2:
             # FC layer
             pass
