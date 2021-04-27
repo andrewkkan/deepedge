@@ -145,22 +145,24 @@ if __name__ == '__main__':
         print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
         # Calculate accuracy for each round
         if args.dataset == "mnist":
-            acc_glob, loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = 16, shuffle = True, device = args.device)
+            test_acc_glob, test_loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = 16, shuffle = True, device = args.device)
+            train_acc_glob, train_loss_glob = test_img(net_glob, dataset_train, args, stop_at_batch = 16, shuffle = True, device = args.device)
         else:
-            acc_glob, loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = -1, shuffle = True, device = args.device)
+            test_acc_glob, test_loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = -1, shuffle = True, device = args.device)
+            train_acc_glob, train_loss_glob = test_img(net_glob, dataset_train, args, stop_at_batch = -1, shuffle = True, device = args.device)
         acc_loc = sum(acc_locals) / len(acc_locals)
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
         loss_avg = sum(loss_locals) / len(loss_locals)
         
         # print status
         print(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
-                format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Central accuracy on global train data {:.3f}, Central loss on global train data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
+                format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc)
         )
         if args.screendump_file:
             sdf.write(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
-                format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Central accuracy on global train data {:.3f}, Central loss on global train data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
+                format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc)
             )
             sdf.flush()
         loss_train.append(loss_avg)
@@ -178,11 +180,11 @@ if __name__ == '__main__':
     net_glob.eval()
     # acc_train, loss_train = test_img(net_glob, dataset_train, args)
     # acc_test, loss_test = test_img(net_glob, dataset_test, args)
-    acc_test, loss_test = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
+    test_acc_glob, test_loss_glob = test_img(net_glob, dataset_test, args, shuffle=True, device=args.device)
     #print("Training accuracy: {:.2f}".format(acc_train))
-    print("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
+    print("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(test_acc_glob, test_loss_glob))
     if args.screendump_file:
-        sdf.write("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
+        sdf.write("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(test_acc_glob, test_loss_glob))
         sdf.write(str(datetime.datetime.now()) + '\n')
         sdf.close()
 
