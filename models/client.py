@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from utils.util_model import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states, net_params_halper
 from models.adaptive_sgd import Adaptive_SGD
 from utils.util_kronecker import multiply_HgDeltHa, get_s_sgrad, get_aaT_abar, calc_mean_dLdS_S_aaT_abar
+from utils.util_lossfn import CrossEntropyLoss, MSELoss, MSESaddleLoss
 
 from IPython import embed
 
@@ -39,15 +40,15 @@ class LocalClientMIME(object):
         self.net_glob = None
         self.user_idx = user_idx
         self.embed = False
-        self.loss_func = self.CrossEntropyLoss
+        self.loss_func = CrossEntropyLoss
         if args.task == 'ObjRec':
-            self.loss_func = self.CrossEntropyLoss
+            self.loss_func = CrossEntropyLoss
         elif args.task == 'LinReg':
-            self.loss_func = self.MSELoss
+            self.loss_func = MSELoss
         elif args.task == 'LinSaddle':
-            self.loss_func = self.MSESaddleLoss
+            self.loss_func = MSESaddleLoss
         elif args.task == 'AutoEnc':
-            self.loss_func = self.MSELoss
+            self.loss_func = MSELoss
 
     def train(self):
         if not self.net:
@@ -157,22 +158,6 @@ class LocalClientMIME(object):
         del self.mom2
         del self.control
 
-    def CrossEntropyLoss(self, outputs, labels):
-        batch_size = outputs.size()[0]            # batch_size
-        outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
-        outputs = outputs[range(batch_size), labels] # labels is 1-hot so the rest softmax outputs go to zero
-        return -torch.sum(outputs)/float(batch_size) 
-
-    def MSELoss(self, yhat, y):
-        batch_size = yhat.size()[0]
-        return torch.sum((yhat - y).pow(2))/float(batch_size)
-
-    def MSESaddleLoss(self, yhat, y):
-        batch_size = yhat.size()[0]
-        return torch.sum((yhat[:,0] - y[:,0]).pow(2))/float(batch_size) - torch.sum((yhat[:,1] - y[:,1]).pow(2))/float(batch_size)
-
-
-
 
 class LocalClientK1BFGS(object):
     def __init__(self, args, net, dataset=None, idxs=None, user_idx=0):
@@ -188,15 +173,15 @@ class LocalClientK1BFGS(object):
         self.net_glob = None
         self.user_idx = user_idx
         self.embed = False
-        self.loss_func = self.CrossEntropyLoss
+        self.loss_func = CrossEntropyLoss
         if args.task == 'ObjRec':
-            self.loss_func = self.CrossEntropyLoss
+            self.loss_func = CrossEntropyLoss
         elif args.task == 'LinReg':
-            self.loss_func = self.MSELoss
+            self.loss_func = MSELoss
         elif args.task == 'LinSaddle':
-            self.loss_func = self.MSESaddleLoss
+            self.loss_func = MSESaddleLoss
         elif args.task == 'AutoEnc':
-            self.loss_func = self.MSELoss
+            self.loss_func = MSELoss
 
     def train(self, round_idx):
         if not self.net:
@@ -327,17 +312,3 @@ class LocalClientK1BFGS(object):
     def del_stats(self):
         del self.net 
         del self.H_mat 
-
-    def CrossEntropyLoss(self, outputs, labels):
-        batch_size = outputs.size()[0]            # batch_size
-        outputs = F.log_softmax(outputs, dim=1)   # compute the log of softmax values
-        outputs = outputs[range(batch_size), labels] # labels is 1-hot so the rest softmax outputs go to zero
-        return -torch.sum(outputs)/float(batch_size) 
-
-    def MSELoss(self, yhat, y):
-        batch_size = yhat.size()[0]
-        return torch.sum((yhat - y).pow(2))/float(batch_size)
-
-    def MSESaddleLoss(self, yhat, y):
-        batch_size = yhat.size()[0]
-        return torch.sum((yhat[:,0] - y[:,0]).pow(2))/float(batch_size) - torch.sum((yhat[:,1] - y[:,1]).pow(2))/float(batch_size)

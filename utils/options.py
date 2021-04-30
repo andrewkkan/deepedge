@@ -62,7 +62,8 @@ def args_parser():
     parser.add_argument('--kronecker_bc_off', action='store_true', help="Turn off bias correction for kronecker metrics momentum")
     parser.add_argument('--momentum_beta', type=float, default=0.9)
     parser.add_argument('--momentum_bc_off', action='store_true', help="Turn off bias correction for global and client gradient momentum")
-
+    parser.add_argument('--kronecker_stop_update', type=int, default=-1, help="Provide round index to stop KBFGS update.")
+    parser.add_argument('--warmup_dataset', type=str, default='', help="Name of warmup dataset for initial H_mat")
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 

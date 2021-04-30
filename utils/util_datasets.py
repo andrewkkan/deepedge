@@ -8,11 +8,55 @@ from utils.emnist_dataset import EMNISTDataset_by_write
 from models.linRegress import DataLinRegress, lin_reg
 from IPython import embed
 
+def get_warmup_datasets(args, image_dim):
+    if image_dim == tuple((32, 32)):
+        transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
+    else:
+        transform = transforms.Compose([transforms.Resize((28, 28)), transforms.ToTensor()])
+    if args.warmup_dataset == 'mnist':
+        dataset_warmup = datasets.MNIST('./data/mnist/', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'emnist':
+        dataset_warmup = datasets.EMNIST('./data/emnist/', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'fashionmnist':
+        dataset_warmup = datasets.FashionMNIST('./data/fashionmnist/', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'cityscapes':
+        dataset_warmup = datasets.Cityscapes('./data/cityscapes/', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'cifar10':
+        dataset_warmup = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'cifar100':
+        dataset_warmup = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=transform)
+    elif args.warmup_dataset == 'bcct200':
+        dataset_warmup = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=transform)
+    return dataset_warmup
+
+
+def augment_num_channels(batchdata, num_channels):
+    # batchdata.size()[0] is num batches, [1] is num channels, [2:3] are image HxL
+    if batchdata.shape[1] == 1 and num_channels == 3:
+        return torch.cat((batchdata, batchdata, batchdata), dim=1)
+    elif batchdata.shape[1] == 3 and num_channels == 1:
+        return batchdata[:, 0, :, :]
+    else:
+        return None
+
 def get_datasets(args):
+    trans_generic = transforms.Compose([transforms.ToTensor()])
+    trans_generic_2828 = transforms.Compose([transforms.Resize((28, 28)), transforms.ToTensor()])
+    trans_generic_3232 = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
+
+    if args.model == 'cnn': # CIFAR
+        transform = trans_generic_3232
+    elif args.model == 'lenet5':
+        transform = trans_generic_3232
+    # elif args.model == 'autoenc':
+    #     transform = trans_generic_2828
+    else:
+        transform = trans_generic
+
     if args.dataset == 'mnist':
         trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist)
-        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
+        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=transform)
+        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=transform)
         # sample users
         if args.iid:
             dict_users = mnist_iid(dataset_train, args.num_users)
@@ -21,13 +65,12 @@ def get_datasets(args):
             dict_users = mnist_noniid(dataset_train, args.num_users, args.noniid_hard)
         args.num_classes = 10
         args.num_channels = 1
-        args.task = 'ObjRec'
     elif args.dataset == 'emnist':
         # trans_emnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.9635,), (0.1586,))])
         trans_emnist = transforms.Compose([transforms.ToTensor()])
         # dataset_train = EMNISTDataset_by_write(train=True, transform=trans_emnist)
-        dataset_train = EMNISTDataset_by_write(train=True, transform=trans_emnist)
-        dataset_test = EMNISTDataset_by_write(train=False, transform=trans_emnist)
+        dataset_train = EMNISTDataset_by_write(train=True, transform=transform)
+        dataset_test = EMNISTDataset_by_write(train=False, transform=transform)
         # sample users
         args.num_classes = 62
         args.num_channels = 1
@@ -47,37 +90,34 @@ def get_datasets(args):
         args.frac = 0.0123
     elif args.dataset == 'cifar10':
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
-        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
-        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=trans_cifar)
+        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=transform)
+        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=transform)
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 10
-        args.task = 'ObjRec'
     elif args.dataset == 'cifar100':
         trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
-        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
-        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar100)
+        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=transform)
+        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=transform)
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
             dict_users = cifar100_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 100
-        args.task = 'ObjRec'
     elif args.dataset == 'bcct200':
         if args.num_users > 8:
             args.num_users = 8
             print("Warning: limiting number of users to 8.")
         trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.262428402,0.262428402,0.262428402], std=[0.30702864, 0.30702864, 0.30702864])])
-        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
+        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=transform)
         dataset_test = dataset_train
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 4
-        args.task = 'ObjRec'
     elif args.dataset == 'linregress':
         args.linregress_numinputs = 50
         args.num_classes = 1

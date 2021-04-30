@@ -6,6 +6,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from utils.util_datasets import augment_num_channels
 
 from IPython import embed
 
@@ -32,6 +33,8 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
     else:
         dataset_len = stop_at_batch  * args.bs
     for idx, (data, target) in enumerate(data_loader):
+        if args.num_channels != data.shape[1]:
+            data = augment_num_channels(data, args.num_channels)
         if idx == stop_at_batch:
             break
         if args.device != torch.device('cpu'):

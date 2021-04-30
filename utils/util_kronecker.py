@@ -52,7 +52,6 @@ def multiply_HgDeltHa(delt_w, H_mat, net_sd, device):
             del descent_b
             del descent
 
-
     descent_vec = torch.cat(descent_list)
     del descent_list[:]
     return descent_vec
@@ -165,6 +164,30 @@ def initialize_Hmat(net):
             })
     return Hmat
 
+def copy_Hmat(Hmat_in):
+    Hmat = []
+    for lh in Hmat_in:
+        Hmat.append({
+            'name': lh['name'],
+            'Hg':   lh['Hg'].clone().to(lh['Hg'].device),
+            'Ha':   lh['Ha'].clone().to(lh['Ha'].device),
+            'sg':   lh['sg'].clone().to(lh['sg'].device),
+            'yg':   lh['yg'].clone().to(lh['yg'].device),
+            'A' :   lh['A'].clone().to(lh['A'].device),            
+        })
+    return Hmat
+
+def del_Hmat(Hmat):
+    for lh in Hmat:
+        del lh['Hg']
+        del lh['Ha']
+        del lh['sg']
+        del lh['yg']
+        del lh['A']
+        del lh['name']
+    del Hmat[:]
+    del Hmat
+
 def initialize_dLdS(net):
     dLdS = []
     for layerkey, layerval in net.state_dict().items():
@@ -173,6 +196,12 @@ def initialize_dLdS(net):
                 torch.zeros(layerval.shape[0], device=layerval.device, requires_grad=False)
             )        
     return dLdS
+
+def del_dLdS(dLdS):
+    for ld in dLdS:
+        del ld
+    del dLdS[:]
+    del dLdS
 
 def initialize_aaT(net):
     aaT = []
@@ -188,6 +217,12 @@ def initialize_aaT(net):
             )
     return aaT
 
+def del_aaT(aaT):
+    for la in aaT:
+        del la
+    del aaT[:]
+    del aaT
+
 def initialize_abar(net):
     abar = []
     for layerkey, layerval in net.state_dict().items():
@@ -201,6 +236,12 @@ def initialize_abar(net):
                 torch.zeros(abar_dim, device=layerval.device, requires_grad=False)
             )
     return abar
+
+def del_abar(abar):
+    for la in abar:
+        del la
+    del abar[:]
+    del abar    
 
 def update_grads(grad, update, scale):
     grad.add_(update * scale)
@@ -240,7 +281,7 @@ def update_Hmat(Hmat, args, epoch_idx, dLdS_curr, dLdS_last, S_curr, S_last, aaT
         Hmat[li]['yg'] = args.kronecker_beta * Hmat[li]['yg'] + (1. - args.kronecker_beta) * dLdS_diff
         Hmat[li]['yg'] /= bias_correction_curr        
         sg_tilde, yg_tilde = double_damp_per_layer(mu1, mu2, Hmat[li]['sg'], Hmat[li]['yg'], Hmat[li]['Hg'])
-        Hmat[li]['Hg'] = BFGS(Hmat[li]['Hg'], sg_tilde.view(-1), yg_tilde.view(-1))
+        update_BFGS(Hmat[li]['Hg'], sg_tilde.view(-1), yg_tilde.view(-1))
 
         Hmat[li]['A'] *= bias_correction_last
         Hmat[li]['A'] = args.kronecker_beta * Hmat[li]['A'] + (1. - args.kronecker_beta) * aaT[li]
@@ -248,9 +289,7 @@ def update_Hmat(Hmat, args, epoch_idx, dLdS_curr, dLdS_last, S_curr, S_last, aaT
         A_LM = Hmat[li]['A'] + lamb_A * torch.eye(Hmat[li]['A'].shape[0], device=args.device)
         sa = torch.mm(Hmat[li]['Ha'], abar[li].view(-1, 1))
         ya = torch.mm(A_LM, sa)
-        Hmat[li]['Ha'] = BFGS(Hmat[li]['Ha'], sa.view(-1), ya.view(-1))       
-
-    return Hmat
+        update_BFGS(Hmat[li]['Ha'], sa.view(-1), ya.view(-1))   
 
 
 def double_damp_per_layer(mu1, mu2, s, y, H):
@@ -278,8 +317,7 @@ def double_damp_per_layer(mu1, mu2, s, y, H):
     return s_tilde, y_tilde
 
 
-
-def BFGS(H, s, y):
+def update_BFGS(H, s, y):
     sTy = s.dot(y)
     ssT = torch.mm(s.view(-1, 1), s.view(1, -1))
     Hy = torch.mm(H, y.view(-1, 1)).view(-1)
@@ -287,8 +325,14 @@ def BFGS(H, s, y):
     HysT = torch.mm(Hy.view(-1, 1), s.view(1, -1))
     syT = torch.mm(s.view(-1, 1), y.view(1, -1))
     syTH = torch.mm(syT, H)
+    H += (sTy + yTHy) * ssT / sTy / sTy - (HysT + syTH) / sTy
 
-    H_new = H + (sTy + yTHy) * ssT / sTy / sTy - (HysT + syTH) / sTy
-    return H_new
+def calc_normdiff_Hmat(Hmat1, Hmat2):
+    norm_accum = float(0.)
+    for h1, h2 in zip(Hmat1, Hmat2):
+        norm_accum += ((h1['Hg'] - h2['Hg']).pow(2.).mean() + (h1['Ha'] - h2['Ha']).pow(2.).mean()) / 2.0
+    return (norm_accum / float(len(Hmat1))).sqrt()
+
+
 
 
