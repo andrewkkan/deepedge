@@ -19,7 +19,7 @@ from models.test import test_img, test_img_ensem
 from utils.util_datasets import get_datasets, get_warmup_datasets, augment_num_channels
 from utils.util_kronecker import initialize_Hmat, initialize_dLdS, initialize_aaT, initialize_abar, update_grads, update_metrics, update_Hmat, calc_normdiff_Hmat
 from utils.util_kronecker import get_s_sgrad, get_aaT_abar
-from utils.util_kronecker import del_Hmat, del_dLdS, del_aaT, del_abar, copy_Hmat
+from utils.util_kronecker import copy_Hmat, del_kronecker_metric, copy_kronecker_metric
 from utils.util_model import get_model_k, gather_flat_params, add_states
 from utils.util_lossfn import CrossEntropyLoss, MSELoss
 
@@ -124,19 +124,19 @@ if __name__ == '__main__':
                     S_curr, dLdS_curr = get_s_sgrad(s)
                     aaT, abar = get_aaT_abar(a)
 
-                    update_Hmat(
-                        stats_glob['H_mat'],
-                        args,
-                        step_idx,
-                        dLdS_curr   = dLdS_curr,
-                        dLdS_last   = stats_glob['dLdS'],
-                        S_curr      = S_curr,
-                        S_last      = stats_glob['S'],
-                        aaT         = aaT,
-                        abar        = abar,
-                    )
-                    stats_glob['dLdS'] = dLdS_curr
-                    stats_glob['S'] = S_curr
+                update_Hmat(
+                    stats_glob['H_mat'],
+                    args,
+                    step_idx,
+                    dLdS_curr   = dLdS_curr,
+                    dLdS_last   = stats_glob['dLdS'],
+                    S_curr      = S_curr,
+                    S_last      = stats_glob['S'],
+                    aaT         = aaT,
+                    abar        = abar,
+                )
+                stats_glob['dLdS'] = dLdS_curr
+                stats_glob['S'] = S_curr
 
                 optim_warmup.step()
                 step_idx += 1
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                 sdf.write(
                     'Warmup Complete, Central loss on warmup data {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}'.\
                     format(warmup_loss_glob, test_loss_glob, train_loss_glob)
-                )                
+                )
             sdf.write('\n')
             sdf.flush()
 
@@ -209,16 +209,16 @@ if __name__ == '__main__':
             acc_locals.append(acc_l)
             acc_locals_on_local.append(acc_ll)
             # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
-            local_user[user_idx].del_stats()
+            local_user[user_idx].del_stats() # Make sure this does not delete any stats_glob values such as H_mat
 
         if args.momentum_bc_off == True:
             bias_correction_curr = bias_correction_last = 1.0
         else:
             bias_correction_curr = 1. - args.momentum_beta ** (epoch_idx + 1)
             bias_correction_last = 1. - args.momentum_beta ** epoch_idx
-        grad_mom = stats_glob['grad_mom'] * bias_correction_last # undo last bias correction before adding momentum
-        grad_mom = args.momentum_beta * grad_mom + (1.0 - args.momentum_beta) * stats_round['grad']
-        grad_mom = grad_mom / bias_correction_curr # apply bias correction for current round
+        stats_glob['grad_mom'] = stats_glob['grad_mom'] * bias_correction_last # undo last bias correction before adding momentum
+        stats_glob['grad_mom'] = args.momentum_beta * stats_glob['grad_mom'] + (1.0 - args.momentum_beta) * stats_round['grad']
+        stats_glob['grad_mom'] = stats_glob['grad_mom'] / bias_correction_curr # apply bias correction for current round
         # Update H_mat
         if (not args.warmup_dataset) and (args.kronecker_stop_update < 0 or epoch_idx < args.kronecker_stop_update):
             Hmat_last = copy_Hmat(stats_glob['H_mat'])
@@ -234,20 +234,21 @@ if __name__ == '__main__':
                 abar        = stats_round['abar'],
             )
             normdiff_Hmat = calc_normdiff_Hmat(stats_glob['H_mat'], Hmat_last)
-            del_Hmat(Hmat_last)
         else:
             normdiff_Hmat = 0.0
-        del stats_glob['grad_mom']
-        del stats_glob['delt_w']
-        del stats_glob['dLdS']
-        del stats_glob['S']
 
-        stats_glob['delt_w'] = stats_round['delt_w']
-        stats_glob['grad_mom'] = grad_mom
-        stats_glob['dLdS'] = stats_round['dLdS']
-        stats_glob['S'] = stats_round['S']
+        stats_glob['delt_w'] = stats_round['delt_w'].clone().to(args.device)
+        stats_glob['dLdS'] = copy_kronecker_metric(stats_round['dLdS'])
+        stats_glob['S'] = copy_kronecker_metric(stats_round['S'])
 
         add_states(net_glob, args.lr_server * stats_glob['delt_w'])
+
+        del_kronecker_metric(stats_round['dLdS'])
+        del_kronecker_metric(stats_round['S'])
+        del_kronecker_metric(stats_round['aaT'])
+        del_kronecker_metric(stats_round['abar'])
+        del stats_round['delt_w']
+        del stats_round['grad']
 
         print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
         # Calculate accuracy for each round

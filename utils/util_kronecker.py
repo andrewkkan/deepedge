@@ -23,11 +23,6 @@ def multiply_HgDeltHa(delt_w, H_mat, net_sd, device):
             descent = torch.cat([descent_w, descent_b])
             descent_list.append(descent)
             Hmat_idx += 1
-            del delt_layer_w
-            del delt_layer_b
-            del descent_w
-            del descent_b
-            del descent
         elif len(layerval.shape) == 4: # conv layers
             delt_layer_w = delt_w[delt_idx:delt_idx+(layerval.shape[0] * layerval.shape[1] * layerval.shape[2] * layerval.shape[3])].view(
                 layerval.shape[0],
@@ -46,14 +41,7 @@ def multiply_HgDeltHa(delt_w, H_mat, net_sd, device):
             descent = torch.cat([descent_w, descent_b])
             descent_list.append(descent)
             Hmat_idx += 1
-            del delt_layer_w
-            del delt_layer_b
-            del descent_w
-            del descent_b
-            del descent
-
     descent_vec = torch.cat(descent_list)
-    del descent_list[:]
     return descent_vec
 
 def get_s_sgrad(s):
@@ -101,7 +89,6 @@ def get_aaT_abar(a):
         a1_l = torch.cat([a_l, torch.ones([a_l.shape[0], 1], device=a_l.device)], dim=1)
         aaT_list.append(torch.mm(a1_l.t(), a1_l).data / torch.tensor(a1_l.shape[0], device=a1_l.device))
         abar_list.append(a1_l.mean(dim=0))
-        del a1_l
     return aaT_list, abar_list
 
 def calc_mean_dLdS_S_aaT_abar(dLdS_blist, S_blist, aaT_blist, abar_blist):
@@ -137,7 +124,6 @@ def calc_mean_dLdS_S_aaT_abar(dLdS_blist, S_blist, aaT_blist, abar_blist):
         S_mean.append(torch.stack(S_layers[li]).mean(dim=0))
         aaT_mean.append(torch.stack(aaT_layers[li]).mean(dim=0))
         abar_mean.append(torch.stack(abar_layers[li]).mean(dim=0))
-
     return dLdS_mean, S_mean, aaT_mean, abar_mean
 
 def initialize_Hmat(net):
@@ -177,17 +163,6 @@ def copy_Hmat(Hmat_in):
         })
     return Hmat
 
-def del_Hmat(Hmat):
-    for lh in Hmat:
-        del lh['Hg']
-        del lh['Ha']
-        del lh['sg']
-        del lh['yg']
-        del lh['A']
-        del lh['name']
-    del Hmat[:]
-    del Hmat
-
 def initialize_dLdS(net):
     dLdS = []
     for layerkey, layerval in net.state_dict().items():
@@ -196,12 +171,6 @@ def initialize_dLdS(net):
                 torch.zeros(layerval.shape[0], device=layerval.device, requires_grad=False)
             )        
     return dLdS
-
-def del_dLdS(dLdS):
-    for ld in dLdS:
-        del ld
-    del dLdS[:]
-    del dLdS
 
 def initialize_aaT(net):
     aaT = []
@@ -217,12 +186,6 @@ def initialize_aaT(net):
             )
     return aaT
 
-def del_aaT(aaT):
-    for la in aaT:
-        del la
-    del aaT[:]
-    del aaT
-
 def initialize_abar(net):
     abar = []
     for layerkey, layerval in net.state_dict().items():
@@ -236,12 +199,6 @@ def initialize_abar(net):
                 torch.zeros(abar_dim, device=layerval.device, requires_grad=False)
             )
     return abar
-
-def del_abar(abar):
-    for la in abar:
-        del la
-    del abar[:]
-    del abar    
 
 def update_grads(grad, update, scale):
     grad.add_(update * scale)
@@ -271,7 +228,6 @@ def update_Hmat(Hmat, args, epoch_idx, dLdS_curr, dLdS_last, S_curr, S_last, aaT
     for li in range(num_layers):
         if Hmat[li] == None: # conv layers
             continue
-
         S_diff = S_curr[li] - S_last[li]
         Hmat[li]['sg'] *= bias_correction_last
         Hmat[li]['sg'] = args.kronecker_beta * Hmat[li]['sg'] + (1. - args.kronecker_beta) * S_diff
@@ -303,7 +259,6 @@ def double_damp_per_layer(mu1, mu2, s, y, H):
     else:
         theta1 = 1.0
     s_tilde = theta1 * s + (1. - theta1) * Hy
-
     stTy = s_tilde.dot(y)
     stTst = s_tilde.dot(s_tilde)
     if stTy < mu2 * stTst:
@@ -313,7 +268,6 @@ def double_damp_per_layer(mu1, mu2, s, y, H):
     else:
         theta2 = 1.0
     y_tilde = theta2 * y + (1. - theta2) * s_tilde
-
     return s_tilde, y_tilde
 
 
@@ -333,6 +287,14 @@ def calc_normdiff_Hmat(Hmat1, Hmat2):
         norm_accum += ((h1['Hg'] - h2['Hg']).pow(2.).mean() + (h1['Ha'] - h2['Ha']).pow(2.).mean()) / 2.0
     return (norm_accum / float(len(Hmat1))).sqrt()
 
+def del_kronecker_metric(m):
+    for ml in m:
+        del ml
+    del m[:]
 
-
+def copy_kronecker_metric(m):
+    metric_copy = []
+    for ml in m:
+        metric_copy.append(ml.clone().to(ml.device))
+    return metric_copy
 

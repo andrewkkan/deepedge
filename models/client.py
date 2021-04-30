@@ -190,7 +190,8 @@ class LocalClientK1BFGS(object):
         self.net.train()
         last_net.train()
 
-        clipping_metric = gather_flat_params(last_net).abs().mean()
+        with torch.no_grad():
+            clipping_metric = gather_flat_params(last_net).abs().mean()
 
         epoch_loss = []
         epoch_accuracy = []
@@ -199,6 +200,12 @@ class LocalClientK1BFGS(object):
         aaT_batchlist = []
         abar_batchlist = []
         S_batchlist = []
+
+        if self.args.momentum_bc_off == True:
+            bias_correction_curr = bias_correction_last = 1.0
+        else:
+            bias_correction_curr = 1. - self.args.momentum_beta ** (round_idx + 1)
+            bias_correction_last = 1. - self.args.momentum_beta ** round_idx   
 
         for iter in range(self.args.local_ep):
             batch_loss = []
@@ -218,18 +225,13 @@ class LocalClientK1BFGS(object):
                 batch_loss.append(loss.item())
                 if nnout_max is not None:
                     batch_accuracy.append(sum(nnout_max==labels).float() / len(labels))
-                    del nnout_max
                 else:
                     batch_accuracy.append(0)
                 loss.backward()
-                deltw = gather_flat_grad(self.net)
 
+                with torch.no_grad():
+                    deltw = gather_flat_grad(self.net)
                 # Add momentum to deltw.  Default is MIME style, i.e. server statistics based
-                if self.args.momentum_bc_off == True:
-                    bias_correction_curr = bias_correction_last = 1.0
-                else:
-                    bias_correction_curr = 1. - self.args.momentum_beta ** (round_idx + 1)
-                    bias_correction_last = 1. - self.args.momentum_beta ** round_idx   
                 deltw_mom = self.mom * bias_correction_last 
                 deltw_mom = deltw_mom * self.args.momentum_beta + deltw * (1.0 - self.args.momentum_beta)
                 deltw_mom /= bias_correction_curr
@@ -252,45 +254,32 @@ class LocalClientK1BFGS(object):
                         nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
                         loss_ref = self.loss_func(nn_outputs_ref, labels) 
                     loss_ref.backward()
-                    deltw_ref = gather_flat_grad(last_net)
+                    with torch.no_grad():
+                        deltw_ref = gather_flat_grad(last_net)
+                        s_l, sgrad_l = get_s_sgrad(s)
+                        aaT, abar = get_aaT_abar(a)
                     grad_sum += deltw_ref
-                    # sum and average the following: 1. s.grad = g, and 2. a aT
-                    s_l, sgrad_l = get_s_sgrad(s)
                     dLdS_batchlist.append(sgrad_l)
                     S_batchlist.append(s_l)
-                    aaT, abar = get_aaT_abar(a)
                     aaT_batchlist.append(aaT)
                     abar_batchlist.append(abar)
-                    del aaT
-                    del abar
-                    del deltw_ref
-                    del nn_outputs_ref
-                    del loss_ref
 
-                del descent
-                del deltw
-                del nn_outputs
-                del loss
-
-            flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
+            with torch.no_grad():
+                flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
             flat_delts = flat_net_states - flat_last_net_states
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
             epoch_accuracy.append(sum(batch_accuracy)/len(batch_accuracy))
-            del batch_loss[:]
-            del batch_accuracy[:]
 
-        flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
+        with torch.no_grad():
+            flat_net_states, flat_last_net_states = gather_flat_states(self.net), gather_flat_states(last_net)
         flat_delts = flat_net_states - flat_last_net_states
         flat_grad = grad_sum / float(batch_idx + 1)  # This grad has been averaged for the batch size (from loss calculation) as well as the number of batches (here)
         dLdS_mean, S_mean, aaT_mean, abar_mean = calc_mean_dLdS_S_aaT_abar(dLdS_batchlist, S_batchlist, aaT_batchlist, abar_batchlist) # inputs are lists of batches, outputs are lists of per-layer metrics
-        
-        del flat_net_states
-        del flat_last_net_states
-        del last_net
-        del grad_sum
-        del dLdS_batchlist[:]
-        del aaT_batchlist[:]
-        del abar_batchlist[:]
+
+        self.del_metricList(dLdS_batchlist)
+        self.del_metricList(S_batchlist)
+        self.del_metricList(aaT_batchlist)
+        self.del_metricList(abar_batchlist)
 
         # flat_delts is simply the change in parameters before and after training.  
         # flat_grad is actually the gradient of the entire dataset from the local client against the model parameters before training (from net_glob)
@@ -306,9 +295,17 @@ class LocalClientK1BFGS(object):
 
     def stats_update(self, net, H_mat, mom):
         self.net = net
-        self.H_mat = H_mat # Do not modify 
+        self.H_mat = H_mat # Do not modify or delete
         self.mom = mom
 
     def del_stats(self):
         del self.net 
-        del self.H_mat 
+        # del self.H_mat 
+        del self.mom
+
+    def del_metricList(self, l):
+        for ll in l:
+            for lll in ll:
+                del lll
+            del ll[:]
+        del l[:]
