@@ -161,24 +161,30 @@ class LeNet5(nn.Module):
         self.unfold_func['conv1'] = nn.Unfold(**self.conv1_kwargs)
         self.input_size['conv1'] = (32, 32)
         self.output_size['conv1'] = (28, 28, 75) # 75 = kernel_size[0]*kernel_size[1]*num_channels
-        self.tanh1 = nn.Tanh()
         self.maxpool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
         self.conv2_kwargs = dict(kernel_size=(5, 5))
         self.conv2 = nn.Conv2d(6, 16, **self.conv2_kwargs)
         self.unfold_func['conv2'] = nn.Unfold(**self.conv2_kwargs)
         self.input_size['conv2'] = (14, 14)
         self.output_size['conv2'] = (10, 10, 150) # 150 = kernel_size[0]*kernel_size[1]*6
-        self.tanh2 = nn.Tanh()
         self.maxpool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
         self.conv3_kwargs = dict(kernel_size=(5, 5))
         self.conv3 = nn.Conv2d(16, 120, **self.conv3_kwargs)
         self.unfold_func['conv3'] = nn.Unfold(**self.conv3_kwargs)
         self.input_size['conv3'] = (5, 5)
         self.output_size['conv3'] = (1, 1, 400) # 400 = kernel_size[0]*kernel_size[1]*16
-        self.tanh3 = nn.Tanh()
         self.fc1 = nn.Linear(120, 84)
-        self.tanh4 = nn.Tanh()
         self.fc2 = nn.Linear(84, args.num_classes)
+        if args.lenet5_activation == "relu":
+            self.activation1 = nn.ReLU()
+            self.activation2 = nn.ReLU()
+            self.activation3 = nn.ReLU()
+            self.activation4 = nn.ReLU()
+        elif True or args.lenet5_activation == 'tanh':
+            self.activation1 = nn.Tanh()
+            self.activation2 = nn.Tanh()
+            self.activation3 = nn.Tanh()
+            self.activation4 = nn.Tanh() 
 
     def forward(self, img, out_feature=False):
         # a and s are as defined in Algo1 of the Martens / Goose paper.  a and s would be a and h in the Goldfarb paper.
@@ -192,7 +198,7 @@ class LeNet5(nn.Module):
         output = self.conv1(img)
         output.retain_grad()
         s.append(output)
-        output = self.tanh1(output)
+        output = self.activation1(output)
         output = self.maxpool1(output)
 
         a_unfolded = self.unfold_func['conv2'](output)
@@ -201,7 +207,7 @@ class LeNet5(nn.Module):
         output = self.conv2(output)
         output.retain_grad()
         s.append(output)
-        output = self.tanh2(output)
+        output = self.activation2(output)
         output = self.maxpool2(output)
 
         a_unfolded = self.unfold_func['conv3'](output)
@@ -210,14 +216,14 @@ class LeNet5(nn.Module):
         output = self.conv3(output)
         output.retain_grad()
         s.append(output)
-        output = self.tanh3(output)
+        output = self.activation3(output)
 
         feature = output.view(-1, 120)
         a.append(feature)
         output = self.fc1(feature)
         output.retain_grad()
         s.append(output)
-        output = self.tanh4(output)
+        output = self.activation4(output)
 
         a.append(output)
         output = self.fc2(output)

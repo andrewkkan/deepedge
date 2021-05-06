@@ -65,6 +65,9 @@ def args_parser():
     parser.add_argument('--kronecker_stop_update', type=int, default=-1, help="Provide round index to stop KBFGS update.")
     parser.add_argument('--warmup_dataset', type=str, default='', help="Name of warmup dataset for initial H_mat")
 
+    parser.add_argument('--lenet5_activation', type=str, default='relu', help="Options: relu or tanh")
+    parser.add_argument('--datasets_normalization', type=str, default='custom', help="Options: custom or generic.")
+
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 
 

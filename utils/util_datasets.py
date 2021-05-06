@@ -40,23 +40,30 @@ def augment_num_channels(batchdata, num_channels):
         return None
 
 def get_datasets(args):
-    trans_generic = transforms.Compose([transforms.ToTensor()])
-    trans_generic_2828 = transforms.Compose([transforms.Resize((28, 28)), transforms.ToTensor()])
-    trans_generic_3232 = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
+    trans_generic = [transforms.ToTensor()]
+    trans_generic_2828 = [transforms.Resize((28, 28)), transforms.ToTensor()]
+    trans_generic_3232 = [transforms.Resize((32, 32)), transforms.ToTensor()]
 
     if args.model == 'cnn': # CIFAR
-        transform = trans_generic_3232
+        transform_list = trans_generic_3232
     elif args.model == 'lenet5':
-        transform = trans_generic_3232
+        transform_list = trans_generic_3232
     # elif args.model == 'autoenc':
     #     transform = trans_generic_2828
     else:
         transform = trans_generic
 
     if args.dataset == 'mnist':
-        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=transform)
-        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=transform)
+        if args.datasets_normalization == 'custom':
+            transform_list.append(
+                transforms.Normalize((0.1307,), (0.3081,))
+            )
+        else:
+            transform_list.append(
+                transforms.Normalize((0.5,), (0.25,))
+            )            
+        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=transforms.Compose(transform_list))
+        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=transforms.Compose(transform_list))
         # sample users
         if args.iid:
             dict_users = mnist_iid(dataset_train, args.num_users)
@@ -67,10 +74,17 @@ def get_datasets(args):
         args.num_channels = 1
     elif args.dataset == 'emnist':
         # trans_emnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.9635,), (0.1586,))])
-        trans_emnist = transforms.Compose([transforms.ToTensor()])
         # dataset_train = EMNISTDataset_by_write(train=True, transform=trans_emnist)
-        dataset_train = EMNISTDataset_by_write(train=True, transform=transform)
-        dataset_test = EMNISTDataset_by_write(train=False, transform=transform)
+        if args.datasets_normalization == 'custom':
+            transform_list.append(
+                transforms.Normalize((0.9637268,), (0.15913315,))
+            )
+        else:
+            transform_list.append(
+                transforms.Normalize((0.5,), (0.25,))
+            )         
+        dataset_train = EMNISTDataset_by_write(train=True, transform=transforms.Compose(transform_list))
+        dataset_test = EMNISTDataset_by_write(train=False, transform=transforms.Compose(transform_list))
         # sample users
         args.num_classes = 62
         args.num_channels = 1
@@ -89,18 +103,32 @@ def get_datasets(args):
     elif args.dataset == 'reddit':
         args.frac = 0.0123
     elif args.dataset == 'cifar10':
-        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
-        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=transform)
-        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=transform)
+        if args.datasets_normalization == 'custom':
+            transform_list.append(
+                transforms.Normalize((0.49139968, 0.48215841, 0.44653091), (0.24703223, 0.24348513, 0.26158784))
+            )
+        else:
+            transform_list.append(
+                transforms.Normalize((0.5,0.5,0.5), (0.25,0.25,0.25))
+            )         
+        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=transforms.Compose(transform_list))
+        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=transforms.Compose(transform_list))
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
             dict_users = generic_noniid(dataset_train, args.num_users, args.noniid_dirich_alpha)
         args.num_classes = 10
     elif args.dataset == 'cifar100':
-        trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
-        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=transform)
-        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=transform)
+        if args.datasets_normalization == 'custom':
+            transform_list.append(
+                transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))
+            )
+        else:
+            transform_list.append(
+                transforms.Normalize((0.5,0.5,0.5), (0.25,0.25,0.25))
+            )         
+        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=transforms.Compose(transform_list))
+        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=transforms.Compose(transform_list))
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
         else:
@@ -110,8 +138,15 @@ def get_datasets(args):
         if args.num_users > 8:
             args.num_users = 8
             print("Warning: limiting number of users to 8.")
-        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.262428402,0.262428402,0.262428402], std=[0.30702864, 0.30702864, 0.30702864])])
-        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=transform)
+        if args.datasets_normalization == 'custom':
+            transform_list.append(
+                transforms.Normalize(mean=[0.262428402,0.262428402,0.262428402], std=[0.30702864, 0.30702864, 0.30702864])
+            )
+        else:
+            transform_list.append(
+                transforms.Normalize((0.5,0.5,0.5), (0.25,0.25,0.25))
+            )         
+        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=transforms.Compose(transform_list))
         dataset_test = dataset_train
         if args.iid:
             dict_users = generic_iid(dataset_train, args.num_users)
