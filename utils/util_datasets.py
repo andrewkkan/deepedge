@@ -105,7 +105,8 @@ def get_datasets(args):
     elif args.dataset == 'cifar10':
         if args.datasets_normalization == 'custom':
             transform_list.append(
-                transforms.Normalize((0.49139968, 0.48215841, 0.44653091), (0.24703223, 0.24348513, 0.26158784))
+                # transforms.Normalize((0.49139968, 0.48215841, 0.44653091), (0.24703223, 0.24348513, 0.26158784))
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
             )
         else:
             transform_list.append(
