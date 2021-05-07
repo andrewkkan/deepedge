@@ -265,24 +265,24 @@ if __name__ == '__main__':
         # print status
         if args.task == 'ObjRec':
             print(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {:.8f}'.\
-                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, normdiff_Hmat)
+                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, str(normdiff_Hmat))
             )
         elif args.task == 'AutoEnc':
             print(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, LNorm of diff between Hmat(t) and Hmat(t-1) {:.8f}'.\
-                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, normdiff_Hmat)
+                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, LNorm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
             )
         if args.screendump_file:
             if args.task == 'ObjRec':
                 sdf.write(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {:.8f}'.\
-                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, normdiff_Hmat)
+                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, str(normdiff_Hmat))
                 )
             elif args.task == 'AutoEnc':
                 sdf.write(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {:.8f}'.\
-                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, normdiff_Hmat)
+                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
                 )
             sdf.write('\n')
             sdf.flush()

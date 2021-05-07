@@ -6,10 +6,11 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import copy
 import torch.nn.functional as F
-from utils.util_model import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states, net_params_halper
+from utils.util_model import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states
 from models.adaptive_sgd import Adaptive_SGD
 from utils.util_kronecker import multiply_HgDeltHa, get_s_sgrad, get_aaT_abar, calc_mean_dLdS_S_aaT_abar
 from utils.util_lossfn import CrossEntropyLoss, MSELoss, MSESaddleLoss
+from utils.util_experimental import simple_linesearch
 
 from IPython import embed
 
@@ -191,7 +192,10 @@ class LocalClientK1BFGS(object):
         last_net.train()
 
         with torch.no_grad():
-            clipping_metric = gather_flat_params(last_net).abs().mean()
+            if self.args.newton_method == "predetermined":
+                clipping_metric = gather_flat_params(last_net).abs().mean()
+            # elif self.args.newton_method == "linesearch":
+            #     clipping_metric = gather_flat_params(last_net).abs().mean() * self.args.lr_device
 
         epoch_loss = []
         epoch_accuracy = []
@@ -238,11 +242,15 @@ class LocalClientK1BFGS(object):
                 # descent = Hg deltw Ha for each layer
                 descent = multiply_HgDeltHa(deltw_mom, self.H_mat, self.net.state_dict(), device=self.args.device)
                 # descent = deltw_mom
-                descent_metric = descent.abs().mean()
-                if descent_metric > clipping_metric:
-                    descent *= clipping_metric / descent_metric
+                if self.args.newton_method == "predetermined":
+                    descent_metric = descent.abs().mean()
+                    if descent_metric > clipping_metric:
+                        descent *= clipping_metric / descent_metric
+                    descent *= self.args.lr_device
+                elif self.args.newton_method == "linesearch":
+                    descent = simple_linesearch(flat_descent=descent, net=self.net, flat_grad=deltw_mom, loss_func=self.loss_func, images_labels=(images, labels), task=self.args.task, curr_loss=loss)
                 # Add lr * descent to local net
-                add_states(self.net, -self.args.lr_device * descent)
+                add_states(self.net, -descent)
 
                 if iter == (self.args.local_ep - 1):
                     last_net.zero_grad()

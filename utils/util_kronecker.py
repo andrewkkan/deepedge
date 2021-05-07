@@ -283,9 +283,13 @@ def update_BFGS(H, s, y):
 
 def calc_normdiff_Hmat(Hmat1, Hmat2):
     norm_accum = float(0.)
+    norm_perlayer = []
     for h1, h2 in zip(Hmat1, Hmat2):
-        norm_accum += ((h1['Hg'] - h2['Hg']).pow(2.).mean() + (h1['Ha'] - h2['Ha']).pow(2.).mean()) / 2.0
-    return (norm_accum / float(len(Hmat1))).sqrt()
+        norm2_l = ((h1['Hg'] - h2['Hg']).pow(2.).mean() + (h1['Ha'] - h2['Ha']).pow(2.).mean()) / 2.0
+        norm_accum += norm2_l 
+        norm_perlayer.append(norm2_l.sqrt())
+    norm_accum = (norm_accum / float(len(Hmat1))).sqrt()
+    return {'Total': norm_accum, 'Per Layer:': norm_perlayer}
 
 def del_kronecker_metric(m):
     for ml in m:

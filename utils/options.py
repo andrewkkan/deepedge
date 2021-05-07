@@ -67,6 +67,7 @@ def args_parser():
 
     parser.add_argument('--lenet5_activation', type=str, default='relu', help="Options: relu or tanh")
     parser.add_argument('--datasets_normalization', type=str, default='custom', help="Options: custom or generic.")
+    parser.add_argument('--newton_method', type=str, default='predetermined', help="Options: predetermined or linesearch")
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 

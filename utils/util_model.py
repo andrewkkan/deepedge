@@ -114,21 +114,21 @@ def gather_flat_grad(model):
         views.append(view)
     return torch.cat(views, 0)
 
-def net_params_halper(net, states):
-    sdk = net.state_dict().keys()
-    npk = dict(net.named_parameters()).keys()    
-    wl, osl = [], []
-    deltw, deltos = None, None
-    offset = 0
-    for k in sdk:
-        numel = net.state_dict()[k].numel()
-        if k in npk:
-            wl.append(delts[offset:offset+numel])
-        else:
-            osl.append(delts[offset:offset+numel])
-        offset += numel
-    deltw = torch.cat(wl, 0)
-    if osl:
-        deltos = torch.cat(osl, 0)
-    return deltw, deltos
+# def net_params_helper(net, states):
+#     sdk = net.state_dict().keys()
+#     npk = dict(net.named_parameters()).keys()    
+#     wl, osl = [], []
+#     deltw, deltos = None, None
+#     offset = 0
+#     for k in sdk:
+#         numel = net.state_dict()[k].numel()
+#         if k in npk:
+#             wl.append(delts[offset:offset+numel])
+#         else:
+#             osl.append(delts[offset:offset+numel])
+#         offset += numel
+#     deltw = torch.cat(wl, 0)
+#     if osl:
+#         deltos = torch.cat(osl, 0)
+#     return deltw, deltos
 
