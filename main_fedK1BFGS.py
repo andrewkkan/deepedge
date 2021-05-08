@@ -204,10 +204,10 @@ if __name__ == '__main__':
                 update_metrics(stats_round['S'], stats_local['S'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
                 update_metrics(stats_round['aaT'], stats_local['aaT'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
                 update_metrics(stats_round['abar'], stats_local['abar'], scale = float(nD_by_user_idx[user_idx])/float(nD_total))
-            acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch = 16, shuffle = True, device = args.device)
-            loss_locals.append(loss)
-            acc_locals.append(acc_l)
-            acc_locals_on_local.append(acc_ll)
+            # acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch = 16, shuffle = True, device = args.device)
+            # loss_locals.append(loss)
+            # acc_locals.append(acc_l)
+            # acc_locals_on_local.append(acc_ll)
             # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
             local_user[user_idx].del_stats() # Make sure this does not delete any stats_glob values such as H_mat
 
@@ -258,35 +258,35 @@ if __name__ == '__main__':
         else:
             test_acc_glob, test_loss_glob = test_img(net_glob, dataset_test, args, stop_at_batch = -1, shuffle = True, device = args.device)
             train_acc_glob, train_loss_glob = test_img(net_glob, dataset_train, args, stop_at_batch = -1, shuffle = True, device = args.device)
-        acc_loc = sum(acc_locals) / len(acc_locals)
-        acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
-        loss_avg = sum(loss_locals) / len(loss_locals)
+        # acc_loc = sum(acc_locals) / len(acc_locals)
+        # acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
+        # loss_avg = sum(loss_locals) / len(loss_locals)
         
         # print status
         if args.task == 'ObjRec':
             print(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
-                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, str(normdiff_Hmat))
+                    'Round {:3d}, Devices participated {:2d}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, str(normdiff_Hmat))
             )
         elif args.task == 'AutoEnc':
             print(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, LNorm of diff between Hmat(t) and Hmat(t-1) {}'.\
-                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
+                    'Round {:3d}, Devices participated {:2d}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, LNorm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
             )
         if args.screendump_file:
             if args.task == 'ObjRec':
                 sdf.write(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Local accuracy on global train data {:.8f}, Local accuracy on local train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
-                    format(epoch_idx, m, loss_avg, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, acc_loc, acc_lloc, str(normdiff_Hmat))
+                    'Round {:3d}, Devices participated {:2d}, Central accuracy on global test data {:.8f}, Central loss on global test data {:.8f}, Central accuracy on global train data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, test_acc_glob, test_loss_glob, train_acc_glob, train_loss_glob, str(normdiff_Hmat))
                 )
             elif args.task == 'AutoEnc':
                 sdf.write(
-                    'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
-                    format(epoch_idx, m, loss_avg, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
+                    'Round {:3d}, Devices participated {:2d}, Central loss on global test data {:.8f}, Central loss on global train data {:.8f}, Norm of diff between Hmat(t) and Hmat(t-1) {}'.\
+                    format(epoch_idx, m, test_loss_glob, train_loss_glob, str(normdiff_Hmat))
                 )
             sdf.write('\n')
             sdf.flush()
-        loss_train.append(loss_avg)
+        # loss_train.append(loss_avg)
 
         with torch.cuda.device(args.device):
             torch.cuda.empty_cache()
