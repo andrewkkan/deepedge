@@ -1,28 +1,38 @@
 import torch
+import numpy as np
 import copy
 from utils.util_model import gather_flat_params, gather_flat_params_with_grad, gather_flat_other_states, gather_flat_grad, gather_flat_states, add_states
 
 def simple_linesearch(flat_descent, net, flat_grad, loss_func, images_labels, task, curr_loss):
-    num_trials = 10
-    loss_trials = []
     (images, labels) = images_labels
-    for nt in range(num_trials):
-        search_net = copy.deepcopy(net)
-        scale = float(nt+1) / float(num_trials)
-        add_states(search_net, -flat_descent * scale)
-        nn_outputs, _, _ = search_net(images)
-        with torch.no_grad():
+    num_trials = 8
+    half_index = int(num_trials/2.)
+    depth_level = 3
+    dwell_offset = 0.0
+    for dl in range(depth_level):
+        loss_trials = []
+        for nt in range(num_trials):
+            search_net = copy.deepcopy(net)
+            scale = float(nt+0.5) / float(num_trials) / np.power(2.0,dl) + dwell_offset
+            add_states(search_net, -flat_descent * scale)
+            nn_outputs, _, _ = search_net(images)
             if task == 'AutoEnc':
                 loss = loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
             else:
                 loss = loss_func(nn_outputs, labels) 
-        loss_trials.append(loss)
-        del search_net
-    min_loss = min(loss_trials)
-    min_index = loss_trials.index(min_loss)
-    if min_loss <= curr_loss:
-        # return flat_descent * float(min_index+1) / float(num_trials)
-        return flat_descent * 0.075
+            loss_trials.append(loss.item())
+            del search_net
+        losses_np = np.array(loss_trials)
+        loss_sum1 = losses_np[0:half_index].sum()
+        loss_sum2 = losses_np[half_index:].sum()
+        if loss_sum1 >= loss_sum2:
+            dwell_offset += np.power(2.0, -(dl+1))
+    if loss_sum1 >= loss_sum2:
+        final_loss_avg = loss_sum2 / float(half_index)
+    else:
+        final_loss_avg = loss_sum1 / float(half_index)
+    if final_loss_avg <= curr_loss:
+        return flat_descent * (np.power(2.0, -(dl+2)) + dwell_offset)
     else:
         return torch.zeros_like(flat_descent)
 

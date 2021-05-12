@@ -192,8 +192,7 @@ class LocalClientK1BFGS(object):
         last_net.train()
 
         with torch.no_grad():
-            if self.args.newton_method == "predetermined":
-                clipping_metric = gather_flat_params(last_net).abs().mean()
+            clipping_metric = gather_flat_params(last_net).abs().mean()
             # elif self.args.newton_method == "linesearch":
             #     clipping_metric = gather_flat_params(last_net).abs().mean() * self.args.lr_device
 
@@ -242,10 +241,10 @@ class LocalClientK1BFGS(object):
                 # descent = Hg deltw Ha for each layer
                 descent = multiply_HgDeltHa(deltw_mom, self.H_mat, self.net.state_dict(), device=self.args.device)
                 # descent = deltw_mom
+                descent_metric = descent.abs().mean()
+                if descent_metric > clipping_metric:
+                    descent *= clipping_metric / descent_metric
                 if self.args.newton_method == "predetermined":
-                    descent_metric = descent.abs().mean()
-                    if descent_metric > clipping_metric:
-                        descent *= clipping_metric / descent_metric
                     descent *= self.args.lr_device
                 elif self.args.newton_method == "linesearch":
                     descent = simple_linesearch(flat_descent=descent, net=self.net, flat_grad=deltw_mom, loss_func=self.loss_func, images_labels=(images, labels), task=self.args.task, curr_loss=loss)
