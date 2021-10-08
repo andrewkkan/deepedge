@@ -1,13 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Python version: 3.6
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Tuple, Union, Callable
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 
-class MLP(nn.Module):
+NNet_Out = Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor], ]
+
+class NNet(ABC):
+    @abstractmethod
+    def forward(self, x: torch.Tensor) -> NNet_Out: 
+        pass   
+
+class MLP(nn.Module, NNet):
     def __init__(self, dim_in, dim_hidden, dim_out, weight_init=None, bias_init=None):
         super(MLP, self).__init__()
         self.layer_input = nn.Linear(dim_in, dim_hidden)
@@ -30,7 +39,7 @@ class MLP(nn.Module):
             torch.nn.init.zeros_(self.layer_hidden2.bias)
 
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> NNet_Out: 
         x = x.view(-1, x.shape[-3]*x.shape[-2]*x.shape[-1])
         x = self.layer_input(x)
         x = self.relu(x)
@@ -40,7 +49,7 @@ class MLP(nn.Module):
         return x
 
 
-class CNNMnist(nn.Module):
+class CNNMnist(nn.Module, NNet):
     def __init__(self, args):
         super(CNNMnist, self).__init__()
         self.conv1 = nn.Conv2d(args.num_channels, 10, kernel_size=5)
@@ -49,7 +58,7 @@ class CNNMnist(nn.Module):
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, args.num_classes)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> NNet_Out: 
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
         x = x.view(-1, x.shape[-3]*x.shape[2]*x.shape[3])
@@ -60,7 +69,7 @@ class CNNMnist(nn.Module):
         return x
 
 
-class CNNCifar(nn.Module):
+class CNNCifar(nn.Module, NNet):
     def __init__(self, args):
         super(CNNCifar, self).__init__()
         self.conv1 = nn.Conv2d(args.num_channels, 6, 5)
@@ -73,7 +82,7 @@ class CNNCifar(nn.Module):
         self.bn2 = nn.BatchNorm1d(84)
         self.fc3 = nn.Linear(84, args.num_classes)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> NNet_Out: 
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 16 * 5 * 5)
@@ -86,7 +95,7 @@ class CNNCifar(nn.Module):
         #return F.log_softmax(x, dim=1)
         return x
 
-class LeNet5(nn.Module):
+class LeNet5(nn.Module, NNet):
 
     def __init__(self, args):
         super(LeNet5, self).__init__()
@@ -109,7 +118,7 @@ class LeNet5(nn.Module):
             self.activation3 = nn.Tanh()
             self.activation4 = nn.Tanh()         
 
-    def forward(self, img, out_feature=False):
+    def forward(self, img: torch.Tensor, out_feature=False) -> NNet_Out: 
         output = self.conv1(img)
         output = self.activation1(output)
         output = self.maxpool1(output)
@@ -127,7 +136,7 @@ class LeNet5(nn.Module):
         else:
             return output,feature
 
-class MNIST_AE(nn.Module):
+class MNIST_AE(nn.Module, NNet):
 
     def __init__(self, dim_in):
         super(MNIST_AE, self).__init__()
@@ -142,7 +151,7 @@ class MNIST_AE(nn.Module):
         self.activation = nn.Sigmoid()
 
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> NNet_Out: 
         input_shape = x.shape
         x = x.view(-1, x.shape[-3]*x.shape[-2]*x.shape[-1])
         x = self.layer_input(x)
@@ -162,7 +171,7 @@ class MNIST_AE(nn.Module):
         x = self.activation(x)
         return x.view(input_shape)
 
-class LSTM_reddit(nn.Module):
+class LSTM_reddit(nn.Module, NNet):
 
     def __init__(self, vocab_size=10004, embedding_size=96, hiddenLSTM_dim=670, hiddenLin1_dim=96, hiddenLin2_dim=10004):
         super(LSTM_reddit, self).__init__()
@@ -172,7 +181,7 @@ class LSTM_reddit(nn.Module):
         self.linear1 = nn.Linear(hiddenLin1_dim, hiddenLin2_dim)
         self.tanh = nn.Tanh()
 
-    def forward(self, sentence):
+    def forward(self, sentence: torch.Tensor) -> NNet_Out: 
         embeds = self.word_embeddings(sentence)
         lstm_out, _ = self.lstm(embeds.view(len(sentence), 1, -1))
         lin1_out = self.linear1(lstm_out.view(len(sentence), -1))

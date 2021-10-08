@@ -48,71 +48,21 @@ if __name__ == '__main__':
         sdf.write(str(datetime.datetime.now()) + '\n\n')
 
     # load dataset and split users
-    if args.dataset == 'mnist':
-        trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True, transform=trans_mnist)
-        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
-        # sample users
-        args.num_classes = 10
-        args.num_channels = 1
-        args.task = 'ObjRec'
-    elif args.dataset == 'emnist':
-        # trans_emnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.9635,), (0.1586,))])
-        trans_emnist = transforms.Compose([transforms.ToTensor()])
-        dataset_train = EMNISTDataset_by_write(train=True, transform=trans_emnist)
-        dataset_test = EMNISTDataset_by_write(train=False, transform=trans_emnist)
-        args.num_classes = 62
-        args.num_channels = 1
-        args.task = 'AutoEnc'
-        args.model = 'autoenc'
-    elif args.dataset == 'cifar10':
-        trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
-        dataset_train = datasets.CIFAR10('./data/cifar', train=True, download=True, transform=trans_cifar)
-        dataset_test = datasets.CIFAR10('./data/cifar', train=False, download=True, transform=trans_cifar)
-        args.num_classes = 10
-        args.task = 'ObjRec'
-    elif args.dataset == 'cifar100':
-        trans_cifar100 = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))])
-        dataset_train = datasets.CIFAR100('./data/cifar100', train=True, download=True, transform=trans_cifar100)
-        dataset_test = datasets.CIFAR100('./data/cifar100', train=False, download=True, transform=trans_cifar100)
-        args.num_classes = 100
-        args.task = 'ObjRec'
-    elif args.dataset == 'bcct200':
-        trans_bcct = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), transforms.Normalize(mean=[0.26215256, 0.26215256, 0.26215256], std=[0.0468134, 0.0468134, 0.0468134])])
-        dataset_train = datasets.ImageFolder(root='./data/BCCT200_resized/', transform=trans_bcct)
-        dataset_test = dataset_train
-        args.num_classes = 4
-        args.task = 'ObjRec'
-    else:
-        exit('Error: unrecognized dataset')
-
-    args.img_size = dataset_train[0][0].shape
+    dataset_train, dataset_test, dict_users, args, = get_datasets(args)
 
     # build model
-    if args.model == 'cnn' and args.dataset != 'mnist':
-        net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'lenet5' and args.dataset != 'mnist':
-        net_glob = LeNet5(args=args).to(args.device)
-    elif args.model == 'cnn' and args.dataset == 'mnist':
-        net_glob = CNNMnist(args=args).to(args.device)
-    elif args.model == 'mlp':
-        net_glob = MLP(dim_in=args.img_size[0]*args.img_size[1]*args.img_size[2], dim_hidden=200,
-                       dim_out=args.num_classes,
-                       weight_init=args.weight_init, bias_init=args.bias_init).to(args.device) 
-    elif args.model == 'autoenc':
-        net_glob = MNIST_AE(dim_in = args.img_size[0]*args.img_size[1]*args.img_size[2]).to(args.device)
-    else:
-        exit('Error: unrecognized model')
-
+    # build model
+    net_glob = get_model(args)
     net_glob = net_glob.to(args.device)
+    print(net_glob)
+    net_glob.train()
+
     if args.opt_mode == 3:
         optimizer = torch.optim.Adam(net_glob.parameters(), lr=args.lr_device, betas=(0.9,0.999))
     elif args.opt_mode == 0:
         optimizer = torch.optim.SGD(net_glob.parameters(), lr=args.lr_device, momentum=args.momentum)
     elif args.opt_mode == 1:
         optimizer = torch.optim.LBFGS(net_glob.parameters(), lr=args.lr_device, history_size=args.lbfgs_hist)
-    print(net_glob)
-    net_glob.train()
 
     # torch.save(net_glob.state_dict(), './data/models/main_central_emnist_AE_' + str(args.seed) + '_init.pt')
 

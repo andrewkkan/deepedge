@@ -14,9 +14,9 @@ import sys
 import datetime
 from torch.utils.data import DataLoader
 from utils.options import args_parser
-from models.client import LocalClientK1BFGS, DatasetSplit
+from models.client_K1BFGS import LocalClient_K1BFGS
 from models.test import test_img, test_img_ensem
-from utils.util_datasets import get_datasets, get_warmup_datasets, augment_num_channels
+from utils.util_datasets import get_datasets, get_warmup_datasets, augment_num_channels, DatasetSplit
 from utils.util_kronecker import initialize_Hmat, initialize_dLdS, initialize_aaT, initialize_abar, update_grads, update_metrics, update_Hmat, calc_normdiff_Hmat
 from utils.util_kronecker import get_s_sgrad, get_aaT_abar
 from utils.util_kronecker import copy_Hmat, del_kronecker_metric, copy_kronecker_metric
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     local_user, nD_by_user_idx = [], []
     for idx in range(args.num_users):
-        local_user.append(LocalClientK1BFGS(args=args, net=None, dataset=dataset_train, idxs=dict_users[idx], user_idx=idx))
+        local_user.append(LocalClient_K1BFGS(args=args, net=None, dataset=dataset_train, idxs=dict_users[idx], user_idx=idx))
         nD_by_user_idx.append(len(dict_users[idx]))
     args.local_nb = len(dict_users[0]) # Number of local mini-batches (asummed user 0 is representative)
     last_update = np.ones(args.num_users) * -1

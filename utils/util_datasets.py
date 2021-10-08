@@ -8,6 +8,20 @@ from utils.emnist_dataset import EMNISTDataset_by_write
 from models.linRegress import DataLinRegress, lin_reg
 from IPython import embed
 
+
+
+class DatasetSplit(Dataset):
+    def __init__(self, dataset, idxs):
+        self.dataset = dataset
+        self.idxs = list(idxs)
+
+    def __len__(self):
+        return len(self.idxs)
+
+    def __getitem__(self, item):
+        image, label = self.dataset[self.idxs[item]]
+        return image, label
+
 def get_warmup_datasets(args, image_dim):
     if image_dim == tuple((32, 32)):
         transform = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor()])
@@ -51,7 +65,7 @@ def get_datasets(args):
     # elif args.model == 'autoenc':
     #     transform = trans_generic_2828
     else:
-        transform = trans_generic
+        transform_list = trans_generic
 
     if args.dataset == 'mnist':
         if args.datasets_normalization == 'custom':
