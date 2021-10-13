@@ -50,6 +50,7 @@ class LocalClient_HypGrad(object):
             self.sync_interval = self.num_local_steps
         else:
             self.sync_interval = args.sync_interval
+        self.hypergrad_on = args.hypergrad_on
         assert(self.local_bs * self.num_local_steps <= len(idxs) * self.local_ep)
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.local_bs, shuffle=True)
         self.net = net
@@ -108,7 +109,7 @@ class LocalClient_HypGrad(object):
                 loss.backward()
 
                 with torch.no_grad():
-                    add_states(self.net, - self.lr_adapt * gather_flat_grad(self.net))
+                    add_states(self.net, - self.lr_local * gather_flat_grad(self.net))
 
                     self.active_state['step_loss'].append(loss.item())
                     if nnout_max is not None:
@@ -129,25 +130,27 @@ class LocalClient_HypGrad(object):
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
             self.active_state = None
             return {'delt_w': flat_delts , }, mean_loss, mean_accuracy
-        else:
+        elif self.hypergrad_on:
             # Interval sync with server before eaching end of round
             with torch.no_grad():
                 flat_net_states, flat_ref_states = gather_flat_states(self.net), gather_flat_states(self.active_state['net_start_interval'])
             flat_delts = flat_net_states - flat_ref_states
-            lr_adapt: float = (flat_delts * self.desc_glob / float(self.num_local_steps)).sum() # Dot product
+            lr_local: float = (flat_delts * self.desc_glob).sum() / float(self.sync_interval) # dot prouduct normalized 
             hyper_grad = {
-                'lr_adapt':  lr_adapt,
+                'lr_local':  lr_local,
             }
             return {'hyper_grad':   hyper_grad, }
+        else:
+            return {'hyper_grad':   0.0, }
 
-    def sync_update(self, net: Optional[NNet]=None, desc_glob: Optional[torch.Tensor]=None, lr_adapt: Optional[float]=None):
+    def sync_update(self, net: Optional[NNet]=None, desc_glob: Optional[torch.Tensor]=None, lr_local: Optional[float]=None):
         # Do not modify self.value if value is None
         if net is not None:
             self.net = net
         if desc_glob is not None:
             self.desc_glob = desc_glob
-        if lr_adapt is not None:
-            self.lr_adapt = lr_adapt
+        if lr_local is not None:
+            self.lr_local = lr_local
 
 
 

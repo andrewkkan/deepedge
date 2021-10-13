@@ -20,7 +20,7 @@ from models.test import test_img, test_img_ensem
 from models.linRegress import DataLinRegress, lin_reg
 from utils.util_datasets import get_datasets
 from utils.util_model import get_model, gather_flat_params, gather_flat_states, add_states
-from utils.util_hyper_grad import update_hyper_grad
+from utils.util_hyper_grad import update_hyper_grad, calcuate_lr_global, calculate_global_descent
 
 
 if __name__ == '__main__':
@@ -80,6 +80,13 @@ if __name__ == '__main__':
     num_sync_per_round = int(args.num_local_steps / args.sync_interval)
     if args.num_local_steps % args.sync_interval:
         args.num_local_steps = num_sync_per_round * args.sync_interval
+    if args.hypergrad_on:
+        # Start at same values
+        args.lr_device = args.lr_local_init
+        args.lr_global_init = args.lr_local_init
+    else:
+        args.lr_local_init = args.lr_device 
+        args.lr_global_init = args.lr_server
 
     for idx in range(args.num_users):
         local_user.append(LocalClient_HypGrad(args=args, net=None, dataset=dataset_train, idxs=dict_users[idx], user_idx=idx))
@@ -88,53 +95,85 @@ if __name__ == '__main__':
 
     m = min(max(int(args.frac * args.num_users), 1), args.num_users)
     stats_glob = {
-        'desc': torch.zeros_like(gather_flat_params(net_glob)),
+        'desc_global': torch.zeros_like(gather_flat_params(net_glob)),
+        'delt_w': torch.zeros_like(gather_flat_params(net_glob)),
     }
-    hyper_grad_vals: Dict[str, float] = {
-        'lr_adapt': args.lr_adapt_init,
+    hyper_grad_vals: Dict[str, float] = { 
+        'lr_global': args.lr_global_init,
+        'lr_local': args.lr_local_init,
     }
     hyper_grad_lr: Dict[str, float] = {
-        'lr_adapt': args.lr_adapt_lr, 
+        'lr_global': args.hyper_lr,
+        'lr_local': args.hyper_lr, 
     }
     for epoch_idx in range(args.epochs):
         deltw_locals, grad_locals, nD_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], [], []
+        hyper_grad_local_agg: List[Dict[str, float]] = []
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
-        for iu_idx, user_idx in enumerate(idxs_users):
+        for iu_idx, user_idx in enumerate(idxs_users): # updates that are only needed once per round
             last_update[user_idx] = epoch_idx
             local_user[user_idx].sync_update(
                 net = copy.deepcopy(net_glob).to(args.device), 
-                desc_glob = stats_glob['desc'].clone().to(args.device), 
+                desc_glob = stats_glob['desc_global'].clone().to(args.device), 
             )
-        hyper_grad_agg: List[Dict[str, float]] = []
-        for sync_idx in range(num_sync_per_round):
+        if args.hypergrad_on:
+            hyper_grad_vals['lr_local'] = hyper_grad_vals['lr_global'] # lr_global just means starting lr_local for each round
+        else:
+            hyper_grad_vals['lr_local'] = args.lr_local_init
+        for sync_idx in range(num_sync_per_round): # updates that are needed multiple syncs per round
             for iu_idx, user_idx in enumerate(idxs_users):
                 local_user[user_idx].sync_update(
-                    lr_adapt = hyper_grad_vals['lr_adapt'],
+                    lr_local = hyper_grad_vals['lr_local'],
                 )
                 train_results = local_user[user_idx].train()
                 try:
-                    hyper_grad = train_results['hyper_grad']
+                    hyper_grad_local = train_results['hyper_grad']
                 except:
-                    assert(sync_idx == num_sync_per_round - 1) # Expected exception, unless...
+                    assert(sync_idx == num_sync_per_round - 1) # Expected exception, unless the assert condition is broken
                     # print("Unexpected error when unpacking train_results in sync_interval loop!!")
+                    train_out, loss, acc_ll = train_results
+                    deltw_locals.append(copy.deepcopy(train_out['delt_w']))
+                    acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
+                    loss_locals.append(loss)
+                    acc_locals.append(acc_l)
+                    acc_locals_on_local.append(acc_ll)
+                    nD_locals.append(nD_by_user_idx[user_idx])
+                    # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
                 else:
-                    hyper_grad_agg.append(hyper_grad)
-            update_hyper_grad(hyper_grad_vals, hyper_grad_lr, hyper_grad_agg)
-        train_out, loss, acc_ll = train_results
-        deltw_locals.append(copy.deepcopy(train_out['delt_w']))
-        acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
-        loss_locals.append(loss)
-        acc_locals.append(acc_l)
-        acc_locals_on_local.append(acc_ll)
-        nD_locals.append(nD_by_user_idx[user_idx])
-        # print("Epoch idx = ", epoch_idx, ", User idx = ", user_idx, ", Loss = ", loss, ", Net norm = ", gather_flat_params(local_user[user_idx].net).norm())
+                    hyper_grad_local_agg.append(hyper_grad_local)
+            if args.hypergrad_on:
+                update_hyper_grad(hyper_grad_vals, hyper_grad_lr, hyper_grad_local_agg)
+            new_lr_local = hyper_grad_vals['lr_local']
+            print(f"Round = {epoch_idx}, LR Local = {new_lr_local} \n")
 
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
+        delt_w_normalized = delt_w / float(args.num_local_steps)
+        assert(args.lr_server == 1.0) # Let's enforce this value for now.
+        add_states(
+            model = net_glob, 
+            flat_states = args.lr_server * delt_w,
+        )
+        desc_glob: torch.Tensor = calculate_global_descent(
+            desc_current = stats_glob['desc_global'], 
+            delt_w = delt_w_normalized, 
+            momentum_alpha = args.glob_descent_momentum, 
+            epoch_idx = epoch_idx,
+        )
+        lr_global: float = calcuate_lr_global(
+            lr_global_current = hyper_grad_vals['lr_global'], 
+            hlr = hyper_grad_lr['lr_global'], 
+            desc_ref = stats_glob['desc_global'], 
+            delt_w = delt_w_normalized,
+        )
         stats_glob.update({
-            'delt_w':   delt_w,
+            'delt_w':       delt_w,
+            'desc_global':  desc_glob,
         })
-        add_states(net_glob, args.lr_server * stats_glob['delt_w'])
+        hyper_grad_vals.update({
+            'lr_global':    lr_global,
+        })
+
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)
         # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
