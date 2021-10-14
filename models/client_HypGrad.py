@@ -135,9 +135,9 @@ class LocalClient_HypGrad(object):
             with torch.no_grad():
                 flat_net_states, flat_ref_states = gather_flat_states(self.net), gather_flat_states(self.active_state['net_start_interval'])
             flat_delts = flat_net_states - flat_ref_states
-            lr_local: float = (flat_delts * self.desc_glob).sum() / float(self.sync_interval) # dot prouduct normalized 
+            lr_local_grad: float = (flat_delts * self.desc_glob).sum() / float(self.sync_interval) # dot prouduct normalized 
             hyper_grad = {
-                'lr_local':  lr_local,
+                'lr_local':  lr_local_grad,
             }
             return {'hyper_grad':   hyper_grad, }
         else:
