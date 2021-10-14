@@ -141,3 +141,18 @@ def args_parser_fedhypgrad():
 
     args = parser.parse_args()
     return args
+
+def args_parser_fedhypgrad_2():
+    parser = argparse.ArgumentParser()
+
+    args_parser_core(parser)
+    parser.add_argument('--hypergrad_on', action='store_true')
+    parser.add_argument('--hyper_lr', type=float, default=0.05, help="")
+    parser.add_argument('--lr_local_init_val', type=float, default=0.1, help="")
+    parser.add_argument('--lr_local_init_descent', type=str, default='EQ', help="EQ or INV or LIN")
+    parser.add_argument('--num_local_steps', type=int, default=10)
+    parser.add_argument('--lr_local_interval', type=int, default=5)
+    parser.add_argument('--glob_descent_momentum', type=float, default=0.9)
+
+    args = parser.parse_args()
+    return args

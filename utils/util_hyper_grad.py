@@ -3,11 +3,14 @@ import torch
 import numpy as np
 
 
-def update_hyper_grad(hyper_grad_vals: Dict[str, float], hyper_grad_lr: Dict[str, float], hyper_grad_agg: List[Dict[str, float]],
+def update_hyper_grad(hyper_grad_vals: Dict[str, Union[float, List[float]]], hyper_grad_lr: Dict[str, float], hyper_grad_agg: List[Dict[str, Union[float, List[float]]]],
 ) -> None:
 
     for key, val in hyper_grad_vals.items():
-        hyper_grad_update: float = 0.0
+        if type(val) == float:
+            hyper_grad_update: float = 0.0
+        elif type(val) == list:
+            hyper_grad_update: np.array = np.zeros_like(np.asarray(val), dtype=np.float64)
         num_updates = 0
         for hg in hyper_grad_agg:
             try:
@@ -15,11 +18,18 @@ def update_hyper_grad(hyper_grad_vals: Dict[str, float], hyper_grad_lr: Dict[str
             except:
                 continue
             else:
-                hyper_grad_update += hg[key]
+                if type(key_val) == list:
+                    key_val = np.asarray(key_val, dtype=np.float64)
+                hyper_grad_update += key_val
                 num_updates += 1
         if num_updates:
             hyper_grad_update = hyper_grad_update / float(num_updates)
-            hyper_grad_vals[key] += hyper_grad_lr[key] * hyper_grad_update
+            if type(hyper_grad_vals[key]) == list:
+                hypergrad_val = np.asarray(hyper_grad_vals[key], dtype=np.float64) + hyper_grad_lr[key] * hyper_grad_update
+                hypergrad_val = hypergrad_val.tolist()
+            else:
+                hypergrad_val = hyper_grad_vals[key] + hyper_grad_lr[key] * hyper_grad_update
+            hyper_grad_vals[key] = hypergrad_val
 
 
 
