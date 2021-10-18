@@ -3,7 +3,12 @@ import torch
 import numpy as np
 
 
-def update_hyper_grad(hyper_grad_vals: Dict[str, Union[float, List[float]]], hyper_grad_lr: Dict[str, float], hyper_grad_agg: List[Dict[str, Union[float, List[float]]]],
+def update_hyper_grad(
+        hyper_grad_vals: Dict[str, Union[float, List[float]]], 
+        hyper_grad_lr_alpha: Dict[str, float], 
+        hyper_grad_mom: Dict[str, Union[float, List[float]]],
+        hyper_grad_agg: List[Dict[str, Union[float, List[float]]]],
+        round_idx: int,
 ) -> None:
 
     for key, val in hyper_grad_vals.items():
@@ -24,21 +29,29 @@ def update_hyper_grad(hyper_grad_vals: Dict[str, Union[float, List[float]]], hyp
                 num_updates += 1
         if num_updates:
             hyper_grad_update = hyper_grad_update / float(num_updates)
+            lr = hyper_grad_lr_alpha[key]['lr']
+            alpha = hyper_grad_lr_alpha[key]['alpha']
+            bias_correction = 1.0 - alpha ** (round_idx + 1)
             if type(hyper_grad_vals[key]) == list:
-                hypergrad_val = np.asarray(hyper_grad_vals[key], dtype=np.float64) + hyper_grad_lr[key] * hyper_grad_update
+                hypergrad_val = np.asarray(hyper_grad_vals[key], dtype=np.float64) 
+                hypergrad_mom = (np.asarray(hyper_grad_mom[key], dtype=np.float64) * alpha \
+                    + lr * hyper_grad_update * (1.0 - alpha)) / bias_correction
+                hypergrad_val += hypergrad_mom
                 hypergrad_val = hypergrad_val.tolist()
             else:
-                hypergrad_val = hyper_grad_vals[key] + hyper_grad_lr[key] * hyper_grad_update
+                hypergrad_mom = (hyper_grad_mom[key]* alpha \
+                    + lr * hyper_grad_update * (1.0 - alpha)) / bias_correction
+                hypergrad_val = hyper_grad_vals[key] + hypergrad_mom
             hyper_grad_vals[key] = hypergrad_val
+            hyper_grad_mom[key] = hypergrad_mom
 
 
-
-def calculate_global_descent(desc_current: torch.Tensor, delt_w: torch.Tensor, momentum_alpha: float, epoch_idx: int,
+def calculate_gradient_ref(grad_current: torch.Tensor, grad_w: torch.Tensor, momentum_alpha: float, epoch_idx: int,
 ) -> torch.Tensor:
 
     bias_correction = 1.0 - momentum_alpha ** (epoch_idx + 1)
-    desc_with_momentum = (desc_current * momentum_alpha + delt_w * (1.0 - momentum_alpha)) / bias_correction
-    return desc_with_momentum
+    grad_with_momentum = (grad_current * momentum_alpha + grad_w * (1.0 - momentum_alpha)) / bias_correction
+    return grad_with_momentum
 
 
 
