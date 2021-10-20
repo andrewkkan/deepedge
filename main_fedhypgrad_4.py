@@ -76,7 +76,7 @@ if __name__ == '__main__':
         if args.local_ep < 1:
             pass # Will be calculated within local client initiation
     if args.lr_local_interval < 1:
-        args.lr_local_interval = 1
+        args.lr_local_interval = args.num_local_steps
     lr_adapts_per_round = int(args.num_local_steps / args.lr_local_interval)
     if args.num_local_steps % args.lr_local_interval:
         args.num_local_steps = lr_adapts_per_round * args.lr_local_interval
@@ -147,6 +147,8 @@ if __name__ == '__main__':
                     sync_idx = sync_idx,
                 )
             lr_local: float = hyper_grad_vals['lr_local'][sync_idx]
+            if lr_local <= 0:
+                print('break here')
             for iu_idx, user_idx in enumerate(idxs_users):
                 train_results = local_user[user_idx].train_step(lr_local)
                 if train_results is not None:

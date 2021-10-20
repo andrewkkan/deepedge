@@ -104,37 +104,37 @@ class LocalClient_HypGrad(object):
 
         if lr_local <= 0.0:
             self.active_state['step_idx'] = self.num_local_steps
-
-        for mini_step_idx in range(self.lr_local_interval):
-            try:
-                images, labels = next(self.active_state['data_iter'])
-            except StopIteration:
-                print("data_iter is emptied unexpectedly!!")
-                raise
-            else:
-                images, labels = images.to(self.args.device), labels.to(self.args.device)
-                self.net.zero_grad()
-                nn_outputs = self.net(images)
-                if self.args.task == 'AutoEnc':
-                    loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
-                    nnout_max = None
+        else:
+            for mini_step_idx in range(self.lr_local_interval):
+                try:
+                    images, labels = next(self.active_state['data_iter'])
+                except StopIteration:
+                    print("data_iter is emptied unexpectedly!!")
+                    raise
                 else:
-                    nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
-                    loss = self.loss_func(nn_outputs, labels) 
-                loss.backward()
-
-                with torch.no_grad():
-                    add_states(self.net, - lr_local * gather_flat_grad(self.net))
-
-                    self.active_state['step_loss'].append(loss.item())
-                    if nnout_max is not None:
-                        self.active_state['step_accuracy'].append(sum(nnout_max==labels).float() / len(labels))
+                    images, labels = images.to(self.args.device), labels.to(self.args.device)
+                    self.net.zero_grad()
+                    nn_outputs = self.net(images)
+                    if self.args.task == 'AutoEnc':
+                        loss = self.loss_func(nn_outputs, images) / images.shape[-1] / images.shape[-2] / images.shape[-3]
+                        nnout_max = None
                     else:
-                        self.active_state['step_accuracy'].append(0)
+                        nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
+                        loss = self.loss_func(nn_outputs, labels) 
+                    loss.backward()
 
-                self.active_state['step_idx'] += 1
-                if self.active_state['step_idx'] == self.num_local_steps:
-                    break
+                    with torch.no_grad():
+                        add_states(self.net, - lr_local * gather_flat_grad(self.net))
+
+                        self.active_state['step_loss'].append(loss.item())
+                        if nnout_max is not None:
+                            self.active_state['step_accuracy'].append(sum(nnout_max==labels).float() / len(labels))
+                        else:
+                            self.active_state['step_accuracy'].append(0)
+
+                    self.active_state['step_idx'] += 1
+                    if self.active_state['step_idx'] == self.num_local_steps:
+                        break
 
         if self.active_state['step_idx'] == self.num_local_steps:
             with torch.no_grad():
