@@ -146,6 +146,11 @@ if __name__ == '__main__':
                     round_idx = epoch_idx,
                     sync_idx = sync_idx,
                 )
+
+                # print(f"Round {epoch_idx} Sync {sync_idx}: hyper_grad_vals = {hyper_grad_vals}")
+                # print(f"Round {epoch_idx} Sync {sync_idx}: hyper_grad_mom = {hyper_grad_mom}")
+                # print(f"Round {epoch_idx} Sync {sync_idx}: hyper_grad_local_agg = {hyper_grad_local_agg}")
+
             lr_local: float = hyper_grad_vals['lr_local'][sync_idx]
             if lr_local <= 0:
                 print('break here')
@@ -159,7 +164,7 @@ if __name__ == '__main__':
                     acc_locals.append(acc_l)
                     acc_locals_on_local.append(acc_ll)
                     nD_locals.append(nD_by_user_idx[user_idx])
-                    grad_locals.append(train_out['grad'])
+                    # grad_locals.append(train_out['grad'])
                     train_done = True
             if train_done: # possible early finish
                 break
@@ -168,23 +173,35 @@ if __name__ == '__main__':
         print(f'Round {epoch_idx}, LR_Local = {lr_local_list}')
 
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
-        grad_ref_est = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
 
         assert(args.lr_server == 1.0) # Let's enforce this value for now.
         add_states(
             model = net_glob, 
             flat_states = args.lr_server * delt_w,
         )
-        grad_ref: torch.Tensor = calculate_gradient_ref(
-            grad_current = stats_glob['gradient_ref'], 
-            grad_w = grad_ref_est, 
-            momentum_alpha = args.grad_ref_alpha, 
-            epoch_idx = epoch_idx,
-        )
-        stats_glob.update({
-            'delt_w':       delt_w,
-            'gradient_ref': grad_ref,
-        })
+
+        if args.hypergrad_on:
+            for iu_idx, user_idx in enumerate(idxs_users):
+                local_user[user_idx].sync_update(
+                    net = copy.deepcopy(net_glob).to(args.device),
+                )
+                grad_locals.append(local_user[user_idx].calc_gradient())
+
+            grad_ref_est = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
+            grad_ref: torch.Tensor = calculate_gradient_ref(
+                grad_current = stats_glob['gradient_ref'], 
+                grad_w = grad_ref_est, 
+                momentum_alpha = args.grad_ref_alpha, 
+                epoch_idx = epoch_idx,
+            )
+            stats_glob.update({
+                'delt_w':       delt_w,
+                'gradient_ref': grad_ref,
+            })
+        else:
+            stats_glob.update({
+                'delt_w':       delt_w,
+            })
 
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)

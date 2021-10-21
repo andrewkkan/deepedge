@@ -189,6 +189,7 @@ def args_parser_fedhypgrad_4():
     parser.add_argument('--num_local_steps', type=int, default=10)
     parser.add_argument('--lr_local_interval', type=int, default=5)
     parser.add_argument('--grad_ref_alpha', type=float, default=0.9)
+    parser.add_argument('--dynamic_batch_size', action='store_true')
 
     args = parser.parse_args()
     return args

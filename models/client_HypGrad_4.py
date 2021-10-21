@@ -145,11 +145,11 @@ class LocalClient_HypGrad(object):
 
             # Run the final net with the entire dataset once, without modifying the net parameters.  
             # Collect gradients at the end.
-            flat_grad = self.calc_gradient()
+            # flat_grad = self.calc_gradient()
             self.active_state = None
             return ({
                 'delt_w': flat_delts, 
-                'grad': flat_grad,
+                # 'grad': flat_grad,
                 }, 
                 mean_loss, 
                 mean_accuracy,

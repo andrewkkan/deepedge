@@ -38,8 +38,8 @@ def update_hyper_grad(
                 hyper_grad_update_array = hyper_grad_update_array / float(num_updates_array)
                 hypergrad_val: np.array = np.asarray(hyper_grad_vals[key], dtype=np.float64) 
                 hypergrad_mom: np.array = (np.asarray(hyper_grad_mom[key], dtype=np.float64) * alpha \
-                    + lr * hyper_grad_update * (1.0 - alpha)) / bias_correction
-                hypergrad_val: np.array = hypergrad_val + hypergrad_mom
+                    + hyper_grad_update * (1.0 - alpha)) / bias_correction
+                hypergrad_val: np.array = hypergrad_val + lr * hypergrad_mom
                 hypergrad_val: list = hypergrad_val.tolist()
                 hypergrad_mom: list = hypergrad_mom.tolist()
             elif num_updates_float:  # for now just assume either float or array update, not both
@@ -48,8 +48,8 @@ def update_hyper_grad(
                     hypergrad_val:float = hyper_grad_vals[key][sync_idx]
                     hypergrad_mom:float = hyper_grad_mom[key][sync_idx]
                     hypergrad_mom:float = (hypergrad_mom* alpha \
-                        + lr * hyper_grad_update_float * (1.0 - alpha)) / bias_correction
-                    hypergrad_val:float = hypergrad_val + hypergrad_mom
+                        + hyper_grad_update_float * (1.0 - alpha)) / bias_correction
+                    hypergrad_val:float = hypergrad_val + lr * hypergrad_mom
                     hypergrad_val_list = hyper_grad_vals[key]
                     hypergrad_val_list[sync_idx] = hypergrad_val
                     hypergrad_val: list = hypergrad_val_list
@@ -58,8 +58,8 @@ def update_hyper_grad(
                     hypergrad_mom: list = hypergrad_mom_list                    
                 else:
                     hypergrad_mom:float = (hyper_grad_mom[key]* alpha \
-                        + lr * hyper_grad_update * (1.0 - alpha)) / bias_correction
-                    hypergrad_val:float = hyper_grad_vals[key] + hypergrad_mom
+                        + hyper_grad_update * (1.0 - alpha)) / bias_correction
+                    hypergrad_val:float = hyper_grad_vals[key] + lr * hypergrad_mom
 
             hyper_grad_vals[key]: Union[float, List[float]] = hypergrad_val
             hyper_grad_mom[key]: Union[float, List[float]] = hypergrad_mom
