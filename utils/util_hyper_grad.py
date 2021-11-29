@@ -74,10 +74,14 @@ def calculate_gradient_ref(grad_current: torch.Tensor, grad_w: torch.Tensor, mom
 
 
 
-def calcuate_lr_global(lr_global_current: float, hlr: float, desc_ref: torch.Tensor, delt_w: torch.Tensor,
+def calcuate_lr_global(lr_global_current: float, hlr: float, grad_ref: torch.Tensor, delt_w: torch.Tensor,
 ) -> float:
-
-    cos_similarity: float = (desc_ref * delt_w).sum()
+    grad_ref_norm: float = grad_ref.norm().item()
+    delt_w_norm: float = delt_w.norm().item()
+    if grad_ref_norm == 0.0 or delt_w_norm == 0.0:
+        cos_similarity: float = 0.0
+    else:
+        cos_similarity: float = (grad_ref * delt_w).sum().div(grad_ref_norm * delt_w_norm).item()
     print(f"cos_similarity = {cos_similarity} \n")
     lr_global_new = lr_global_current + hlr * cos_similarity
     return lr_global_new

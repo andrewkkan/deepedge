@@ -4,6 +4,7 @@
 from typing import Dict, List, Optional, Tuple, Union, Callable
 
 import torch
+import numpy as np
 from torch.utils.data import DataLoader, Dataset
 import copy
 import itertools
@@ -51,7 +52,12 @@ class LocalClient_HypGrad(object):
         else:
             self.lr_local_interval = args.lr_local_interval
         self.hypergrad_on = args.hypergrad_on
+        self.dynamic_batch_size = args.dynamic_batch_size
+        self.local_bs_adjusted = True # Initialized
+        self.est_samples = args.sigma2est_samples
         assert(self.local_bs * self.num_local_steps <= len(idxs) * self.local_ep)
+        self.dataset = dataset
+        self.data_idxs = idxs
         self.ldr_train = DataLoader(DatasetSplit(dataset, idxs), batch_size=self.local_bs, shuffle=True)
         self.net = net
         self.active_state = None
@@ -67,12 +73,32 @@ class LocalClient_HypGrad(object):
             self.loss_func = MSELoss
         self.args = args
 
+
+    def adjust_batch_size(self, new_lr_adapts_per_round: int) -> None:
+        # self.local_ep = number of local epochs per round; this may change.
+        # self.num_local_steps = number of steps per round; this may change
+        # self.local_bs = batch size i.e. number of samples per step; this may change
+        # self.lr_local_interval = lr adapt interval in terms of steps; should not change
+        # len(self.lr_local) = args.num_local_steps / args.lr_local_interval; this may change
+        self.num_local_steps = new_lr_adapts_per_round * self.lr_local_interval
+        if self.num_local_steps < self.local_ep:
+            self.local_ep = self.num_local_steps
+        total_data_samples = len(self.data_idxs) * self.local_ep
+        self.local_bs = total_data_samples // self.num_local_steps
+        self.local_bs_adjusted = True
+
+
     def train_prep(self,
     ) -> Dict[str, Dict[str, float]]:
         # Prep for eah lr_local interval
 
         flat_grad = self.calc_gradient()
-        lr_local_grad: float = ((flat_grad * self.gradient_ref).sum()).item() 
+        flat_grad_norm: float = flat_grad.norm().item()
+        grad_ref_norm: float = self.gradient_ref.norm().item()
+        if flat_grad_norm == 0.0 or grad_ref_norm == 0.0:
+            lr_local_grad: float = 0.0
+        else:
+            lr_local_grad: float = (flat_grad * self.gradient_ref).sum().div(flat_grad_norm * grad_ref_norm).item() 
         hyper_grad = {
             'lr_local':  lr_local_grad,
         }
@@ -80,7 +106,7 @@ class LocalClient_HypGrad(object):
 
     def train_step(self, lr_local: float,
     ) -> Union[
-        Tuple[Dict[str, Union[torch.Tensor, List[float]]], float, float],
+        Tuple[Dict[str, Union[torch.Tensor, List[float], float]], float, float],
         None,
     ]:
         # Training for each lr_local interval 
@@ -97,10 +123,25 @@ class LocalClient_HypGrad(object):
                     'data_iter':            itertools.chain(),
                     'lr_local_grad':        [],
                     'step_idx':             0,
+                    'local_step_gradients': [],
+                    'gradient_ref':         [],
+                    'gradient_sigma2':       [],
                 }
             self.net.train()
+            if self.local_bs_adjusted:
+                self.ldr_train = DataLoader(
+                    DatasetSplit(
+                        self.dataset, 
+                        self.data_idxs,
+                    ), 
+                    batch_size=self.local_bs, 
+                    shuffle=True
+                )
+                self.local_bs_adjusted = False
             for ep_idx in range(self.local_ep):
                 self.active_state['data_iter'] = itertools.chain(self.active_state['data_iter'], self.ldr_train)
+
+            self.active_state['gradient_ref'].append(self.gradient_ref)
 
         if lr_local <= 0.0:
             self.active_state['step_idx'] = self.num_local_steps
@@ -124,7 +165,12 @@ class LocalClient_HypGrad(object):
                     loss.backward()
 
                     with torch.no_grad():
-                        add_states(self.net, - lr_local * gather_flat_grad(self.net))
+                        local_step_gradient: torch.Tensor = gather_flat_grad(self.net)
+                    sigma2_est = self.estimate_sigma2(local_step_gradient, (images, labels))
+                    with torch.no_grad():
+                        add_states(self.net, - lr_local * local_step_gradient)
+                        self.active_state['local_step_gradients'].append(local_step_gradient)
+                        self.active_state['gradient_sigma2'].append(sigma2_est)
 
                         self.active_state['step_loss'].append(loss.item())
                         if nnout_max is not None:
@@ -143,6 +189,9 @@ class LocalClient_HypGrad(object):
             mean_loss = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 
+            graddiffmean_norm = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).mean(dim=0).norm().item()
+            gradvar_norm = np.mean(self.active_state['gradient_sigma2'])
+            # print(f"User Idx = {self.user_idx}, Graddiffnorm_mean = {graddiffmean_norm}, Graddiffnorm_std = {graddiffvar_norm.power(0.5)}")
             # Run the final net with the entire dataset once, without modifying the net parameters.  
             # Collect gradients at the end.
             # flat_grad = self.calc_gradient()
@@ -150,12 +199,39 @@ class LocalClient_HypGrad(object):
             return ({
                 'delt_w': flat_delts, 
                 # 'grad': flat_grad,
+                'graddiffmean_norm': graddiffmean_norm,
+                'gradvar_norm': gradvar_norm,
                 }, 
                 mean_loss, 
                 mean_accuracy,
             )
         else:
+            self.gradient_ref = self.gradient_ref * np.power(self.args.grad_ref_alpha, 1.0 / self.num_local_steps)
+            self.active_state['gradient_ref'].append(self.gradient_ref)
             return None      
+
+
+    def estimate_sigma2(self, mean_grad: torch.Tensor, input_batch: Tuple[torch.Tensor]) -> float:
+        images, labels = input_batch
+        batch_size = images.shape[0]
+        sigma2_est: float = 0.0
+        selections = np.random.choice(batch_size, size=self.est_samples, replace=False)
+
+        for idx in selections:
+            image, label = images[idx], labels[idx]
+            self.net.zero_grad()
+            nn_output = self.net(image)
+            if self.args.task == 'AutoEnc':
+                loss = self.loss_func(nn_output, image) / image.shape[-1] / image.shape[-2] / image.shape[-3]
+                nnout_max = None
+            else:
+                nnout_max = torch.argmax(nn_output, dim=1, keepdim=False)                
+                loss = self.loss_func(nn_output, label) 
+            loss.backward()
+            flat_grad: torch.Tensor = gather_flat_grad(self.net)
+            sigma2_est += (flat_grad - mean_grad).square().mean().item() # * float(self.est_samples) / float(batch_size)
+
+        return sigma2_est
 
 
     def sync_update(self, 

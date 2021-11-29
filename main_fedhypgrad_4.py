@@ -119,16 +119,37 @@ if __name__ == '__main__':
         'lr_local':     [0.0 for idx in range(lr_adapts_per_round)], 
     }
 
+    trained_users = set()
     for epoch_idx in range(args.epochs):
-        deltw_locals, grad_locals, nD_locals, loss_locals, acc_locals, acc_locals_on_local = [], [], [], [], [], []
+        deltw_locals, grad_locals, nD_locals, \
+            loss_locals, acc_locals, acc_locals_on_local, \
+            graddiffmean_norm, gradvar_norm = \
+            [], [], [], [], [], [], [], []
+
+        lr_local_vals = []
+        prev_val = 0.0 
+        for val in hyper_grad_vals['lr_local']:
+            if val < prev_val * 0.75 or val <= 0.0:
+                prev_val = prev_val * 0.75 
+                continue
+            else:
+                lr_local_vals.append(val)
+                prev_val = val
+        if len(lr_local_vals) is not len(hyper_grad_vals['lr_local']):
+            hyper_grad_vals['lr_local'] = lr_local_vals
+            del hyper_grad_mom['lr_local'][len(hyper_grad_vals['lr_local']):]
+            lr_adapts_per_round = len(hyper_grad_vals['lr_local'])
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        trained_users.update(idxs_users)
         for iu_idx, user_idx in enumerate(idxs_users): # updates that are only needed once per round
             last_update[user_idx] = epoch_idx
             local_user[user_idx].sync_update(
                 net = copy.deepcopy(net_glob).to(args.device), 
                 gradient_ref = stats_glob['gradient_ref'].clone().to(args.device), 
             )
+            if local_user[user_idx].num_local_steps is not lr_adapts_per_round * args.lr_local_interval:
+                local_user[user_idx].adjust_batch_size(lr_adapts_per_round)
 
         train_done = False
         for sync_idx in range(lr_adapts_per_round): # updates that are needed multiple syncs per round
@@ -138,14 +159,19 @@ if __name__ == '__main__':
                 for iu_idx, user_idx in enumerate(idxs_users):
                     prep_results = local_user[user_idx].train_prep()
                     hyper_grad_local_agg.append(prep_results['hyper_grad'])
-                update_hyper_grad(
-                    hyper_grad_vals = hyper_grad_vals, 
-                    hyper_grad_lr_alpha = hyper_grad_lr_alpha, 
-                    hyper_grad_mom = hyper_grad_mom, 
-                    hyper_grad_agg = hyper_grad_local_agg,
-                    round_idx = epoch_idx,
-                    sync_idx = sync_idx,
-                )
+                # update_hyper_grad(
+                #     hyper_grad_vals = hyper_grad_vals, 
+                #     hyper_grad_lr_alpha = hyper_grad_lr_alpha, 
+                #     hyper_grad_mom = hyper_grad_mom, 
+                #     hyper_grad_agg = hyper_grad_local_agg,
+                #     round_idx = epoch_idx,
+                #     sync_idx = sync_idx,
+                # )
+
+                # if sync_idx == 0:
+                #     _hyper_grad = hyper_grad_local_agg
+                #     _key2 = 'lr_local'
+                #     print(f'Round {epoch_idx} Sync 0, hyper_grad_lr = {["{:.3f}".format(val[_key2]) for val in _hyper_grad]}')
 
                 # print(f"Round {epoch_idx} Sync {sync_idx}: hyper_grad_vals = {hyper_grad_vals}")
                 # print(f"Round {epoch_idx} Sync {sync_idx}: hyper_grad_mom = {hyper_grad_mom}")
@@ -164,15 +190,22 @@ if __name__ == '__main__':
                     acc_locals.append(acc_l)
                     acc_locals_on_local.append(acc_ll)
                     nD_locals.append(nD_by_user_idx[user_idx])
+                    graddiffmean_norm.append(train_out['graddiffmean_norm'])
+                    gradvar_norm.append(train_out['gradvar_norm'])
                     # grad_locals.append(train_out['grad'])
                     train_done = True
             if train_done: # possible early finish
                 break
 
         lr_local_list = hyper_grad_vals['lr_local']
-        print(f'Round {epoch_idx}, LR_Local = {lr_local_list}')
+        print(f'Round {epoch_idx}, LR_Local = {["{:.3f}".format(num) for num in lr_local_list]}')
 
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
+        graddiff_std = np.std(graddiffmean_norm)
+        grad_meanstd = np.sqrt(np.mean(gradvar_norm))
+        #print(f'Round {epoch_idx}, graddiffmean_norm = {graddiffmean_norm}')
+        #print(f'Round {epoch_idx}, gradvar_norm = {gradvar_norm}')
+        print(f'Round {epoch_idx}, GradDiff Std = {graddiff_std}, Grad Mean Std = {grad_meanstd}')
 
         assert(args.lr_server == 1.0) # Let's enforce this value for now.
         add_states(
@@ -198,6 +231,12 @@ if __name__ == '__main__':
                 'delt_w':       delt_w,
                 'gradient_ref': grad_ref,
             })
+
+            # print(f'Round {epoch_idx}, grad_locals.norm = {["{:.3f}".format(num.norm()) for num in grad_locals]}')
+            # print(f'Round {epoch_idx}, deltw_locals.norm = {["{:.3f}".format(num.norm()) for num in deltw_locals]}')
+            # print(f'Round {epoch_idx}, trained_users = {trained_users}')
+            # print(f'Round {epoch_idx}, current_users = {idxs_users}')
+
         else:
             stats_glob.update({
                 'delt_w':       delt_w,
