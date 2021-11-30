@@ -167,8 +167,8 @@ class LocalClient_sigmaxi(object):
             mean_loss = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 
-            # xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).mean(dim=0).norm().item()
-            xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).square().mean(dim=0).sqrt().norm().item()
+            xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).abs().mean(dim=0).mean().item()
+            # xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).square().mean(dim=0).mean().item()
             sigma2_est = np.mean(self.active_state['gradient_sigma2'])
             # print(f"User Idx = {self.user_idx}, Graddiffnorm_mean = {graddiffmean_norm}, Graddiffnorm_std = {graddiffvar_norm.power(0.5)}")
             # Run the final net with the entire dataset once, without modifying the net parameters.  
@@ -218,7 +218,8 @@ class LocalClient_sigmaxi(object):
             flat_grad: torch.Tensor = gather_flat_grad(self.net)
             sigma2_est += (flat_grad - mean_grad).square().mean().item() # * float(self.est_samples) / float(batch_size)
 
-        # sigma2_est = sigma2_est * float(batch_size) / float(self.est_samples) 
+        sigma2_est = sigma2_est / float(self.est_samples) # Averaging
+        sigma2_est = sigma2_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
         return sigma2_est
 
