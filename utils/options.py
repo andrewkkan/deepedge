@@ -127,70 +127,17 @@ def args_parser_core(parser):
 
     parser.add_argument('--screendump_file', type=str, default='', help="path to screen dump")
 
-def args_parser_fedhypgrad():
+
+def args_parser_fedsigmaxi():
     parser = argparse.ArgumentParser()
 
     args_parser_core(parser)
-    parser.add_argument('--hypergrad_on', action='store_true')
-    parser.add_argument('--hyper_lr', type=float, default=0.05, help="")
-    parser.add_argument('--lr_global_init', type=float, default=0.1, help="")
-    parser.add_argument('--lr_local_init', type=float, default=0.1, help="")
     parser.add_argument('--num_local_steps', type=int, default=10)
-    parser.add_argument('--sync_interval', type=int, default=5)
-    parser.add_argument('--glob_descent_momentum', type=float, default=0.9)
-
-    args = parser.parse_args()
-    return args
-
-def args_parser_fedhypgrad_2():
-    parser = argparse.ArgumentParser()
-
-    args_parser_core(parser)
-    parser.add_argument('--hypergrad_on', action='store_true')
-    parser.add_argument('--hyper_lr', type=float, default=0.05, help="")
-    parser.add_argument('--hyper_alpha', type=float, default=0.9, help="")
-    parser.add_argument('--lr_local_init_val', type=float, default=0.1, help="")
-    parser.add_argument('--lr_local_init_descent', type=str, default='EQ', help="EQ or INV or LIN")
-    parser.add_argument('--num_local_steps', type=int, default=10)
-    parser.add_argument('--lr_local_interval', type=int, default=5)
-    parser.add_argument('--glob_descent_momentum', type=float, default=0.9)
-    parser.add_argument('--early_stop_local', action='store_true')
-
-    args = parser.parse_args()
-    return args
-
-def args_parser_fedhypgrad_3():
-    parser = argparse.ArgumentParser()
-
-    args_parser_core(parser)
-    parser.add_argument('--hypergrad_on', action='store_true')
-    parser.add_argument('--hyper_lr', type=float, default=0.05, help="")
-    parser.add_argument('--hyper_alpha', type=float, default=0.9, help="")
-    parser.add_argument('--lr_local_init_val', type=float, default=0.1, help="")
-    parser.add_argument('--lr_local_init_descent', type=str, default='EQ', help="EQ or INV or LIN")
-    parser.add_argument('--num_local_steps', type=int, default=10)
-    parser.add_argument('--lr_local_interval', type=int, default=5)
-    parser.add_argument('--grad_ref_alpha', type=float, default=0.9)
-    parser.add_argument('--early_stop_local', action='store_true')
-
-    args = parser.parse_args()
-    return args
-
-
-def args_parser_fedhypgrad_4():
-    parser = argparse.ArgumentParser()
-
-    args_parser_core(parser)
-    parser.add_argument('--hypergrad_on', action='store_true')
-    parser.add_argument('--hyper_lr', type=float, default=0.05, help="")
-    parser.add_argument('--hyper_alpha', type=float, default=0.9, help="")
-    parser.add_argument('--lr_local_init_val', type=float, default=0.1, help="")
-    parser.add_argument('--lr_local_init_descent', type=str, default='EQ', help="EQ or INV or LIN")
-    parser.add_argument('--num_local_steps', type=int, default=10)
-    parser.add_argument('--lr_local_interval', type=int, default=5)
     parser.add_argument('--grad_ref_alpha', type=float, default=0.9)
     parser.add_argument('--dynamic_batch_size', action='store_true')
     parser.add_argument('--sigma2est_samples', type=int, default=5)
+    parser.add_argument('--use_full_estimates', action='store_true')
+    parser.add_argument('--use_local_gradref_mom', action='store_true')
 
     args = parser.parse_args()
     return args
