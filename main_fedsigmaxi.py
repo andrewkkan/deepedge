@@ -94,9 +94,8 @@ if __name__ == '__main__':
     for epoch_idx in range(args.epochs):
         deltw_locals, grad_locals, nD_locals, \
             loss_locals, acc_locals, acc_locals_on_local, \
-            xi_est_locals, sigma2_est_locals, \
-            local_gradients, local_sigma2 = \
-            [], [], [], [], [], [], [], [], [], []
+            xi_est_locals, sigma_est_locals, = \
+            [], [], [], [], [], [], [], []
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         trained_users.update(idxs_users)
@@ -126,25 +125,14 @@ if __name__ == '__main__':
                     acc_locals_on_local.append(train_out['mean_accuracy'])
                     nD_locals.append(nD_by_user_idx[user_idx])
                     xi_est_locals.append(train_out['xi_est'])
-                    sigma2_est_locals.append(train_out['sigma2_est'])
-                    if args.use_full_estimates:
-                        # Still assuming num_local_steps are the same across all clients.
-                        local_gradients.append({
-                            'num_local_steps': local_user[user_idx].num_local_steps,
-                            'gradients': train_out['local_step_gradients'],
-                        })
-                        local_sigma2.append({
-                            'num_local_steps': local_user[user_idx].num_local_steps,
-                            'sigma2': train_out['gradient_sigma2']
-                        })
+                    sigma_est_locals.append(train_out['sigma_est'])
                     train_done = True
             if train_done: # possible early finish
                 break
 
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         xi_est = np.std(xi_est_locals)
-        # xi_est = np.sqrt(np.mean(xi_est_locals))
-        sigma_est = np.sqrt(np.mean(sigma2_est_locals))
+        sigma_est = np.mean(sigma_est_locals)
 
         assert(args.lr_server == 1.0) # Let's enforce this value for now.
         add_states(
@@ -171,26 +159,6 @@ if __name__ == '__main__':
             'gradient_ref': grad_ref,
         })
 
-        # if args.use_full_estimates:
-        #     num_local_steps = local_gradients[0]['num_local_steps']
-        #     for client_local_gradients in local_gradients:
-        #         # Still assuming num_local_steps are the same across all clients.
-        #         assert(num_local_steps == client_local_gradients['num_local_steps'])
-        #     xi_est_per_step = []
-        #     for ls_idx in range(num_local_steps):
-        #         grad_per_step = []
-        #         for client_local_gradients in local_gradients:
-        #             grad_per_step.append(client_local_gradients['gradients'][ls_idx])
-        #         with torch.no_grad():
-        #             grad_per_step_tensor = torch.stack(grad_per_step)
-        #             xi_est_per_step.append((grad_per_step_tensor - grad_ref).square().mean(dim=0).sqrt().mean().item())
-        #             del grad_per_step_tensor
-        #     xi_est_full = np.mean(xi_est_per_step)
-        # else:
-        #     xi_est_full = None
-        # if args.use_full_estimates:
-        #     print(f'Round {epoch_idx}, xi_est = {xi_est}, xi_est_full = {xi_est_full}, sigma_est = {sigma_est}')
-        # else:
         print(f'Round {epoch_idx}, xi_est = {xi_est}, sigma_est = {sigma_est}')
 
         # print status

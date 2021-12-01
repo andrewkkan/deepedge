@@ -49,7 +49,7 @@ class LocalClient_sigmaxi(object):
                 self.local_ep = args.local_ep
         self.dynamic_batch_size = args.dynamic_batch_size
         self.local_bs_adjusted = True # Initialized
-        self.est_samples = args.sigma2est_samples
+        self.est_samples = args.sigma_est_samples
         assert(self.local_bs * self.num_local_steps <= len(idxs) * self.local_ep)
         self.dataset = dataset
         self.data_idxs = idxs
@@ -102,7 +102,7 @@ class LocalClient_sigmaxi(object):
                     'step_idx':             0,
                     'local_step_gradients': [],
                     'gradient_ref':         [],
-                    'gradient_sigma2':      [],
+                    'gradient_sigma':      [],
                 }
             self.net.train()
             if self.local_bs_adjusted:
@@ -141,11 +141,11 @@ class LocalClient_sigmaxi(object):
 
                     with torch.no_grad():
                         local_step_gradient: torch.Tensor = gather_flat_grad(self.net)
-                    sigma2_est = self.estimate_sigma2(local_step_gradient, (images, labels))
+                    sigma_est = self.estimate_sigma(local_step_gradient, (images, labels))
                     with torch.no_grad():
                         add_states(self.net, - lr_local * local_step_gradient)
                         self.active_state['local_step_gradients'].append(local_step_gradient)
-                        self.active_state['gradient_sigma2'].append(sigma2_est)
+                        self.active_state['gradient_sigma'].append(sigma_est)
                         self.active_state['step_loss'].append(loss.item())
                         self.active_state['gradient_ref'].append(self.gradient_ref)
                         if nnout_max is not None:
@@ -168,26 +168,14 @@ class LocalClient_sigmaxi(object):
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 
             xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).abs().mean(dim=0).mean().item()
-            # xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).square().mean(dim=0).mean().item()
-            sigma2_est = np.mean(self.active_state['gradient_sigma2'])
-            # print(f"User Idx = {self.user_idx}, Graddiffnorm_mean = {graddiffmean_norm}, Graddiffnorm_std = {graddiffvar_norm.power(0.5)}")
-            # Run the final net with the entire dataset once, without modifying the net parameters.  
-            # Collect gradients at the end.
-            # flat_grad = self.calc_gradient()
-            if self.args.use_full_estimates:
-                local_step_gradients = self.active_state['local_step_gradients']
-                gradient_sigma2 = self.active_state['gradient_sigma2']
-            else:
-                local_step_gradients = None
-                gradient_sigma2 = None
+            sigma_est = np.mean(self.active_state['gradient_sigma'])
+
             self.active_state = None
             return {
                 'delt_w': flat_delts, 
                 # 'grad': flat_grad,
                 'xi_est': xi_est,
-                'sigma2_est': sigma2_est,
-                'local_step_gradients': local_step_gradients,
-                'gradient_sigma2': gradient_sigma2,
+                'sigma_est': sigma_est,
                 'mean_loss': mean_loss,
                 'mean_accuracy': mean_accuracy,
                 'done': True,
@@ -198,10 +186,10 @@ class LocalClient_sigmaxi(object):
             }     
 
 
-    def estimate_sigma2(self, mean_grad: torch.Tensor, input_batch: Tuple[torch.Tensor]) -> float:
+    def estimate_sigma(self, mean_grad: torch.Tensor, input_batch: Tuple[torch.Tensor]) -> float:
         images, labels = input_batch
         batch_size = images.shape[0]
-        sigma2_est: float = 0.0
+        sigma_local = []
         selections = np.random.choice(batch_size, size=self.est_samples, replace=False)
 
         for idx in selections:
@@ -216,12 +204,12 @@ class LocalClient_sigmaxi(object):
                 loss = self.loss_func(nn_output, label) 
             loss.backward()
             flat_grad: torch.Tensor = gather_flat_grad(self.net)
-            sigma2_est += (flat_grad - mean_grad).square().mean().item() # * float(self.est_samples) / float(batch_size)
+            sigma_local.append((flat_grad - mean_grad).abs())
 
-        sigma2_est = sigma2_est / float(self.est_samples) # Averaging
-        sigma2_est = sigma2_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
+        sigma_est = torch.stack(sigma_local).std(dim=0).mean()
+        sigma_est = sigma_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
-        return sigma2_est
+        return sigma_est
 
 
     def sync_update(self, 
