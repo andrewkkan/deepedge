@@ -102,7 +102,8 @@ class LocalClient_sigmaxi(object):
                     'step_idx':             0,
                     'local_step_gradients': [],
                     'gradient_ref':         [],
-                    'gradient_sigma':      [],
+                    'sigma_est':            [],
+                    'xi_est':               [],
                 }
             self.net.train()
             if self.local_bs_adjusted:
@@ -141,11 +142,16 @@ class LocalClient_sigmaxi(object):
 
                     with torch.no_grad():
                         local_step_gradient: torch.Tensor = gather_flat_grad(self.net)
-                    sigma_est = self.estimate_sigma(local_step_gradient, (images, labels))
+                    sigma_est, xi_est = self.estimate_sigma_xi(
+                        local_step_gradient, 
+                        self.gradient_ref,
+                        (images, labels),
+                    ) # this needs to happen before update
                     with torch.no_grad():
                         add_states(self.net, - lr_local * local_step_gradient)
                         self.active_state['local_step_gradients'].append(local_step_gradient)
-                        self.active_state['gradient_sigma'].append(sigma_est)
+                        self.active_state['sigma_est'].append(sigma_est)
+                        self.active_state['xi_est'].append(xi_est)
                         self.active_state['step_loss'].append(loss.item())
                         self.active_state['gradient_ref'].append(self.gradient_ref)
                         if nnout_max is not None:
@@ -167,8 +173,9 @@ class LocalClient_sigmaxi(object):
             mean_loss = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 
-            xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).abs().mean(dim=0).mean().item()
-            sigma_est = np.mean(self.active_state['gradient_sigma'])
+            # xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).abs().mean(dim=0).mean().item()
+            sigma_est = np.mean(self.active_state['sigma_est'])
+            xi_est = np.mean(self.active_state['xi_est'])
 
             self.active_state = None
             return {
@@ -186,10 +193,10 @@ class LocalClient_sigmaxi(object):
             }     
 
 
-    def estimate_sigma(self, mean_grad: torch.Tensor, input_batch: Tuple[torch.Tensor]) -> float:
+    def estimate_sigma_xi(self, mean_grad: torch.Tensor, ref_grad: torch.Tensor, input_batch: Tuple[torch.Tensor]) -> float:
         images, labels = input_batch
         batch_size = images.shape[0]
-        sigma_local = []
+        sigma_local, xi_local = [], []
         selections = np.random.choice(batch_size, size=self.est_samples, replace=False)
 
         for idx in selections:
@@ -205,11 +212,15 @@ class LocalClient_sigmaxi(object):
             loss.backward()
             flat_grad: torch.Tensor = gather_flat_grad(self.net)
             sigma_local.append((flat_grad - mean_grad).abs())
+            xi_local.append((flat_grad - ref_grad).abs())
 
         sigma_est:float = torch.stack(sigma_local).std(dim=0).mean().item()
         sigma_est:float = sigma_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
-        return sigma_est
+        xi_est:float = torch.stack(xi_local).std(dim=0).mean().item()
+        xi_est:float = xi_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
+
+        return sigma_est, xi_est
 
 
     def sync_update(self, 

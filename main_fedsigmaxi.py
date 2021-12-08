@@ -131,8 +131,9 @@ if __name__ == '__main__':
                 break
 
         delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
-        xi_est = np.std(xi_est_locals)
+        # xi_est = np.std(xi_est_locals)
         sigma_est = np.mean(sigma_est_locals)
+        xi_est = np.mean(xi_est_locals)
 
         assert(args.lr_server == 1.0) # Let's enforce this value for now.
         add_states(
