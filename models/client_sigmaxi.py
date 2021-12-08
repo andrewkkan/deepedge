@@ -211,14 +211,14 @@ class LocalClient_sigmaxi(object):
                 loss = self.loss_func(nn_output, label) 
             loss.backward()
             flat_grad: torch.Tensor = gather_flat_grad(self.net)
-            sigma_local.append((flat_grad - mean_grad).abs())
-            xi_local.append((flat_grad - ref_grad).abs())
+            sigma_local.append((flat_grad - mean_grad).square())
+            xi_local.append((flat_grad - ref_grad).square())
 
-        sigma_est:float = torch.stack(sigma_local).std(dim=0).mean().item()
-        sigma_est:float = sigma_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
+        sigma_est:float = torch.stack(sigma_local).mean(dim=0).sum().sqrt().item()
+        sigma_est:float = sigma_est / np.sqrt(float(batch_size)) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
-        xi_est:float = torch.stack(xi_local).std(dim=0).mean().item()
-        xi_est:float = xi_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
+        xi_est:float = torch.stack(xi_local).mean(dim=0).sum().sqrt().item()
+        xi_est:float = xi_est / np.sqrt(float(batch_size)) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
         return sigma_est, xi_est
 
