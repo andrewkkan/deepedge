@@ -28,6 +28,7 @@ import plotly
 
 if __name__ == '__main__':
 
+    print("python main_fedsigmaxi.py " + subprocess.list2cmdline(sys.argv[1:]) + "\n")
     # parse args
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
