@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
 import copy
 import numpy as np
 import torch
@@ -12,6 +12,7 @@ import random
 import os
 import sys
 import datetime
+import subprocess
 from typing import Dict, List, Optional, Tuple, Union, Callable
 
 from utils.options import args_parser_fedsigmaxi as args_parser
@@ -22,9 +23,6 @@ from utils.util_datasets import get_datasets
 from utils.util_model import get_model, gather_flat_params, gather_flat_states, add_states
 from utils.util_hyper_grad import calculate_gradient_ref
 
-import pandas as pd
-import plotly.express as px
-import plotly
 
 if __name__ == '__main__':
 
