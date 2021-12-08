@@ -206,8 +206,8 @@ class LocalClient_sigmaxi(object):
             flat_grad: torch.Tensor = gather_flat_grad(self.net)
             sigma_local.append((flat_grad - mean_grad).abs())
 
-        sigma_est = torch.stack(sigma_local).std(dim=0).mean()
-        sigma_est = sigma_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
+        sigma_est:float = torch.stack(sigma_local).std(dim=0).mean().item()
+        sigma_est:float = sigma_est / float(batch_size) # Adjust for the fact that each data sample is noisier than a batch of data samples
 
         return sigma_est
 
