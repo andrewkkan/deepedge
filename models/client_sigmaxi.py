@@ -81,7 +81,7 @@ class LocalClient_sigmaxi(object):
         self.local_bs_adjusted = True
 
 
-    def train_step(self, lr_local: float,
+    def train_step(self, lr_local: float, num_local_steps: int,
     ) -> Union[
         Tuple[Dict[str, Union[torch.Tensor, List[float], float]], float, float],
         None,
@@ -168,8 +168,8 @@ class LocalClient_sigmaxi(object):
 
         if self.active_state['step_idx'] == self.num_local_steps:
             with torch.no_grad():
-                flat_net_states, flat_ref_states = gather_flat_states(self.net), gather_flat_states(self.active_state['net_start_round'])
-            flat_delts = flat_net_states - flat_ref_states
+                flat_net_states, flat_init_states = gather_flat_states(self.net), gather_flat_states(self.active_state['net_start_round'])
+            flat_delts = flat_net_states - flat_init_states
             mean_loss = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 

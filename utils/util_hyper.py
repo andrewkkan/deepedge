@@ -88,3 +88,16 @@ def calcuate_lr_global(lr_global_current: float, hlr: float, grad_ref: torch.Ten
 
 
 
+def calculate_lr_local(lr_local: float, mean_grad_local: torch.Tensor, grad_ref: torch.Tensor, hyper_lrlr: float,
+) -> float:
+    hadamard_prod: torch.Tensor = mean_grad_local * grad_ref
+    cossim: float = float(hadamard_prod.sum().item())
+    update: float = - hyper_lrlr * cossim
+    new_lr_local: float = lr_local - update
+    return new_lr_local
+
+
+
+
+
+

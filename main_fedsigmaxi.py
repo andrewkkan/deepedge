@@ -14,6 +14,7 @@ import sys
 import datetime
 import subprocess
 from typing import Dict, List, Optional, Tuple, Union, Callable
+from typing_extensions import TypedDict
 
 from utils.options import args_parser_fedsigmaxi as args_parser
 from models.client_sigmaxi import LocalClient_sigmaxi as LocalClient 
@@ -21,7 +22,7 @@ from models.test import test_img, test_img_ensem
 from models.linRegress import DataLinRegress, lin_reg
 from utils.util_datasets import get_datasets
 from utils.util_model import get_model, gather_flat_params, gather_flat_states, add_states
-from utils.util_hyper_grad import calculate_gradient_ref
+from utils.util_hyper import calculate_gradient_ref, calculate_lr_local
 
 
 if __name__ == '__main__':
@@ -84,9 +85,17 @@ if __name__ == '__main__':
     last_update = np.ones(args.num_users) * -1
 
     m = min(max(int(args.frac * args.num_users), 1), args.num_users)
-    stats_glob = {
+
+    class StatsGlob(TypedDict):
+        gradient_ref:       torch.Tensor
+        delt_w:             torch.Tensor
+        lr_local:           float
+        num_local_steps:    int
+    stats_glob: StatsGlob = {
         'gradient_ref': torch.zeros_like(gather_flat_params(net_glob)),
         'delt_w': torch.zeros_like(gather_flat_params(net_glob)),
+        'lr_local': float(args.lr_device), # initialize
+        'num_local_steps': int(args.num_local_steps),
     }
 
     trained_users = set()
@@ -106,16 +115,19 @@ if __name__ == '__main__':
             )
             # Modify the below to adjust batch size, based upon change in number of local steps.
             if args.dynamic_batch_size and local_user[user_idx].num_local_steps != new_num_local_steps:
-                # local_user[user_idx].num_local_steps = new_num_local_steps
-                # local_user[user_idx].adjust_batch_size(new_num_local_steps)
-                pass
+                local_user[user_idx].adjust_batch_size(
+                    stats_glob['num_local_steps'],
+                )
 
         train_done = False
         # The following loop is for updates that are needed multiple syncs per round.
         # Since we are not adjusting lr locals, we do not need multiple syncs per round.
         for sync_idx in range(1): 
             for iu_idx, user_idx in enumerate(idxs_users):
-                train_out = local_user[user_idx].train_step(args.lr_device)
+                train_out = local_user[user_idx].train_step(
+                    lr_local=stats_glob['lr_local'], 
+                    num_local_steps=stats_glob['num_local_steps'],
+                )
                 if train_out['done']:
                     deltw_locals.append(train_out['delt_w'])
                     acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
@@ -147,6 +159,7 @@ if __name__ == '__main__':
                 net = copy.deepcopy(net_glob).to(args.device),
             )
             grad_locals.append(local_user[user_idx].calc_gradient())
+
         grad_ref_est = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         grad_ref: torch.Tensor = calculate_gradient_ref(
             grad_current = stats_glob['gradient_ref'], 
@@ -154,12 +167,24 @@ if __name__ == '__main__':
             momentum_alpha = args.grad_ref_alpha, 
             epoch_idx = epoch_idx,
         )
-        stats_glob.update({
-            'delt_w':       delt_w,
-            'gradient_ref': grad_ref,
-        })
+        mean_grad_local: torch.Tensor = - torch.stack(deltw_locals).mean(axis=0) / float(stats_glob['lr_local']) / float(stats_glob['num_local_steps'])
+        lr_local: float = calculate_lr_local(
+            lr_local = stats_glob['lr_local'],
+            mean_grad_local = mean_grad_local,
+            grad_ref = grad_ref,
+            hyper_lrlr = args.hyper_lrlr,
+        )
+        num_local_steps: int = stats_glob['num_local_steps'] # Temp placeholder, will need to add dynamic logic
 
-        print(f'Round {epoch_idx}, xi_est = {xi_est}, sigma_est = {sigma_est}')
+        stats_glob_update: StatsGlob = {
+            'delt_w':           delt_w,
+            'gradient_ref':     grad_ref,
+            'lr_local':         lr_local,
+            'num_local_steps':  num_local_steps,        
+        }
+        stats_glob.update(stats_glob_update)
+
+        print(f'Round {epoch_idx}, xi_est = {xi_est}, sigma_est = {sigma_est}, lr_local = {lr_local}')
 
         # print status
         loss_avg = sum(loss_locals) / len(loss_locals)

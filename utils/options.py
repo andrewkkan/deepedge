@@ -137,6 +137,8 @@ def args_parser_fedsigmaxi():
     parser.add_argument('--dynamic_batch_size', action='store_true')
     parser.add_argument('--sigma_est_samples', type=int, default=5)
     parser.add_argument('--use_local_gradref_mom', action='store_true')
+    parser.add_argument('--dynamic_lr', action='store_true')
+    parser.add_argument('--hyper_lrlr', type=float, default=0.001, help='Hyper-learning rate for dynamic learning rate.')
 
     args = parser.parse_args()
     return args
