@@ -91,6 +91,7 @@ def args_parser_core(parser):
     parser.add_argument('--bs', type=int, default=256, help="test batch size")
     parser.add_argument('--lr_device', type=float, default=0.1, help="Device local learning rate")
     parser.add_argument('--lr_server', type=float, default=1.0, help="Server global learning rate")
+    parser.add_argument('--lambda_reg', type=float, default=0.0, help="Ridge regularization")
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

@@ -73,26 +73,15 @@ def calculate_gradient_ref(grad_current: torch.Tensor, grad_w: torch.Tensor, mom
     return grad_with_momentum
 
 
-
-def calcuate_lr_global(lr_global_current: float, hlr: float, grad_ref: torch.Tensor, delt_w: torch.Tensor,
-) -> float:
-    grad_ref_norm: float = grad_ref.norm().item()
-    delt_w_norm: float = delt_w.norm().item()
-    if grad_ref_norm == 0.0 or delt_w_norm == 0.0:
-        cos_similarity: float = 0.0
-    else:
-        cos_similarity: float = (grad_ref * delt_w).sum().div(grad_ref_norm * delt_w_norm).item()
-    print(f"cos_similarity = {cos_similarity} \n")
-    lr_global_new = lr_global_current + hlr * cos_similarity
-    return lr_global_new
-
-
-
 def calculate_lr_local(lr_local: float, mean_grad_local: torch.Tensor, grad_ref: torch.Tensor, hyper_lrlr: float,
 ) -> float:
+    mean_grad_norm: float = mean_grad_local.norm().item()
+    grad_ref_norm: float = grad_ref.norm().item()
+    if mean_grad_norm == 0.0 or grad_ref_norm == 0.0:
+        return lr_local # no change
     hadamard_prod: torch.Tensor = mean_grad_local * grad_ref
     cossim: float = float(hadamard_prod.sum().item())
-    update: float = - hyper_lrlr * cossim
+    update: float = - hyper_lrlr * cossim 
     new_lr_local: float = lr_local - update
     return new_lr_local
 

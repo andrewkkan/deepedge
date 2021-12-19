@@ -146,18 +146,10 @@ if __name__ == '__main__':
         sigma_est = np.mean(sigma_est_locals)
         xi_est = np.mean(xi_est_locals)
 
-
-        mean_grad_local: torch.Tensor = - torch.stack(deltw_locals).mean(axis=0) / float(stats_glob['lr_local']) / float(stats_glob['num_local_steps'])
-        lr_local: float = calculate_lr_local(
-            lr_local = stats_glob['lr_local'],
-            mean_grad_local = mean_grad_local,
-            grad_ref = stats_glob['gradient_ref'],
-            hyper_lrlr = args.hyper_lrlr,
-        )
         assert(args.lr_server == 1.0) # Let's enforce this value for now.
         add_states(
             model = net_glob, 
-            flat_states = args.lr_server * (lr_local / stats_glob['lr_local']) * delt_w ,
+            flat_states = args.lr_server * delt_w,
         )
 
         # The following spends additional bandwidth and cycles to calculate 
@@ -174,6 +166,13 @@ if __name__ == '__main__':
             grad_w = grad_ref_est, 
             momentum_alpha = args.grad_ref_alpha, 
             epoch_idx = epoch_idx,
+        )
+        mean_grad_local: torch.Tensor = - torch.stack(deltw_locals).mean(axis=0) / float(stats_glob['lr_local']) / float(stats_glob['num_local_steps'])
+        lr_local: float = calculate_lr_local(
+            lr_local = stats_glob['lr_local'],
+            mean_grad_local = mean_grad_local,
+            grad_ref = grad_ref,
+            hyper_lrlr = args.hyper_lrlr,
         )
         num_local_steps: int = stats_glob['num_local_steps'] # Temp placeholder, will need to add dynamic logic
 
@@ -225,9 +224,4 @@ if __name__ == '__main__':
         sdf.write("\nTesting accuracy on test data: {:.2f}, Testing loss: {:.2f}\n".format(acc_test, loss_test))
         sdf.write(str(datetime.datetime.now()) + '\n')
         sdf.close()
-
-
-
-
-
 

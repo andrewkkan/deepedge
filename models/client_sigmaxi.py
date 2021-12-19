@@ -57,6 +57,7 @@ class LocalClient_sigmaxi(object):
         self.net = net
         self.active_state = None
         self.user_idx = user_idx
+        self.lambda_reg = args.lambda_reg
         self.loss_func = CrossEntropyLoss
         if args.task == 'ObjRec':
             self.loss_func = CrossEntropyLoss
@@ -138,6 +139,8 @@ class LocalClient_sigmaxi(object):
                     else:
                         nnout_max = torch.argmax(nn_outputs, dim=1, keepdim=False)                
                         loss = self.loss_func(nn_outputs, labels) 
+                    if self.lambda_reg > 0.0:
+                        loss = loss + self.lambda_reg * gather_flat_params_with_grad(self.net).square().sum()
                     loss.backward()
 
                     with torch.no_grad():

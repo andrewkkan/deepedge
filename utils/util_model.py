@@ -66,13 +66,13 @@ def gather_flat_params(model):
     for p in model.parameters():
         flat_params.append(p.data.view(-1))
     return torch.cat(flat_params, 0)
-
+    
 def gather_flat_params_with_grad(model):
     flat_params = []
     for p in model.parameters():
         flat_params.append(p.view(-1))
     return torch.cat(flat_params, 0)
-
+    
 def gather_flat_other_states(model):
     sd = model.state_dict()
     pd = dict(model.named_parameters())
