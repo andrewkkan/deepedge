@@ -15,7 +15,10 @@ def test_img(net_g, datatest, args, stop_at_batch=-1, shuffle=False, device=torc
     # testing
     test_loss = 0
     correct = 0
-    data_loader = DataLoader(datatest, batch_size=args.bs, shuffle=shuffle)
+    if type(datatest) == torch.utils.data.dataloader.DataLoader:
+        data_loader = datatest
+    else:
+        data_loader = DataLoader(datatest, batch_size=args.bs, shuffle=shuffle)
     loss_func = F.cross_entropy
     need_accuracy = True
     if args.task == 'ObjRec':

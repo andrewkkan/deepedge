@@ -13,6 +13,7 @@ from utils.util_model import gather_flat_params, gather_flat_params_with_grad, g
 from utils.util_lossfn import CrossEntropyLoss, MSELoss, MSESaddleLoss
 from utils.util_datasets import DatasetSplit
 from models.Nets import NNet
+from models.test import test_img
 
 class LocalClient_sigmaxi(object):
     def __init__(self, args, net, dataset=None, idxs=None, user_idx=0):
@@ -105,7 +106,10 @@ class LocalClient_sigmaxi(object):
                     'gradient_ref':         [],
                     'sigma_est':            [],
                     'xi_est':               [],
+                    'loss_pretrain':        0.0,
                 }
+            acc_pretrain, loss_pretrain = test_img(self.net, self.ldr_train, self.args, shuffle=True, device=self.args.device)
+            self.active_state['loss_pretrain'] = loss_pretrain
             self.net.train()
             if self.local_bs_adjusted:
                 self.ldr_train = DataLoader(
@@ -173,12 +177,14 @@ class LocalClient_sigmaxi(object):
             with torch.no_grad():
                 flat_net_states, flat_init_states = gather_flat_states(self.net), gather_flat_states(self.active_state['net_start_round'])
             flat_delts = flat_net_states - flat_init_states
-            mean_loss = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
+            mean_loss_train = sum(self.active_state['step_loss']) / len(self.active_state['step_loss'])
             mean_accuracy = sum(self.active_state['step_accuracy']) / len(self.active_state['step_accuracy'])
 
             # xi_est = (torch.stack(self.active_state['local_step_gradients']) - torch.stack(self.active_state['gradient_ref'])).abs().mean(dim=0).mean().item()
             sigma_est = np.mean(self.active_state['sigma_est'])
             xi_est = np.mean(self.active_state['xi_est'])
+
+            loss_pretrain = self.active_state['loss_pretrain']
 
             self.active_state = None
             return {
@@ -186,7 +192,8 @@ class LocalClient_sigmaxi(object):
                 # 'grad': flat_grad,
                 'xi_est': xi_est,
                 'sigma_est': sigma_est,
-                'mean_loss': mean_loss,
+                'mean_loss_train': mean_loss_train,
+                'loss_pretrain': loss_pretrain,
                 'mean_accuracy': mean_accuracy,
                 'done': True,
             } 

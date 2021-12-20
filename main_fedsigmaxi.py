@@ -18,7 +18,7 @@ from typing_extensions import TypedDict
 
 from utils.options import args_parser_fedsigmaxi as args_parser
 from models.client_sigmaxi import LocalClient_sigmaxi as LocalClient 
-from models.test import test_img, test_img_ensem
+from models.test import test_img
 from models.linRegress import DataLinRegress, lin_reg
 from utils.util_datasets import get_datasets
 from utils.util_model import get_model, gather_flat_params, gather_flat_states, add_states
@@ -101,9 +101,9 @@ if __name__ == '__main__':
     trained_users = set()
     for epoch_idx in range(args.epochs):
         deltw_locals, grad_locals, nD_locals, \
-            loss_locals, acc_locals, acc_locals_on_local, \
+            loss_locals_pretrain, loss_locals_train, acc_locals, acc_locals_on_local, \
             xi_est_locals, sigma_est_locals, = \
-            [], [], [], [], [], [], [], []
+            [], [], [], [], [], [], [], [], []
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         trained_users.update(idxs_users)
@@ -131,7 +131,8 @@ if __name__ == '__main__':
                 if train_out['done']:
                     deltw_locals.append(train_out['delt_w'])
                     acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
-                    loss_locals.append(train_out['mean_loss'])
+                    loss_locals_pretrain.append(train_out['loss_pretrain'])
+                    loss_locals_train.append(train_out['mean_loss_train'])
                     acc_locals.append(acc_l)
                     acc_locals_on_local.append(train_out['mean_accuracy'])
                     nD_locals.append(nD_by_user_idx[user_idx])
@@ -187,7 +188,8 @@ if __name__ == '__main__':
         print(f'Round {epoch_idx}, xi_est = {xi_est}, sigma_est = {sigma_est}, lr_local = {lr_local}')
 
         # print status
-        loss_avg = sum(loss_locals) / len(loss_locals)
+        loss_pretrain_avg = sum(loss_locals_pretrain) / len(loss_locals_pretrain)
+        loss_train_avg = sum(loss_locals_train) / len(loss_locals_train)
         # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
         print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
         # Calculate accuracy for each round
@@ -196,16 +198,16 @@ if __name__ == '__main__':
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
         print(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
-                format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
+                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
         )
         if args.screendump_file:
             sdf.write(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
-                format(epoch_idx, m, loss_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
+                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
             )
             sdf.flush()
-        loss_train.append(loss_avg)
+        loss_train.append(loss_train_avg)
 
     # plot loss curve
     # plt.figure()
