@@ -101,9 +101,10 @@ if __name__ == '__main__':
     trained_users = set()
     for epoch_idx in range(args.epochs):
         deltw_locals, grad_locals, nD_locals, \
-            loss_locals_pretrain, loss_locals_train, acc_locals, acc_locals_on_local, \
+            loss_locals_pretrain, loss_locals_train, loss_locals_posttrain, \
+            acc_locals, acc_locals_on_local, \
             xi_est_locals, sigma_est_locals, = \
-            [], [], [], [], [], [], [], [], []
+            [], [], [], [], [], [], [], [], [], []
 
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
         trained_users.update(idxs_users)
@@ -113,6 +114,8 @@ if __name__ == '__main__':
                 net = copy.deepcopy(net_glob).to(args.device), 
                 gradient_ref = stats_glob['gradient_ref'].clone().to(args.device), 
             )
+            _, loss = local_user[user_idx].local_test()
+            loss_locals_pretrain.append(loss)
             # Modify the below to adjust batch size, based upon change in number of local steps.
             if args.dynamic_batch_size and local_user[user_idx].num_local_steps != new_num_local_steps:
                 local_user[user_idx].adjust_batch_size(
@@ -131,7 +134,6 @@ if __name__ == '__main__':
                 if train_out['done']:
                     deltw_locals.append(train_out['delt_w'])
                     acc_l, _ = test_img(local_user[user_idx].net, dataset_train, args, stop_at_batch=16, shuffle=True, device=args.device)
-                    loss_locals_pretrain.append(train_out['loss_pretrain'])
                     loss_locals_train.append(train_out['mean_loss_train'])
                     acc_locals.append(acc_l)
                     acc_locals_on_local.append(train_out['mean_accuracy'])
@@ -142,7 +144,8 @@ if __name__ == '__main__':
             if train_done: # possible early finish
                 break
 
-        delt_w = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
+        # delt_w is scaled by the number of data samples per client, in theory
+        delt_w: torch.Tensor = ((torch.stack(deltw_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
         # xi_est = np.std(xi_est_locals)
         sigma_est = np.mean(sigma_est_locals)
         xi_est = np.mean(xi_est_locals)
@@ -153,26 +156,44 @@ if __name__ == '__main__':
             flat_states = args.lr_server * delt_w,
         )
 
-        # The following spends additional bandwidth and cycles to calculate 
-        # the clients true gradients at the end of training.
         for iu_idx, user_idx in enumerate(idxs_users):
             local_user[user_idx].sync_update(
                 net = copy.deepcopy(net_glob).to(args.device),
             )
-            grad_locals.append(local_user[user_idx].calc_gradient())
+            _, loss = local_user[user_idx].local_test()
+            loss_locals_posttrain.append(loss)            
+        if args.use_grad_for_ref or args.use_grad_for_dlr: 
+            # The following spends additional bandwidth and cycles to calculate 
+            # the clients true gradients at the end of training.
+            for iu_idx, user_idx in enumerate(idxs_users):
+                grad_locals.append(local_user[user_idx].calc_gradient())
+            grad_from_locals: torch.Tensor = torch.stack(grad_locals).mean(axis=0)
 
-        grad_ref_est = ((torch.stack(grad_locals) * torch.tensor(nD_locals).view(-1,1).to(args.device)) / torch.tensor(nD_locals).to(args.device).sum()).sum(dim=0)
+        else:
+            # grad_from_deltw is not scaled by number of data samples per client, but rather by 
+            # number of local steps and learning rate, to derive the local gradients.
+            grad_from_deltw = - torch.stack(deltw_locals).mean(axis=0) / float(stats_glob['lr_local']) / float(stats_glob['num_local_steps'])
+
+        if args.use_grad_for_ref:
+            grad_ref_est = grad_from_locals
+        else:
+            grad_ref_est = grad_from_deltw
+
+        if args.use_grad_for_dlr:
+            mean_grad_local = grad_from_locals
+        else:
+            mean_grad_local = grad_from_deltw            
+
         grad_ref: torch.Tensor = calculate_gradient_ref(
             grad_current = stats_glob['gradient_ref'], 
             grad_w = grad_ref_est, 
             momentum_alpha = args.grad_ref_alpha, 
             epoch_idx = epoch_idx,
         )
-        mean_grad_local: torch.Tensor = - torch.stack(deltw_locals).mean(axis=0) / float(stats_glob['lr_local']) / float(stats_glob['num_local_steps'])
         lr_local: float = calculate_lr_local(
             lr_local = stats_glob['lr_local'],
             mean_grad_local = mean_grad_local,
-            grad_ref = grad_ref,
+            grad_ref = stats_glob['gradient_ref'],
             hyper_lrlr = args.hyper_lrlr,
         )
         num_local_steps: int = stats_glob['num_local_steps'] # Temp placeholder, will need to add dynamic logic
@@ -190,6 +211,8 @@ if __name__ == '__main__':
         # print status
         loss_pretrain_avg = sum(loss_locals_pretrain) / len(loss_locals_pretrain)
         loss_train_avg = sum(loss_locals_train) / len(loss_locals_train)
+        loss_posttrain_avg = sum(loss_locals_posttrain) / len(loss_locals_posttrain)
+
         # optimizer_glob.step(flat_deltw_list=deltw_locals, flat_deltos_list=deltos_locals, nD_list=nD_locals)
         print("Epoch idx = ", epoch_idx, ", Net Glob Norm = ", gather_flat_params(net_glob).norm())
         # Calculate accuracy for each round
@@ -198,13 +221,13 @@ if __name__ == '__main__':
         acc_lloc = 100. * sum(acc_locals_on_local) / len(acc_locals_on_local)
 
         print(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
-                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Average posttrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}'.\
+                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, loss_posttrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
         )
         if args.screendump_file:
             sdf.write(
-                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
-                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
+                'Round {:3d}, Devices participated {:2d}, Average training loss {:.8f}, Average pretrain loss {:.8f}, Average posttrain loss {:.8f}, Central accuracy on global test data {:.3f}, Central loss on global test data {:.3f}, Local accuracy on global train data {:.3f}, Local accuracy on local train data {:.3f}\n'.\
+                format(epoch_idx, m, loss_train_avg, loss_pretrain_avg, loss_posttrain_avg, acc_glob, loss_glob, acc_loc, acc_lloc)
             )
             sdf.flush()
         loss_train.append(loss_train_avg)

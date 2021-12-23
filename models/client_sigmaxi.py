@@ -106,10 +106,7 @@ class LocalClient_sigmaxi(object):
                     'gradient_ref':         [],
                     'sigma_est':            [],
                     'xi_est':               [],
-                    'loss_pretrain':        0.0,
                 }
-            acc_pretrain, loss_pretrain = test_img(self.net, self.ldr_train, self.args, shuffle=True, device=self.args.device)
-            self.active_state['loss_pretrain'] = loss_pretrain
             self.net.train()
             if self.local_bs_adjusted:
                 self.ldr_train = DataLoader(
@@ -184,7 +181,6 @@ class LocalClient_sigmaxi(object):
             sigma_est = np.mean(self.active_state['sigma_est'])
             xi_est = np.mean(self.active_state['xi_est'])
 
-            loss_pretrain = self.active_state['loss_pretrain']
 
             self.active_state = None
             return {
@@ -193,7 +189,6 @@ class LocalClient_sigmaxi(object):
                 'xi_est': xi_est,
                 'sigma_est': sigma_est,
                 'mean_loss_train': mean_loss_train,
-                'loss_pretrain': loss_pretrain,
                 'mean_accuracy': mean_accuracy,
                 'done': True,
             } 
@@ -260,5 +255,7 @@ class LocalClient_sigmaxi(object):
         flat_grad = gather_flat_grad(self.net) / float(len(train_loader))
         return flat_grad
 
-
+    def local_test(self) -> Tuple[float,float]:
+        acc, loss = test_img(self.net, self.ldr_train, self.args, shuffle=True, device=self.args.device)
+        return acc, loss
 
