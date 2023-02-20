@@ -6,8 +6,6 @@
 import numpy as np
 from torchvision import datasets, transforms
 
-from IPython import embed
-
 def mnist_iid(dataset, num_users):
     return generic_iid(dataset, num_users)
 

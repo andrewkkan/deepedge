@@ -7,8 +7,6 @@ from torch.utils.data import Dataset, DataLoader
 # from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 
-from IPython import embed
-
 
 # Creating the artificial dataset
 class DataLinRegress(Dataset):
